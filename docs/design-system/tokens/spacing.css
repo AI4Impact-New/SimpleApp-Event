@@ -1,0 +1,6 @@
+:root{
+--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;--space-16:64px;--space-20:80px;--space-24:96px;--space-30:120px;
+--container:1216px;--container-pad:24px;
+--section-pad-y:120px;--card-pad:24px;--card-gap:20px;
+--h-topbar:40px;--h-nav:64px;--h-btn-lg:46px;--h-btn-md:38px;--h-btn-sm:30px;--h-input:34px;--h-option:56px;
+}

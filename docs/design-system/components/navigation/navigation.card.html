@@ -1,0 +1,18 @@
+<!-- @dsCard group="Components" viewport="700x360" name="Navigation" subtitle="AnnouncementBar, NavBar, SectionHeader, Footer" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;overflow:hidden;background:var(--surface-dark);font-family:var(--font-body)}</style></head><body><div id="root"></div>
+<script type="text/babel">
+const NS=window.AI4ImpactDesignSystem_a75035;
+
+const {AnnouncementBar,NavBar,SectionHeader,Footer,Button}=NS;
+ReactDOM.createRoot(document.getElementById('root')).render(<div style={{width:1240,transform:'scale(.5645)',transformOrigin:'0 0'}}>
+ <AnnouncementBar items={['Free webinar this Sunday · Sun, 11 Oct, 11:00 AM – 1:00 PM IST','Data & GenAI Career Masterclass','Worth ₹4,999 — now FREE','Live with Puneet Nischal']}/>
+ <NavBar basePath="../../" active="tracks" links={[{id:'tracks',label:'Career tracks'},{id:'programme',label:'Programme+'},{id:'cert',label:'Certification'},{id:'trainers',label:'Trainers'},{id:'hire',label:'Hire from us'}]}/>
+ <div style={{background:'var(--surface-page)'}}><div style={{maxWidth:1216,margin:'0 auto',padding:'32px 24px 36px'}}><SectionHeader eyebrow="Career tracks" title={<>Six roles. One standard:<br/>can you do the work?</>} lead="Every track is built backwards from a real job: what the role does, what it ships and what hiring managers check." aside={<Button variant="outline" size="sm" icon="arrow-right">Compare all tracks</Button>}/></div></div>
+ <Footer basePath="../../" note="Issued by the AI4Impact Institute of Applied AI (IIAA) in academic collaboration with XYZ University." columns={[{title:'Career tracks',links:['Forward Deployed AI Engineer','Data & AI Platform Engineer']},{title:'Programme',links:['Programme+','Certification','Verify a certificate']},{title:'For employers',links:['Hire from us','Become a partner consultancy']}]} legal="© 2026 AI4Impact. Professional certificates are not academic degrees." legalRight="Learner data is handled in line with the DPDP Act 2023."/>
+</div>);
+</script></body></html>

@@ -1,0 +1,15 @@
+:root{
+--radius-xs:4px;--radius-sm:6px;--radius-md:8px;--radius-lg:10px;--radius-xl:14px;--radius-2xl:16px;--radius-3xl:20px;--radius-pill:999px;
+--radius-card:var(--radius-2xl);--radius-btn:var(--radius-md);--radius-btn-lg:var(--radius-lg);--radius-input:var(--radius-lg);
+--shadow-none:none;
+--shadow-float:0 30px 60px -20px rgba(11,22,40,.22),0 8px 20px -8px rgba(11,22,40,.10);
+--shadow-dark-float:0 30px 60px -16px rgba(0,0,0,.55);
+--grid-line:rgba(120,160,200,.07);
+--glow-teal:radial-gradient(60% 50% at 75% 35%,rgba(20,166,140,.22),transparent 70%);/* @kind color */
+--glow-warm:radial-gradient(40% 40% at 10% 85%,rgba(60,50,40,.35),transparent 70%);/* @kind color */
+--bg-hero:var(--navy-900);/* @kind color */
+--bg-hero-gradient:var(--glow-teal),var(--glow-warm),var(--bg-hero);/* @kind color */
+--ease-out:cubic-bezier(.2,.7,.2,1);/* @kind other */
+--dur-fast:120ms;/* @kind other */
+--dur-base:180ms;/* @kind other */
+}

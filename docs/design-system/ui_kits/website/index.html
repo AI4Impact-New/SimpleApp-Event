@@ -1,0 +1,35 @@
+<!-- @dsCard group="Website" viewport="1440x900" name="AI4Impact website" subtitle="Home + Career tracks, click-through" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>AI4Impact — Website UI kit</title><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;background:var(--surface-page);font-family:var(--font-body);-webkit-font-smoothing:antialiased}*{box-sizing:border-box}</style></head><body><div id="root"></div>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="Shared.jsx"></script>
+<script type="text/babel" src="HomeHero.jsx"></script>
+<script type="text/babel" src="HomeSections.jsx"></script>
+<script type="text/babel" src="CoursesScreen.jsx"></script>
+<script type="text/babel">
+const {AnnouncementBar,NavBar}=window.AI4ImpactDesignSystem_a75035;
+function App(){
+  const [page,setPage]=React.useState(localStorage.getItem('ai4-kit-page')||'home');
+  const pending=React.useRef(null);
+  React.useEffect(()=>{localStorage.setItem('ai4-kit-page',page);const id=pending.current;pending.current=null;if(id){const el=document.getElementById(id);if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-64,behavior:'smooth'});}else window.scrollTo(0,0);},[page]);
+  function go(id){
+    if(id==='home'||id==='tracks'){pending.current=null;if(id===page)window.scrollTo({top:0,behavior:'smooth'});else setPage(id);return;}
+    const onHome=['how','projects','cert'].includes(id);
+    if(id==='hire')return;
+    if(onHome&&page!=='home'){pending.current=id;setPage('home');return;}
+    const el=document.getElementById(id);if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-64,behavior:'smooth'});
+  }
+  return <div>
+    <AnnouncementBar items={AI4.announce} onCta={()=>go('guidance')}/>
+    <div style={{position:'sticky',top:0,zIndex:10}}><NavBar basePath="../../" links={AI4.links} active={page==='tracks'?'tracks':null} onNavigate={go} onGuidance={()=>go('guidance')}/></div>
+    {page==='home'?<HomeScreen onNavigate={go}/>:<CoursesScreen onNavigate={go}/>}
+    <SiteFooter/>
+  </div>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script></body></html>

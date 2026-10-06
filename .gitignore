@@ -94,3 +94,8 @@ coverage/
 .cache/
 .turbo/
 .vercel/
+
+# Design system: source screenshots (~10 MB) and the design tool's preview image stay local
+docs/design-system/uploads/
+docs/design-system/scratch/
+docs/design-system/.thumbnail

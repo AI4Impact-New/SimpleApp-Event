@@ -245,14 +245,14 @@ class Vote:
 class Material:
     """Learning material model."""
     id: str
-    event_id: Optional[str] = None
     title: str
     file_url: str
+    event_id: Optional[str] = None
     file_type: Optional[str] = None
     uploaded_by: Optional[str] = None
-    created_at: datetime = field(default_factory=datetime.utcnow)
     course_id: Optional[str] = None
     class_id: Optional[str] = None
+    created_at: datetime = field(default_factory=datetime.utcnow)
 
     def to_dict(self) -> dict:
         return {
@@ -446,8 +446,8 @@ class CourseClass:
     id: str
     course_id: str
     title: str
-    description: Optional[str] = None
     class_type: str  # recorded, online, in_person
+    description: Optional[str] = None
     duration_minutes: Optional[int] = None
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
@@ -533,9 +533,9 @@ class CertificateIssued:
     """Issued certificate (attendance or completion)."""
     id: str
     user_id: str
+    certificate_type: str  # attendance, completion
     course_id: Optional[str] = None
     event_id: Optional[str] = None
-    certificate_type: str  # attendance, completion
     provider: Optional[str] = None
     certificate_url: Optional[str] = None
     external_certificate_id: Optional[str] = None

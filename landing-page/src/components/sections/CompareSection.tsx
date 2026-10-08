@@ -1,7 +1,7 @@
 import { CompareTable, type CompareColumn } from "@/components/data/CompareTable";
 import { SectionHeader } from "@/components/navigation/SectionHeader";
-import { TRACKS } from "./content";
-import { Section } from "./Section";
+import { TRACKS } from "@/content/site";
+import { Section } from "@/components/layout/Section";
 
 type Row = {
   title: string;
@@ -33,9 +33,9 @@ const ROWS: Row[] = TRACKS.map((t) => ({
   fee: t.fee,
 }));
 
-export function CompareSection() {
+export function CompareSection({ pad }: { pad?: "md" | "sm" }) {
   return (
-    <Section id="compare" tone="alt">
+    <Section id="compare" tone="alt" pad={pad}>
       <SectionHeader eyebrow="Compare" title="All tracks at a glance." />
       <CompareTable className="mt-(--space-10)" columns={COLUMNS} rows={ROWS} />
     </Section>

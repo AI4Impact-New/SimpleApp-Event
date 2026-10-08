@@ -7,8 +7,9 @@ import { Eyebrow } from "@/components/core/Eyebrow";
 import { MetaGrid } from "@/components/data/MetaGrid";
 import { ChoiceOption } from "@/components/forms/ChoiceOption";
 import { SectionHeader } from "@/components/navigation/SectionHeader";
-import { FINDER_OPTIONS, TRACKS } from "./content";
-import { Section } from "./Section";
+import { FINDER_OPTIONS, TRACKS } from "@/content/site";
+import { Section } from "@/components/layout/Section";
+import { Card } from "@/components/core/Card";
 
 export function FinderSection() {
   const [selected, setSelected] = useState(0);
@@ -32,10 +33,7 @@ export function FinderSection() {
           ))}
         </div>
 
-        <div
-          aria-live="polite"
-          className="rounded-(--radius-3xl) border border-(--border-default) bg-(--surface-card) px-(--space-8) pt-(--space-8) pb-(--space-8) lg:mt-(--space-6)"
-        >
+        <Card aria-live="polite" className="p-(--space-8) lg:mt-(--space-6)">
           <Eyebrow>Your best-fit track</Eyebrow>
           <h3 className="mt-(--space-6) font-(family-name:--font-display) text-(length:--fs-h3) font-bold leading-(--lh-snug) tracking-(--ls-heading) text-(--text-strong)">
             {track.title}
@@ -65,7 +63,7 @@ export function FinderSection() {
               Still unsure? Talk to us
             </Button>
           </div>
-        </div>
+        </Card>
       </div>
     </Section>
   );

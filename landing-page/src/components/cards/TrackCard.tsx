@@ -2,6 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/core/Badge";
 import { Button } from "@/components/core/Button";
 import { MetaGrid, type MetaItem } from "@/components/data/MetaGrid";
+import { Card } from "@/components/core/Card";
 
 type TrackCardProps = {
   number: string;
@@ -29,7 +30,7 @@ export function TrackCard({
   programmeHref,
 }: TrackCardProps) {
   return (
-    <article className="flex min-w-0 flex-col rounded-(--radius-3xl) border border-(--border-default) bg-(--surface-card) p-(--card-pad)">
+    <Card as="article" className="flex min-w-0 flex-col p-(--card-pad)">
       <div className="flex min-h-(--space-6) items-center justify-between">
         <span className="text-(length:--fs-2xs) leading-none text-(--text-muted)">
           {number} · {family}
@@ -60,6 +61,6 @@ export function TrackCard({
           Programme+
         </Button>
       </div>
-    </article>
+    </Card>
   );
 }

@@ -3,7 +3,7 @@ import { Button } from "@/components/core/Button";
 import { Certificate } from "@/components/cards/Certificate";
 import { CheckCard } from "@/components/cards/CheckCard";
 import { SectionHeader } from "@/components/navigation/SectionHeader";
-import { Section } from "./Section";
+import { Section } from "@/components/layout/Section";
 
 export function CertificationSection() {
   return (

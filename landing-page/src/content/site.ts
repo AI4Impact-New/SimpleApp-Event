@@ -121,10 +121,10 @@ export const ANNOUNCEMENTS = [
 ];
 
 export const NAV_LINKS: NavLink[] = [
-  { label: "Career tracks", href: "#tracks" },
-  { label: "Programme+", href: "#programme" },
-  { label: "Certification", href: "#certification" },
-  { label: "Trainers", href: "#trainers" },
+  { label: "Career tracks", href: "/courses" },
+  { label: "Programme+", href: "/#programme" },
+  { label: "Certification", href: "/#certification" },
+  { label: "Trainers", href: "/#trainers" },
   { label: "Hire from us", href: "#" },
 ];
 
@@ -138,14 +138,14 @@ export const TRAINERS = [
 ];
 
 export const FOOTER_COLUMNS: FooterColumn[] = [
-  { title: "Career tracks", links: TRACKS.map((t) => ({ label: t.title, href: "#compare" })) },
+  { title: "Career tracks", links: TRACKS.map((t) => ({ label: t.title, href: "/courses#compare" })) },
   {
     title: "Programme",
     links: [
-      { label: "Programme+", href: "#programme" },
-      { label: "Certification", href: "#certification" },
+      { label: "Programme+", href: "/#programme" },
+      { label: "Certification", href: "/#certification" },
       { label: "Verify a certificate", href: "#" },
-      { label: "Trainers", href: "#trainers" },
+      { label: "Trainers", href: "/#trainers" },
     ],
   },
   {
@@ -156,3 +156,17 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
     ],
   },
 ];
+
+export const TRACK_FAMILIES: { family: Track["family"]; eyebrow: string; title: string }[] = [
+  { family: "Build", eyebrow: "Build tracks", title: "Ship AI systems into production." },
+  { family: "Data", eyebrow: "Data tracks", title: "Build the data that AI runs on." },
+  { family: "Product", eyebrow: "Product tracks", title: "Decide what gets built, and why." },
+];
+
+/** Shared footer copy. */
+export const FOOTER_COPY = {
+  tagline: "Learn AI. Build real systems. Create impact.",
+  note: "Issued by the AI4Impact Institute of Applied AI (IIAA) in academic collaboration with XYZ University. Final wording is subject to the approved collaboration language.",
+  legal: "© 2026 AI4Impact. Professional certificates are not academic degrees. Career support does not guarantee employment.",
+  legalRight: "Learner data is handled in line with the DPDP Act 2023.",
+};

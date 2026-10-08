@@ -4,7 +4,7 @@ import { Chip } from "@/components/core/Chip";
 import { CellGrid } from "@/components/cards/CellGrid";
 import { ModuleCell } from "@/components/cards/ModuleCell";
 import { SectionHeader } from "@/components/navigation/SectionHeader";
-import { Section } from "./Section";
+import { Section } from "@/components/layout/Section";
 
 const JOURNEY = ["Learn", "Build", "Intern", "Practise", "Apply", "Interview"];
 

@@ -7,16 +7,20 @@ const TONES = {
   glow: "bg-hero-glow",
 };
 
+export type SectionTone = keyof typeof TONES;
+
 type SectionProps = {
   id: string;
-  tone?: keyof typeof TONES;
+  tone?: SectionTone;
+  /** `sm` = 96px vertical padding for stacked listing bands (DS `pad={96}`). */
+  pad?: "md" | "sm";
   children: ReactNode;
 };
 
 /** Full-bleed band with the 1216px container and standard section padding. */
-export function Section({ id, tone = "page", children }: SectionProps) {
+export function Section({ id, tone = "page", pad = "md", children }: SectionProps) {
   return (
-    <section id={id} className={`py-(--space-20) lg:py-(--section-pad-y) ${TONES[tone]}`}>
+    <section id={id} className={`py-(--space-20) ${pad === "sm" ? "lg:py-(--space-24)" : "lg:py-(--section-pad-y)"} ${TONES[tone]}`}>
       <div className="mx-auto max-w-(--container) px-(--container-pad)">{children}</div>
     </section>
   );

@@ -6,8 +6,9 @@ import { Eyebrow } from "@/components/core/Eyebrow";
 import { Checkbox } from "@/components/forms/Checkbox";
 import { Input } from "@/components/forms/Input";
 import { Select } from "@/components/forms/Select";
-import { TRACKS } from "./content";
-import { Section } from "./Section";
+import { TRACKS } from "@/content/site";
+import { Section } from "@/components/layout/Section";
+import { Card } from "@/components/core/Card";
 
 const INTERESTS = ["Not sure yet — help me choose", ...TRACKS.map((t) => t.title)];
 
@@ -36,10 +37,7 @@ export function GuidanceSection() {
           </p>
         </div>
 
-        <div
-          aria-live="polite"
-          className="rounded-(--radius-3xl) border border-(--border-dark) bg-(--surface-dark-raised) px-(--space-8) py-(--space-8)"
-        >
+        <Card theme="dark" aria-live="polite" className="p-(--space-8)">
           {sent ? (
             <div className="flex flex-col gap-(--space-3) py-(--space-10)">
               <span className="font-(family-name:--font-display) text-(length:--fs-h4) font-semibold leading-(--lh-snug) text-(--text-on-dark)">
@@ -66,7 +64,7 @@ export function GuidanceSection() {
               </Button>
             </form>
           )}
-        </div>
+        </Card>
       </div>
     </Section>
   );

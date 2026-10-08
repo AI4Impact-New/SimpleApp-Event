@@ -49,7 +49,7 @@ Design system for **AI4Impact** — a career school for AI, data and product rol
 - Icons match **Lucide** (2px stroke, round caps, 24 grid): arrow-right, arrow-up-right, log-in, circle-play, hammer, messages-square, calendar-clock, database, check, chevron-right, chevron-down, circle-check. No icon files were supplied, so Lucide is linked from CDN (`unpkg.com/lucide@0.460.0`) and wrapped by the `Icon` component — **substitution flagged**. Production apps use the `lucide-react` package instead of the CDN.
 - Usage: 14–18px, navy on light feature cells, slate/navy inline in buttons, teal only for done-state checks inside dark artefacts. The announcement bar separates items with `·`, not icons. Never filled, never in coloured circles.
 - No emoji. `→` appears as a character only inside mock code/pipelines.
-- **Logo:** `assets/logo-light.png` (navy A4 tile + navy/teal wordmark, for light bg) and `assets/logo-dark.png` (white tile + white/teal wordmark, for navy bg), cropped from the screenshots. No vector logo was provided — please supply an SVG.
+- **Logo:** vector mark `assets/logo-mark-navy.svg` (navy tile, white A, amber dot — for light bg and the favicon) and `assets/logo-mark-white.svg` (white tile, navy A — for navy bg). The lockup is the mark followed by the wordmark set as live text: "AI4" in `--text-strong` / `--text-on-dark` and "Impact" in `--teal-600` / `--teal-400`, Space Grotesk 700 at `--fs-h5`, mark 32px, 12px gap. `assets/logo-light.png` and `logo-dark.png` are the older screenshot crops, kept only for `Logo.jsx`, the bundle and the specimen cards until the source project is updated.
 
 ---
 
@@ -89,3 +89,4 @@ Design system for **AI4Impact** — a career school for AI, data and product rol
 
 ## Decision log
 - **2026-10-07 — landing page.** Approved deviations from the source screenshots, now part of the system: the hero uses a tilted product mock (code window, pipeline chips, amber Capstone tag, mentor-review card) on the grid background; the projects section is a dark gradient band with code/pipeline/chart previews and `tag` chips. Everything else follows the restrained styling above.
+- **2026-10-08 — logo.** Supplied SVG mark (`logo-mark-navy.svg`, `logo-mark-white.svg`) replaces the PNG lockups in the landing page navbar, footer and favicon; wordmark is rendered as text next to the mark.

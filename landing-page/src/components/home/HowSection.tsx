@@ -3,7 +3,7 @@ import { CellGrid } from "@/components/cards/CellGrid";
 import { FeatureCell } from "@/components/cards/FeatureCell";
 import { StepCell } from "@/components/cards/StepCell";
 import { SectionHeader } from "@/components/navigation/SectionHeader";
-import { Section } from "./Section";
+import { Section } from "@/components/layout/Section";
 
 const STEPS = [
   { number: "01", title: "Choose", subtitle: "Pick a role, not a topic", description: "Six tracks, each mapped to a job you can apply for. A free call helps you choose." },

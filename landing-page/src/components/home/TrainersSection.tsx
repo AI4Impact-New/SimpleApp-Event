@@ -1,8 +1,8 @@
 import { Button } from "@/components/core/Button";
 import { TrainerCard } from "@/components/cards/TrainerCard";
 import { SectionHeader } from "@/components/navigation/SectionHeader";
-import { TRAINERS } from "./content";
-import { Section } from "./Section";
+import { TRAINERS } from "@/content/site";
+import { Section } from "@/components/layout/Section";
 
 export function TrainersSection() {
   return (

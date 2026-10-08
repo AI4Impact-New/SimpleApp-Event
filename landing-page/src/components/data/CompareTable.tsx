@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Card } from "@/components/core/Card";
 
 export type CompareColumn<Row> = {
   key: keyof Row & string;
@@ -20,9 +21,7 @@ export function CompareTable<Row extends Record<string, ReactNode>>({
   className = "",
 }: CompareTableProps<Row>) {
   return (
-    <div
-      className={`overflow-x-auto rounded-(--radius-3xl) border border-(--border-default) bg-(--surface-card) ${className}`}
-    >
+    <Card className={`overflow-x-auto ${className}`}>
       <table className="w-full border-collapse">
         <thead>
           <tr>
@@ -56,6 +55,6 @@ export function CompareTable<Row extends Record<string, ReactNode>>({
           ))}
         </tbody>
       </table>
-    </div>
+    </Card>
   );
 }

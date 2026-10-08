@@ -2,6 +2,7 @@ import { Database } from "lucide-react";
 import type { ReactNode } from "react";
 import { Chip } from "@/components/core/Chip";
 import { CodeWindow } from "./CodeWindow";
+import { Card } from "@/components/core/Card";
 
 type ProjectCardProps = {
   windowTitle: string;
@@ -15,7 +16,7 @@ type ProjectCardProps = {
 /** Dark project card: code-window preview, title, dataset line, deliverable tags. */
 export function ProjectCard({ windowTitle, preview, title, description, dataset, tags }: ProjectCardProps) {
   return (
-    <article className="flex min-w-0 flex-1 flex-col rounded-(--radius-3xl) border border-(--border-dark) bg-(--surface-dark-raised) p-(--space-4)">
+    <Card as="article" theme="dark" className="flex min-w-0 flex-1 flex-col p-(--space-4)">
       <CodeWindow title={windowTitle} className="min-h-(--space-30)">
         {preview}
       </CodeWindow>
@@ -38,6 +39,6 @@ export function ProjectCard({ windowTitle, preview, title, description, dataset,
           ))}
         </ul>
       </div>
-    </article>
+    </Card>
   );
 }

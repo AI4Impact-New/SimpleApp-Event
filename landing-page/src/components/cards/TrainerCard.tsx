@@ -1,4 +1,5 @@
 import { ChevronRight } from "lucide-react";
+import { Card } from "@/components/core/Card";
 
 type TrainerCardProps = {
   name: string;
@@ -9,7 +10,7 @@ type TrainerCardProps = {
 /** Trainer row: initials tile, name, one-line specialism. */
 export function TrainerCard({ name, initials, subtitle }: TrainerCardProps) {
   return (
-    <div className="flex min-w-0 items-center gap-(--space-4) rounded-(--radius-3xl) border border-(--border-default) bg-(--surface-card) py-(--space-3) pr-(--space-4) pl-(--space-3)">
+    <Card className="flex min-w-0 items-center gap-(--space-4) py-(--space-3) pr-(--space-4) pl-(--space-3)">
       <span className="flex size-(--space-10) shrink-0 items-center justify-center rounded-(--radius-lg) bg-(--slate-100) font-(family-name:--font-display) text-(length:--fs-2xs) font-semibold leading-none text-(--text-strong)">
         {initials}
       </span>
@@ -20,6 +21,6 @@ export function TrainerCard({ name, initials, subtitle }: TrainerCardProps) {
         <span className="truncate text-(length:--fs-2xs) leading-(--lh-snug) text-(--text-body)">{subtitle}</span>
       </span>
       <ChevronRight size={14} aria-hidden className="shrink-0 text-(--text-muted)" />
-    </div>
+    </Card>
   );
 }

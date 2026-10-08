@@ -1,7 +1,7 @@
 import { Chip } from "@/components/core/Chip";
 import { ProjectCard } from "@/components/cards/ProjectCard";
 import { SectionHeader } from "@/components/navigation/SectionHeader";
-import { Section } from "./Section";
+import { Section } from "@/components/layout/Section";
 
 function Key({ children }: { children: string }) {
   return <span className="text-(--teal-400)">{children}</span>;

@@ -17,6 +17,7 @@ type TrackCardProps = {
   programmeHref: string;
 };
 
+/** Spans 7 rows of the parent grid via subgrid so titles, dividers and buttons line up across cards in a row. */
 export function TrackCard({
   number,
   family,
@@ -30,7 +31,7 @@ export function TrackCard({
   programmeHref,
 }: TrackCardProps) {
   return (
-    <Card as="article" className="flex min-w-0 flex-col p-(--card-pad)">
+    <Card as="article" className="row-span-7 grid min-w-0 grid-rows-subgrid gap-y-0 p-(--card-pad)">
       <div className="flex min-h-(--space-6) items-center justify-between">
         <span className="text-(length:--fs-2xs) leading-none text-(--text-muted)">
           {number} · {family}
@@ -44,7 +45,7 @@ export function TrackCard({
         {description}
       </p>
       <MetaGrid items={meta} className="mt-(--space-5) border-t border-(--border-default) pt-(--space-5)" />
-      <div className="min-h-(--space-6) flex-1" />
+      <div className="min-h-(--space-6)" />
       <div className="flex flex-wrap gap-(--space-2)">
         <Button size="sm" icon={ArrowUpRight} href={exploreHref} className="flex-1">
           Explore course

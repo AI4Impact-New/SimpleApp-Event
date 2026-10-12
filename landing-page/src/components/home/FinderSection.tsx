@@ -34,7 +34,9 @@ export function FinderSection() {
         </div>
 
         <Card aria-live="polite" className="p-(--space-8) lg:mt-(--space-6)">
-          <Eyebrow>Your best-fit track</Eyebrow>
+          <Eyebrow tone="muted" line={false}>
+            Your best-fit track
+          </Eyebrow>
           <h3 className="mt-(--space-6) font-(family-name:--font-display) text-(length:--fs-h3) font-bold leading-(--lh-snug) tracking-(--ls-heading) text-(--text-strong)">
             {track.title}
           </h3>

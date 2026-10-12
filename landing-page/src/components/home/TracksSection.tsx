@@ -27,7 +27,7 @@ export function TracksSection() {
       <TrackGrid
         className="mt-(--space-10)"
         tracks={TRACKS}
-        links={{ explore: "/courses", enrol: "#guidance", prerequisites: "#finder", programme: "#programme" }}
+        links={{ explore: "/courses", enrol: "#guidance", prerequisites: "#finder", programme: "/programme-plus" }}
       />
     </Section>
   );

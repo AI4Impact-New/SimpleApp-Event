@@ -2,6 +2,8 @@
 export interface SectionHeaderProps {
   eyebrow?: string;
   eyebrowTone?: 'accent' | 'onDark' | 'promo' | 'muted';
+  /** passed to Eyebrow; default 'mono' */
+  eyebrowVariant?: 'sentence' | 'mono';
   title: React.ReactNode;
   lead?: React.ReactNode;
   theme?: 'light' | 'dark';

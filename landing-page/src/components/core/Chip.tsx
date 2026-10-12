@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
 
-type Variant = "outline" | "tag" | "code" | "code-amber";
+type Variant = "outline" | "dark" | "tag" | "code" | "code-amber";
 
 const VARIANTS: Record<Variant, string> = {
   outline:
     "h-(--h-btn-sm) px-(--space-4) rounded-(--radius-pill) border border-(--border-default) bg-(--surface-card) text-(--text-strong) text-(length:--fs-xs)",
+  dark:
+    "h-(--h-btn-sm) px-(--space-4) rounded-(--radius-pill) border border-(--border-dark-strong) bg-(--surface-dark-raised) text-(--text-on-dark) text-(length:--fs-xs)",
   tag: "h-(--space-6) px-(--space-2) rounded-(--radius-sm) bg-(--navy-600) text-(--text-on-dark) font-(family-name:--font-mono) text-(length:--fs-label)",
   code: "h-(--space-6) px-(--space-2) rounded-(--radius-xs) border border-(--teal-500) text-(--teal-400) font-(family-name:--font-mono) text-(length:--fs-label)",
   "code-amber":
@@ -16,7 +18,7 @@ type ChipProps = {
   children: ReactNode;
 };
 
-/** Outline journey chip on light; tag / code chips inside dark mock artefacts. */
+/** Outline journey chip on light (`outline`) or navy (`dark`); tag / code chips inside dark mock artefacts. */
 export function Chip({ variant = "outline", children }: ChipProps) {
   return (
     <span className={`inline-flex items-center whitespace-nowrap leading-none ${VARIANTS[variant]}`}>

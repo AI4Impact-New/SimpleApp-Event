@@ -8,15 +8,18 @@ type CheckCardProps = {
   items: string[];
   footer: string;
   highlighted?: boolean;
+  eyebrowVariant?: "sentence" | "mono";
 };
 
 /** Checklist card. Highlighted variant = 2px teal border. */
-export function CheckCard({ eyebrow, title, subtitle, items, footer, highlighted = false }: CheckCardProps) {
+export function CheckCard({ eyebrow, title, subtitle, items, footer, highlighted = false, eyebrowVariant }: CheckCardProps) {
   return (
     <div
       className={`flex min-w-0 flex-col rounded-(--radius-3xl) bg-(--surface-card) px-(--space-6) pt-(--space-6) pb-(--space-5) ${highlighted ? "border-2 border-(--border-accent)" : "border border-(--border-default)"}`}
     >
-      <Eyebrow tone="muted">{eyebrow}</Eyebrow>
+      <Eyebrow tone="muted" variant={eyebrowVariant} line={false}>
+        {eyebrow}
+      </Eyebrow>
       <h3 className="mt-(--space-3) font-(family-name:--font-display) text-(length:--fs-h4) font-bold leading-(--lh-snug) tracking-(--ls-heading) text-(--text-strong)">
         {title}
       </h3>

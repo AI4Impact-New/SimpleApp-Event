@@ -4,18 +4,19 @@ import { Eyebrow } from "@/components/core/Eyebrow";
 type SectionHeaderProps = {
   eyebrow?: string;
   eyebrowTone?: "accent" | "onDark" | "promo" | "muted";
+  eyebrowVariant?: "sentence" | "mono";
   title: ReactNode;
   lead?: ReactNode;
   theme?: "light" | "dark";
   aside?: ReactNode;
 };
 
-export function SectionHeader({ eyebrow, eyebrowTone, title, lead, theme = "light", aside }: SectionHeaderProps) {
+export function SectionHeader({ eyebrow, eyebrowTone, eyebrowVariant, title, lead, theme = "light", aside }: SectionHeaderProps) {
   const dark = theme === "dark";
   return (
     <div className="flex flex-col gap-(--space-6) md:flex-row md:items-end md:justify-between md:gap-(--space-8)">
       <div className="flex max-w-4xl flex-col">
-        {eyebrow ? <Eyebrow tone={eyebrowTone ?? (dark ? "onDark" : "accent")}>{eyebrow}</Eyebrow> : null}
+        {eyebrow ? <Eyebrow variant={eyebrowVariant} tone={eyebrowTone ?? (dark ? "onDark" : "accent")}>{eyebrow}</Eyebrow> : null}
         <h2
           className={`font-(family-name:--font-display) text-(length:--fs-h3) font-bold leading-(--lh-heading) tracking-(--ls-heading) md:text-(length:--fs-h2) ${eyebrow ? "mt-(--space-4)" : ""} ${dark ? "text-(--text-on-dark)" : "text-(--text-strong)"}`}
         >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/core/Button";
 import { Eyebrow } from "@/components/core/Eyebrow";
 import { Checkbox } from "@/components/forms/Checkbox";
@@ -12,7 +12,15 @@ import { Card } from "@/components/core/Card";
 
 const INTERESTS = ["Not sure yet — help me choose", ...TRACKS.map((t) => t.title)];
 
-export function GuidanceSection() {
+const DEFAULT_TITLE = (
+  <>
+    Not sure which
+    <br />
+    role fits you?
+  </>
+);
+
+export function GuidanceSection({ title = DEFAULT_TITLE }: { title?: ReactNode }) {
   const [consent, setConsent] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -27,9 +35,7 @@ export function GuidanceSection() {
         <div className="pt-(--space-2)">
           <Eyebrow tone="promo">Free career guidance</Eyebrow>
           <h2 className="mt-(--space-5) font-(family-name:--font-display) text-(length:--fs-h3) font-bold leading-(--lh-heading) tracking-(--ls-heading) text-(--text-on-dark) md:text-(length:--fs-h2)">
-            Not sure which
-            <br />
-            role fits you?
+            {title}
           </h2>
           <p className="mt-(--space-5) max-w-lg text-(length:--fs-lead) leading-(--lh-body) text-(--text-on-dark-body)">
             Book a free 20-minute call. We look at your background and tell you honestly which track fits, or if

@@ -11,7 +11,7 @@ function FinderSection({onNavigate}){
     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:40,marginTop:48,alignItems:'start'}}>
       <div style={{display:'flex',flexDirection:'column',gap:9}}><span style={{font:'400 14px/1 var(--font-body)',color:'var(--text-body)',marginBottom:10}}>What do you want to be doing in a year?</span>{AI4.finder.map((f,i)=><ChoiceOption key={f[0]} selected={i===sel} onClick={()=>setSel(i)}>{f[0]}</ChoiceOption>)}</div>
       <div style={{marginTop:24,background:'var(--surface-card)',border:'1px solid var(--border-default)',borderRadius:'var(--radius-3xl)',padding:'34px 32px 30px'}}>
-        <Eyebrow line={false}>Your best-fit track</Eyebrow>
+        <Eyebrow tone="muted" line={false}>Your best-fit track</Eyebrow>
         <h3 style={{margin:'26px 0 0',font:'700 28px/1.15 var(--font-display)',letterSpacing:'-0.02em',color:'var(--text-strong)'}}>{t.title}</h3>
         <p style={{margin:'20px 0 0',font:'400 16px/1.7 var(--font-body)',color:'var(--text-body)'}}>{t.desc}</p>
         <div style={{height:1,background:'var(--border-default)',margin:'26px 0'}}></div>

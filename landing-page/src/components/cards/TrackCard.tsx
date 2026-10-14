@@ -17,7 +17,7 @@ type TrackCardProps = {
   programmeHref: string;
 };
 
-/** Spans 7 rows of the parent grid via subgrid so titles, dividers and buttons line up across cards in a row. */
+/** Spans 7 rows of the parent grid via subgrid so titles, dividers and buttons line up across cards in a row. Hover: teal border + float shadow. */
 export function TrackCard({
   number,
   family,
@@ -31,9 +31,13 @@ export function TrackCard({
   programmeHref,
 }: TrackCardProps) {
   return (
-    <Card as="article" className="row-span-7 grid min-w-0 grid-rows-subgrid gap-y-0 p-(--card-pad)">
+    <Card
+      as="article"
+      interactive
+      className="row-span-7 grid min-w-0 grid-rows-subgrid gap-y-0 p-(--card-pad)"
+    >
       <div className="flex min-h-(--space-6) items-center justify-between">
-        <span className="text-(length:--fs-2xs) leading-none text-(--text-muted)">
+        <span className="font-(family-name:--font-mono) text-(length:--fs-2xs) leading-none text-(--text-body)">
           {number} · {family}
         </span>
         {badge ? <Badge>{badge}</Badge> : null}

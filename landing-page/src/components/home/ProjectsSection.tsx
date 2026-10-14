@@ -1,27 +1,8 @@
 import { Chip } from "@/components/core/Chip";
 import { ProjectCard } from "@/components/cards/ProjectCard";
+import { ApiPreview } from "@/components/cards/ProjectPreviews";
 import { SectionHeader } from "@/components/navigation/SectionHeader";
 import { Section } from "@/components/layout/Section";
-
-function Key({ children }: { children: string }) {
-  return <span className="text-(--teal-400)">{children}</span>;
-}
-
-const ApiPreview = (
-  <pre className="font-[inherit] whitespace-pre-wrap">
-    {"{\n  "}
-    <Key>&quot;transaction_id&quot;</Key>
-    {': "txn_8816",\n  '}
-    <Key>&quot;score&quot;</Key>
-    {": "}
-    <span className="text-(--amber-500)">0.87</span>
-    {",\n  "}
-    <Key>&quot;decision&quot;</Key>
-    {': "review",\n  '}
-    <Key>&quot;latency_ms&quot;</Key>
-    {": 41\n}"}
-  </pre>
-);
 
 const PipelinePreview = (
   <div className="py-(--space-6)">

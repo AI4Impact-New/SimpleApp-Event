@@ -13,7 +13,7 @@ const STEPS = [
   { number: "05", title: "Move", subtitle: "Optional Programme+", description: "Internship, mock interviews and recruiter recommendations." },
 ];
 
-const FEATURES = [
+export const LEARNING_FEATURES = [
   { icon: CirclePlay, title: "Recorded lessons", description: "Short, structured lessons you watch on your schedule." },
   { icon: Hammer, title: "Hands-on labs", description: "Every week ends with something built, not just watched." },
   { icon: MessagesSquare, title: "Weekly live clarification", description: "Bring blockers to a live session with your trainer." },
@@ -34,7 +34,7 @@ export function HowSection() {
         ))}
       </CellGrid>
       <CellGrid columns="sm:grid-cols-2 lg:grid-cols-4" className="mt-(--space-12)">
-        {FEATURES.map((f) => (
+        {LEARNING_FEATURES.map((f) => (
           <FeatureCell key={f.title} {...f} />
         ))}
       </CellGrid>

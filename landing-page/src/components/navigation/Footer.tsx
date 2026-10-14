@@ -30,7 +30,7 @@ export function Footer({ columns, tagline, note, legal, legalRight }: FooterProp
               <a
                 key={l.label}
                 href={l.href}
-                className="text-(length:--fs-xs) leading-(--lh-snug) text-(--text-on-dark-body) hover:text-(--text-on-dark)"
+                className="text-(length:--fs-xs) leading-(--lh-snug) text-(--text-on-dark-body) hover:text-(--text-on-dark) hover:no-underline"
               >
                 {l.label}
               </a>

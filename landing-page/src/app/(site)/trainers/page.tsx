@@ -31,7 +31,7 @@ export default function TrainersPage() {
         <ul className="grid gap-(--space-4) sm:grid-cols-2 lg:grid-cols-3">
           {TRAINERS.map((t, i) => (
             <li key={t.name} className="flex">
-              <TrainerProfileCard {...t} tile={TILE_CYCLE[i % TILE_CYCLE.length]} profileHref="#" />
+              <TrainerProfileCard {...t} tile={TILE_CYCLE[i % TILE_CYCLE.length]} profileHref={`/trainers/${t.slug}`} />
             </li>
           ))}
         </ul>

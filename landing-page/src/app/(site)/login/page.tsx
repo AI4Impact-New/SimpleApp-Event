@@ -1,5 +1,6 @@
 import { CalendarCheck, FolderGit2, MonitorPlay, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Eyebrow } from "@/components/core/Eyebrow";
 import { Section } from "@/components/layout/Section";
 import { LoginForm } from "@/components/login/LoginForm";
@@ -68,12 +69,12 @@ export default function LoginPage() {
           </div>
           <p className="text-(length:--fs-sm) leading-(--lh-body) text-(--text-body)">
             Not enrolled yet?{" "}
-            <a
+            <Link
               href="/courses"
               className="font-medium text-(--text-strong) underline decoration-1 underline-offset-4 hover:text-(--text-accent)"
             >
               Explore career tracks
-            </a>
+            </Link>
           </p>
         </div>
       </div>

@@ -217,3 +217,11 @@ Certified courses cannot be deleted: `DELETE /courses/{course_id}` returns 409 w
 ## Public landing-page hosting
 
 The public site is deployed separately at https://main.d3revsgd6isklp.amplifyapp.com from `landing-page/`. Its static export keeps Next.js 16 and serves generated HTML from `out/`. The admin app remains https://main.d16744ddqs159z.amplifyapp.com. Staff use Cognito for the admin app; public landing pages require no login. Future branding should use **AI4Impact**. The two apps share a repository and main branch with separate monorepo roots in `amplify.yml`.
+
+## Website marketing enquiries
+
+The landing career-guidance form now saves public enquiries without requiring a student account. `POST /enquiries` accepts `{request_id,name,email,phone,interest,consent,source_page,website}` and returns HTTP 202 `{id,message}`. Generate a UUID request_id and reuse it only for retries of the same details. Consent must be boolean true. The website field is a hidden honeypot and normally empty. The selected track stays a text interest, including “Not sure yet”, rather than an assumed catalog course UUID.
+
+App admins inspect leads through `GET /admin/enquiries?status=new&search=...&offset=0`, returning `{enquiries,total,offset,limit:50}`. `PATCH /admin/enquiries/{id}` accepts `{status,notes}`. Status values are `new`, `contacted`, `registered`, `dropped`. These are marketing follow-up states and never automatically create accounts or grant course enrollment. Public callers cannot list or update contact data. The existing student app interest API and registration flow remain separate.
+
+In the admin Course Enquiries screen, **Website enquiries** shows name, email, phone/WhatsApp, interest, contact consent/time/version, source, submission date and follow-up notes. **Student app interest** retains the existing signed-in course-interest workflow. No automated email, SMS, WhatsApp or appointment booking is configured by this form; authorized staff follow up manually. Stakeholders still need to choose named marketing users, enquiry-only role requirements, lead retention and the contact/booking process.

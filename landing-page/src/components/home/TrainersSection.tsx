@@ -19,7 +19,7 @@ export function TrainersSection() {
       />
       <div className="mt-(--space-10) grid gap-(--space-4) sm:grid-cols-2 lg:grid-cols-3">
         {TRAINERS.map((t) => (
-          <TrainerCard key={t.name} name={t.name} initials={t.initials} subtitle={t.subtitle} />
+          <TrainerCard key={t.name} name={t.name} initials={t.initials} subtitle={t.subtitle} href={`/trainers/${t.slug}`} />
         ))}
       </div>
       <div className="mt-(--space-6)">

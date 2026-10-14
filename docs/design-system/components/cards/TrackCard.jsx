@@ -5,7 +5,7 @@ import { MetaGrid } from '../data/MetaGrid.jsx';
 export function TrackCard({number,family,title,description,badge,meta=[],onExplore,onEnrol,style}){
   return <div style={{display:'flex',flexDirection:'column',background:'var(--surface-card)',border:'1px solid var(--border-default)',borderRadius:'var(--radius-3xl)',padding:24,boxSizing:'border-box',minWidth:0,...style}}>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',minHeight:22}}>
-      <span style={{font:'400 13px/1 var(--font-body)',color:'var(--text-muted)'}}>{family}</span>
+      <span style={{font:'400 13px/1 var(--font-mono)',color:'var(--text-body)'}}>{number?number+' · ':''}{family}</span>
       {badge?<Badge>{badge}</Badge>:null}
     </div>
     <h3 style={{margin:'14px 0 0',font:'700 20px/1.25 var(--font-display)',letterSpacing:'-0.02em',color:'var(--text-strong)',textWrap:'balance'}}>{title}</h3>

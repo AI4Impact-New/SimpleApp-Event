@@ -1,7 +1,8 @@
-/** Feature cell: neutral Lucide icon, display title, short description. Use inside CellGrid. */
+/** Feature cell: teal Lucide icon, optional index top-right, display title, short description. Use inside CellGrid. */
 export interface FeatureCellProps {
   /** Lucide name, e.g. "circle-play", "hammer", "messages-square", "calendar-clock" */
   icon: string;
+  number?: string;
   title: string;
   description: string;
   style?: React.CSSProperties;

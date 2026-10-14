@@ -1,3 +1,4 @@
+import type { MetaItem } from "@/components/data/MetaGrid";
 import type { Track } from "@/content/site";
 import { TrackCard } from "./TrackCard";
 
@@ -16,6 +17,16 @@ type TrackGridProps = {
   className?: string;
 };
 
+/** The four facts on a track card. */
+export function trackMeta(t: Track): MetaItem[] {
+  return [
+    { label: "Level", value: t.level },
+    { label: "Duration", value: t.duration },
+    { label: "Weekly", value: t.weekly },
+    { label: "Projects", value: t.projects },
+  ];
+}
+
 /** Responsive 1/2/3-column grid of TrackCards. */
 export function TrackGrid({ tracks, links, renumber = false, className = "" }: TrackGridProps) {
   return (
@@ -28,15 +39,10 @@ export function TrackGrid({ tracks, links, renumber = false, className = "" }: T
           title={t.title}
           description={t.description}
           badge={t.badge}
-          meta={[
-            { label: "Level", value: t.level },
-            { label: "Duration", value: t.duration },
-            { label: "Weekly", value: t.weekly },
-            { label: "Projects", value: t.projects },
-          ]}
-          exploreHref={links.explore}
+          meta={trackMeta(t)}
+          exploreHref={t.href ?? links.explore}
           enrolHref={links.enrol}
-          prerequisitesHref={links.prerequisites}
+          prerequisitesHref={t.href ? `${t.href}#prerequisites` : links.prerequisites}
           programmeHref={links.programme}
         />
       ))}

@@ -17,6 +17,8 @@ export type Track = {
   /** Finder card only; falls back to `level` when absent. */
   need?: string;
   roles?: string;
+  /** Course detail page; tracks without one link to the listing. */
+  href?: string;
 };
 
 export const TRACKS: Track[] = [
@@ -35,6 +37,7 @@ export const TRACKS: Track[] = [
     fee: "₹69,999",
     need: "Programming fundamentals in any language",
     roles: "Forward Deployed Engineer · Applied AI Engineer · AI Solutions Engineer",
+    href: "/courses/forward-deployed-ai-engineer",
   },
   {
     id: "dp",
@@ -48,6 +51,9 @@ export const TRACKS: Track[] = [
     projects: "4 incl. capstone",
     projectCount: 4,
     fee: "₹49,999",
+    need: "SQL and basic programming in any language",
+    roles: "Data Engineer · Analytics Engineer · Data Platform Engineer",
+    href: "/courses/data-ai-platform-engineer",
   },
   {
     id: "ds",
@@ -61,6 +67,9 @@ export const TRACKS: Track[] = [
     projects: "5 incl. capstone",
     projectCount: 5,
     fee: "₹39,999",
+    need: "Basic mathematics and spreadsheet familiarity",
+    roles: "Data Analyst · Business / Product Analyst · Junior Data Scientist",
+    href: "/courses/data-science-analytics-decision-intelligence",
   },
   {
     id: "ml",
@@ -74,6 +83,9 @@ export const TRACKS: Track[] = [
     projects: "4 incl. capstone",
     projectCount: 4,
     fee: "₹49,999",
+    need: "Python, SQL basics and statistics fundamentals",
+    roles: "Machine Learning Engineer · Applied Scientist · MLOps Engineer",
+    href: "/courses/applied-ai-machine-learning-engineer",
   },
   {
     id: "gen",
@@ -87,6 +99,9 @@ export const TRACKS: Track[] = [
     projects: "4 incl. capstone",
     projectCount: 4,
     fee: "₹44,999",
+    need: "Python and working with REST APIs",
+    roles: "GenAI Engineer · AI Agent Engineer · LLMOps Engineer",
+    href: "/courses/generative-ai-agentic-systems-engineer",
   },
   {
     id: "prod",
@@ -100,6 +115,9 @@ export const TRACKS: Track[] = [
     projects: "4 incl. capstone",
     projectCount: 4,
     fee: "₹34,999",
+    need: "Basic digital fluency — no coding required",
+    roles: "AI Product Manager · Automation Specialist · AI Business Analyst",
+    href: "/courses/ai-product-automation-builder",
   },
 ];
 
@@ -129,6 +147,8 @@ export const NAV_LINKS: NavLink[] = [
 ];
 
 export type Trainer = {
+  /** Profile route: /trainers/[slug]. */
+  slug: string;
   name: string;
   initials: string;
   /** Specialism line, shown on the home row and the trainer card. */
@@ -137,50 +157,64 @@ export type Trainer = {
   role?: string;
   /** e.g. "Lead trainer · DAPE"; codes are the short track names used in timetables. */
   assignments: string[];
+  /** Weekly clarification topics on the profile page. */
+  topics: string[];
 };
 
 export const TRAINERS: Trainer[] = [
   {
+    slug: "bhaskar-m",
     name: "Bhaskar M",
     initials: "BM",
     role: "Hands-on Azure Data Engineer & Analyst",
     subtitle: "Azure data engineering, Databricks and Microsoft Fabric",
     assignments: ["Lead trainer · DAPE"],
+    topics: ["Azure Data Factory", "Databricks", "Delta Lake", "Microsoft Fabric"],
   },
   {
+    slug: "kamal-k-naidu",
     name: "Kamal K Naidu",
     initials: "KN",
     subtitle: "Analytics, SQL, KPIs and business dashboards",
     assignments: ["Lead trainer · DSDI"],
+    topics: ["SQL for analysis", "KPI design", "Funnels and cohorts", "Power BI"],
   },
   {
+    slug: "shuja-l-p",
     name: "Shuja L P",
     initials: "SL",
     subtitle: "Data visualisation, storytelling and web visuals",
     assignments: ["Co-trainer · DSDI"],
+    topics: ["Chart selection", "Data storytelling", "Dashboard layout", "Web visuals"],
   },
   {
+    slug: "naveen-g",
     name: "Naveen G",
     initials: "NG",
     subtitle: "Statistics, machine learning and explainable models",
     assignments: ["Lead trainer · AIML", "Lead trainer · DSDI"],
+    topics: ["Statistics", "Model evaluation", "Feature engineering", "Explainability"],
   },
   {
+    slug: "puneet-nischal",
     name: "Puneet Nischal",
     initials: "PN",
     subtitle: "LLM applications, RAG and agentic systems",
     assignments: ["Lead trainer · GENAI", "Lead trainer · FDE"],
+    topics: ["RAG pipelines", "Prompt design", "Agent workflows", "LLM evaluation"],
   },
   {
+    slug: "ritesh",
     name: "Ritesh",
     initials: "R",
     subtitle: "Product discovery, PRDs, metrics and AI products",
     assignments: ["Lead trainer · APAB"],
+    topics: ["Product discovery", "Writing PRDs", "Product metrics", "AI automation"],
   },
 ];
 
 export const FOOTER_COLUMNS: FooterColumn[] = [
-  { title: "Career tracks", links: TRACKS.map((t) => ({ label: t.title, href: "/courses#compare" })) },
+  { title: "Career tracks", links: TRACKS.map((t) => ({ label: t.title, href: t.href ?? "/courses#compare" })) },
   {
     title: "Programme",
     links: [

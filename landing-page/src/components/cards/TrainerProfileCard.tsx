@@ -31,7 +31,7 @@ export function TrainerProfileCard({
   profileHref,
 }: TrainerProfileCardProps) {
   return (
-    <Card as="article" className="flex w-full min-w-0 flex-col p-(--space-6)">
+    <Card as="article" interactive className="flex w-full min-w-0 flex-col p-(--space-6)">
       <div className="flex items-center gap-(--space-5)">
         <span
           aria-hidden

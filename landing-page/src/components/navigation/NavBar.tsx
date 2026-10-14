@@ -24,7 +24,7 @@ export function NavBar({ links, guidanceHref, loginHref }: NavBarProps) {
         <div className="ml-auto flex items-center gap-(--space-4) lg:ml-0">
           <a
             href={guidanceHref}
-            className="hidden whitespace-nowrap text-(length:--fs-xs) font-medium leading-none text-(--text-strong) hover:text-(--text-strong) sm:inline"
+            className="hidden whitespace-nowrap text-(length:--fs-xs) font-medium leading-none text-(--text-strong) hover:text-(--text-strong) sm:inline lg:hidden xl:inline"
           >
             Free career guidance
           </a>

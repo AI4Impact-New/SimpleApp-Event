@@ -19,6 +19,8 @@ resource "aws_iam_group" "frontend_engineers" {
   name = "AI4ImpactFrontendEngineers"
 }
 resource "aws_iam_policy" "frontend_backend_read" {
+  # Restore environment visibility only after credentials leave function configuration.
+  depends_on  = [aws_lambda_function.events, aws_lambda_function.attendance, aws_lambda_function.polls, aws_lambda_function.materials, aws_lambda_function.analytics, aws_lambda_function.users, aws_lambda_function.courses, aws_lambda_function.learning, aws_lambda_function.notifications]
   name        = "AI4ImpactFrontendBackendRead"
   description = "Project API, Lambda, Cognito, logs, metrics and media configuration inspection"
   policy      = file("${path.module}/policies/frontend-backend-read.json")

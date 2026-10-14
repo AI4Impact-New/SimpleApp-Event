@@ -18,6 +18,10 @@ resource "aws_amplify_branch" "landing_main" {
   framework         = "Web"
   stage             = "PRODUCTION"
   enable_auto_build = true
+  environment_variables = {
+    AMPLIFY_BACKEND_APP_ID = aws_amplify_app.landing.id
+    USER_BRANCH            = "main"
+  }
 }
 output "landing_page_url" {
   value = "https://main.${aws_amplify_app.landing.default_domain}"

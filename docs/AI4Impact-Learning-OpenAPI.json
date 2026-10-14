@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "PiLearn Learning API",
+    "title": "AI4Impact Learning API",
     "version": "2026-10-14",
     "description": "New learning/admin endpoints. See frontend handover for existing course/event/profile endpoints and list response fields. Payments excluded. ID token required, Admins Cognito group for admin routes."
   },

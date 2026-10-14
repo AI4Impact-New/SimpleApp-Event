@@ -1,6 +1,6 @@
 # GitHub connection is completed with the consulting organization account in Amplify.
 resource "aws_amplify_app" "admin" {
-  name                 = "pilearn-admin"
+  name                 = "AI4Impact Admin"
   platform             = "WEB_COMPUTE"
   iam_service_role_arn = aws_iam_role.amplify_hosting.arn
   build_spec           = file("${path.module}/../../amplify.yml")

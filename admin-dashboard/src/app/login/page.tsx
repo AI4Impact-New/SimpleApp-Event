@@ -66,7 +66,7 @@ function LoginForm() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full p-8 sm:p-10 bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-primary-600">PiLearn</h1>
+          <h1 className="text-2xl font-bold text-primary-600">AI4Impact</h1>
           <p className="text-gray-500 mt-1">Admin Dashboard</p>
         </div>
 
@@ -105,7 +105,7 @@ export default function LoginPage() {
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="max-w-md w-full p-8 sm:p-10 bg-white rounded-xl shadow-sm border border-gray-200 text-center">
-          <h1 className="text-2xl font-bold text-primary-600">PiLearn</h1>
+          <h1 className="text-2xl font-bold text-primary-600">AI4Impact</h1>
           <p className="text-gray-500 mt-1">Admin Dashboard</p>
           <div className="mt-6 flex justify-center"><Loader2 size={24} className="animate-spin text-primary-500" /></div>
         </div>

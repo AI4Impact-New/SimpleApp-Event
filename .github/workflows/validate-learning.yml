@@ -1,4 +1,4 @@
-name: Validate PiLearn release
+name: Validate AI4Impact release
 on:
   pull_request:
   push:
@@ -44,6 +44,22 @@ jobs:
           terraform validate
       - name: Admin production build
         working-directory: admin-dashboard
+        run: |
+          npm ci
+          npm run build
+  landing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: landing-page/package-lock.json
+      - name: Landing static production build
+        working-directory: landing-page
+        env:
+          AMPLIFY_LANDING_EXPORT: 'true'
         run: |
           npm ci
           npm run build

@@ -43,7 +43,6 @@
         "lambda:GetFunctionConfiguration",
         "lambda:GetPolicy",
         "lambda:ListTags",
-        "lambda:ListVersionsByFunction",
         "lambda:ListAliases",
         "lambda:GetAlias",
         "lambda:GetFunctionConcurrency",

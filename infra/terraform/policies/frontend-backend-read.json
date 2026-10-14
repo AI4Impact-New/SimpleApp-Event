@@ -169,6 +169,32 @@
         "arn:aws:s3:::pilearn-certificates-767491588787",
         "arn:aws:s3:::pilearn-materials-767491588787-767491588787"
       ]
+    },
+    {
+      "Sid": "DiscoverProjectSchedules",
+      "Effect": "Allow",
+      "Action": [
+        "events:ListRules"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "ap-south-1"
+        }
+      }
+    },
+    {
+      "Sid": "ReadProjectNotificationSchedule",
+      "Effect": "Allow",
+      "Action": [
+        "events:DescribeRule",
+        "events:ListTargetsByRule"
+      ],
+      "Resource": [
+        "arn:aws:events:ap-south-1:767491588787:rule/pilearn-push-outbox"
+      ]
     }
   ]
 }

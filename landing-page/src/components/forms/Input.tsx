@@ -9,6 +9,9 @@ type InputProps = {
   autoComplete?: string;
   required?: boolean;
   theme?: "dark" | "light";
+  maxLength?: number;
+  minLength?: number;
+  pattern?: string;
 };
 
 export function Input({
@@ -20,6 +23,7 @@ export function Input({
   autoComplete,
   required,
   theme = "dark",
+  maxLength, minLength, pattern,
 }: InputProps) {
   const dark = theme === "dark";
   return (
@@ -36,6 +40,9 @@ export function Input({
         placeholder={placeholder}
         autoComplete={autoComplete}
         required={required}
+        maxLength={maxLength}
+        minLength={minLength}
+        pattern={pattern}
         className={`h-(--h-input) w-full rounded-(--radius-input) border px-(--space-3) text-(length:--fs-sm) leading-none outline-none transition-colors duration-(--dur-base) ease-(--ease-out) focus:border-(--teal-500) ${dark ? "border-(--border-dark-strong) bg-(--surface-dark-input) text-(--text-on-dark) placeholder:text-(--text-on-dark-muted)" : "border-(--border-default) bg-(--surface-card) text-(--text-strong) placeholder:text-(--text-muted)"}`}
       />
     </label>

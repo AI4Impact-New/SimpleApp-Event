@@ -1,24 +1,29 @@
 'use client';
 
+import { useState } from 'react';
+import { WebsiteEnquiries } from '@/components/learning/WebsiteEnquiries';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { api } from '@/services/api';
 import { Loader2, MessageCircle, User, BookOpen } from 'lucide-react';
 
 export default function CourseEnquiriesPage() {
+  const [tab, setTab] = useState<'website' | 'app'>('website');
   const { data: enquiries = [], isLoading } = useQuery({
     queryKey: ['course-enquiries'],
     queryFn: () => api.getCourseEnquiries({ status: 'interested' }),
+    enabled: tab === 'app',
   });
 
   return (
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">Course Enquiries</h1>
-        <p className="mt-1 text-sm text-gray-500">Users who marked &quot;Interested&quot; on courses. Contact them and update status to registered or dropped.</p>
+        <p className="mt-1 text-sm text-gray-500">Website leads and signed-in students who showed course interest.</p>
       </header>
 
-      {isLoading ? (
+      <nav aria-label="Enquiry sources" className="flex gap-5 border-b"><button className={`border-b-2 px-1 py-3 text-sm ${tab==='website'?'border-primary-600 text-primary-700':'border-transparent text-gray-500'}`} onClick={()=>setTab('website')}>Website enquiries</button><button className={`border-b-2 px-1 py-3 text-sm ${tab==='app'?'border-primary-600 text-primary-700':'border-transparent text-gray-500'}`} onClick={()=>setTab('app')}>Student app interest</button></nav>
+      {tab === 'website' ? <WebsiteEnquiries /> : isLoading ? (
         <div className="flex items-center justify-center rounded-xl border border-gray-200 bg-white py-20">
           <Loader2 className="animate-spin text-primary-500" size={32} />
         </div>

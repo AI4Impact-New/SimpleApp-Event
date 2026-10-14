@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState, useRef, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/core/Button";
 import { Eyebrow } from "@/components/core/Eyebrow";
 import { Checkbox } from "@/components/forms/Checkbox";
@@ -24,9 +24,31 @@ export function GuidanceSection({ title = DEFAULT_TITLE }: { title?: ReactNode }
   const [consent, setConsent] = useState(false);
   const [sent, setSent] = useState(false);
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [reference, setReference] = useState("");
+  const retry = useRef<{ signature: string; id: string } | null>(null);
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (consent) setSent(true);
+    if (!consent || busy) return;
+    const form = new FormData(e.currentTarget);
+    const details = { name: String(form.get("name") || "").trim(), email: String(form.get("email") || "").trim(), phone: String(form.get("phone") || "").trim(), interest: String(form.get("interest") || ""), consent, website: String(form.get("website") || ""), source_page: window.location.pathname };
+    const signature = JSON.stringify(details);
+    if (!retry.current || retry.current.signature !== signature) retry.current = { signature, id: crypto.randomUUID() };
+    setBusy(true); setError("");
+    try {
+      const api = process.env.NEXT_PUBLIC_API_URL || "https://ke8dywmhil.execute-api.ap-south-1.amazonaws.com";
+      const response = await fetch(`${api.replace(/\/$/, "")}/enquiries`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...details, request_id: retry.current.id }) });
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(response.status === 429 ? "Too many requests. Please wait a moment and try again." : result.error || "Your request was not saved. Please try again.");
+      }
+      const result = await response.json();
+      if (!result.id) throw new Error("Your request was not confirmed. Please try again.");
+      setReference(result.id); setSent(true);
+    } catch (cause) { setError(cause instanceof TypeError ? "Unable to connect. Check your connection and try again." : cause instanceof Error ? cause.message : "Please try again."); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -52,21 +74,24 @@ export function GuidanceSection({ title = DEFAULT_TITLE }: { title?: ReactNode }
               <span className="text-(length:--fs-sm) leading-(--lh-body) text-(--text-on-dark-body)">
                 We&apos;ll be in touch to schedule your call.
               </span>
+              <span className="break-all text-xs text-(--text-on-dark-muted)">Reference: {reference}</span>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-(--space-5)">
-              <Input label="Full name" name="name" autoComplete="name" required />
+              <Input label="Full name" name="name" autoComplete="name" required minLength={2} maxLength={120} />
               <div className="grid gap-(--space-4) sm:grid-cols-2">
-                <Input label="Email" name="email" type="email" autoComplete="email" required />
-                <Input label="Phone / WhatsApp" name="phone" type="tel" autoComplete="tel" defaultValue="+91" required />
+                <Input label="Email" name="email" type="email" autoComplete="email" required maxLength={254} />
+                <Input label="Phone / WhatsApp" name="phone" type="tel" autoComplete="tel" defaultValue="+91" required minLength={10} maxLength={30} pattern="[+0-9 ]{10,30}" />
               </div>
               <Select label="I'm interested in" name="interest" options={INTERESTS} />
               <Checkbox name="consent" checked={consent} onChange={setConsent}>
                 I agree to be contacted by AI4Impact via call, SMS, email and WhatsApp about courses and services. My
                 data is handled in line with the DPDP Act 2023.
               </Checkbox>
-              <Button variant="light" fullWidth disabled={!consent} type="submit">
-                Book free career guidance
+              <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
+              {error && <p role="alert" className="rounded-lg border border-red-400 bg-red-950/30 p-3 text-sm text-red-100">{error}</p>}
+              <Button variant="light" fullWidth disabled={!consent || busy} type="submit">
+                {busy ? "Saving your request…" : "Book free career guidance"}
               </Button>
             </form>
           )}

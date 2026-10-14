@@ -1,10 +1,12 @@
 resource "aws_amplify_app" "landing" {
-  name       = "AI4Impact Landing"
-  platform   = "WEB"
-  build_spec = file("${path.module}/../../amplify.yml")
+  name                 = "AI4Impact Landing"
+  platform             = "WEB"
+  iam_service_role_arn = aws_iam_role.amplify_hosting.arn
+  build_spec           = file("${path.module}/../../amplify.yml")
   environment_variables = {
     AMPLIFY_MONOREPO_APP_ROOT = "landing-page"
     AMPLIFY_LANDING_EXPORT    = "true"
+    AMPLIFY_DIFF_DEPLOY       = "false"
   }
   lifecycle {
     ignore_changes = [repository, access_token, oauth_token]

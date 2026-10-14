@@ -119,16 +119,16 @@ class CourseService:
         return self.repository.delete(course_id)
 
     def register_course(self, course_id: str, user_id: str, source: Optional[str] = None) -> bool:
-        """Register user for course (idempotent, status=registered)."""
+        """Register for published courses only (idempotent; payments excluded)."""
         existing = self.repository.get_by_id(course_id)
-        if not existing:
+        if not existing or existing.get("status") != "published":
             return False
         return self.repository.register(course_id, user_id, status="registered", source=source)
 
     def mark_interest(self, course_id: str, user_id: str, source: Optional[str] = "mobile") -> bool:
-        """Mark user as interested in course."""
+        """Mark user as interested in a published course."""
         existing = self.repository.get_by_id(course_id)
-        if not existing:
+        if not existing or existing.get("status") != "published":
             return False
         return self.repository.mark_interest(course_id, user_id, source=source)
 

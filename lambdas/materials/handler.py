@@ -171,6 +171,9 @@ def get_download_url(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     user_id = app_user.id if app_user else None
     
     service = MaterialService()
+    from shared.entitlements import enrolled, material_courses, is_admin
+    if not is_admin(event.get("user", {})) and any(not user_id or not enrolled(user_id, cid) for cid in material_courses(material_id)):
+        return create_error_response(403, "Registration is required to download course materials")
     result = service.get_download_url(material_id, user_id)
     
     if not result:

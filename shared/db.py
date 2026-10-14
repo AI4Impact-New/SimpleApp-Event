@@ -38,12 +38,14 @@ def init_connection_pool() -> pool.ThreadedConnectionPool:
         config = get_db_config()
         _connection_pool = pool.ThreadedConnectionPool(
             minconn=1,
-            maxconn=10,
+            maxconn=2,
             host=config["host"],
             port=config["port"],
             database=config["database"],
             user=config["user"],
             password=config["password"],
+            connect_timeout=5,
+            sslmode=os.environ.get("DB_SSLMODE", "require"),
         )
         logger.info("Database connection pool initialized")
     

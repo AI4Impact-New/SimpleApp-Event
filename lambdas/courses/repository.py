@@ -450,7 +450,7 @@ class CourseRepository(ICourseRepository):
 
         execute_query("DELETE FROM course_highlights WHERE course_id = %s", (course_id,), fetch="none")
         execute_query("DELETE FROM course_phases WHERE course_id = %s", (course_id,), fetch="none")
-        execute_query("DELETE FROM course_classes WHERE course_id = %s", (course_id,), fetch="none")
+
         execute_query("DELETE FROM course_benefits WHERE course_id = %s", (course_id,), fetch="none")
         execute_query("DELETE FROM course_audience WHERE course_id = %s", (course_id,), fetch="none")
         execute_query("DELETE FROM course_career_outcomes WHERE course_id = %s", (course_id,), fetch="none")
@@ -540,6 +540,7 @@ class CourseRepository(ICourseRepository):
 
         for i, cl in enumerate(children.get("classes") or []):
             cid = str(cl.get("id") or uuid.uuid4())
+            cl["id"] = cid
             start_ts = cl.get("start_time")
             end_ts = cl.get("end_time")
             if isinstance(start_ts, str) and "T" in start_ts:
@@ -558,6 +559,12 @@ class CourseRepository(ICourseRepository):
                 """
                 INSERT INTO course_classes (id, course_id, title, description, class_type, duration_minutes, start_time, end_time, zoom_link, location, recording_material_id, event_id, sort_order)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT(id) DO UPDATE SET title=excluded.title,description=excluded.description,
+                class_type=excluded.class_type,duration_minutes=excluded.duration_minutes,
+                start_time=excluded.start_time,end_time=excluded.end_time,zoom_link=excluded.zoom_link,
+                location=excluded.location,recording_material_id=excluded.recording_material_id,
+                event_id=excluded.event_id,sort_order=excluded.sort_order
+                WHERE course_classes.course_id=excluded.course_id
                 """,
                 (
                     cid,
@@ -577,6 +584,8 @@ class CourseRepository(ICourseRepository):
                 fetch="none",
             )
 
+        class_ids = [str(cl.get("id")) for cl in children.get("classes") or [] if cl.get("id")]
+        execute_query("DELETE FROM course_classes WHERE course_id=%s AND NOT (id = ANY(%s::uuid[]))", (course_id,class_ids),fetch="none")
         logger.info("Updated course: %s", course_id)
         return course
 
@@ -594,7 +603,10 @@ class CourseRepository(ICourseRepository):
                 """
                 INSERT INTO course_registrations (id, course_id, user_id, status, updated_at, source)
                 VALUES (%s, %s, %s, %s, NOW(), %s)
-                ON CONFLICT (course_id, user_id) DO UPDATE SET status = EXCLUDED.status, updated_at = NOW(), source = COALESCE(EXCLUDED.source, course_registrations.source)
+                ON CONFLICT (course_id, user_id) DO UPDATE SET status = CASE
+                    WHEN course_registrations.status = 'completed' THEN 'completed'
+                    WHEN EXCLUDED.status = 'interested' AND course_registrations.status IN ('registered','applied') THEN course_registrations.status
+                    ELSE EXCLUDED.status END, updated_at = NOW(), source = COALESCE(EXCLUDED.source, course_registrations.source)
                 """,
                 (reg_id, course_id, user_id, status, source),
                 fetch="none",

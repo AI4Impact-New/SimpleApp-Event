@@ -23,7 +23,7 @@ export default function CourseViewPage() {
   const { data: course, isLoading, error } = useCourse(id);
   const { data: registrations = [] } = useCourseRegistrations(id);
 
-  if (isLoading || !course) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center rounded-xl border border-gray-200 bg-white py-20 shadow-sm">
         <Loader2 className="animate-spin text-primary-500" size={32} aria-hidden />
@@ -31,7 +31,7 @@ export default function CourseViewPage() {
     );
   }
 
-  if (error) {
+  if (error || !course) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
         Failed to load course. <Link href="/dashboard/courses" className="underline">Back to courses</Link>
@@ -67,13 +67,13 @@ export default function CourseViewPage() {
           <span className="text-gray-300">/</span>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">{course.title}</h1>
         </div>
-        <Link
+        <div className="flex gap-2"><Link href={`/dashboard/learning/${id}`} className="inline-flex items-center rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700">Learning Studio</Link><Link
           href={`/dashboard/courses/${id}/edit`}
           className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-700 shadow-sm hover:bg-gray-50"
         >
           <Pencil size={18} />
           Edit
-        </Link>
+        </Link></div>
       </div>
 
       <div className="border-b border-gray-200">

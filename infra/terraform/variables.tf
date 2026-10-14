@@ -156,3 +156,15 @@ variable "db_password" {
     error_message = "db_password must be at least 8 characters and cannot contain /, @, \", or space (RDS requirement)."
   }
 }
+
+variable "expo_project_id" {
+  description = "App team's EAS project UUID. Native push registration is disabled until configured."
+  type        = string
+  default     = ""
+}
+variable "expo_push_access_token" {
+  description = "Optional Expo enhanced-push-security access token; provide through local secret variables."
+  type        = string
+  sensitive   = true
+  default     = ""
+}

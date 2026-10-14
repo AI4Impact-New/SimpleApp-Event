@@ -9,7 +9,7 @@ LAMBDAS_DIR="$REPO_ROOT/lambdas"
 SHARED_DIR="$REPO_ROOT/shared"
 REQUIREMENTS="$REPO_ROOT/requirements.txt"
 BUILD_DIR="$REPO_ROOT/build_lambda"
-LAMBDA_NAMES=(events attendance polls materials analytics users courses cognito_post_confirm)
+LAMBDA_NAMES=(events attendance polls materials analytics users courses cognito_post_confirm learning notifications)
 
 cd "$REPO_ROOT"
 
@@ -31,7 +31,7 @@ for name in "${LAMBDA_NAMES[@]}"; do
   rm -rf "$BUILD_DIR/$name"
   cp -r "$LAMBDAS_DIR/$name" "$BUILD_DIR/$name"
   # Zip contents of build dir (so zip root has shared/, events/, psycopg2/, etc.)
-  (cd "$BUILD_DIR" && zip -rq "$LAMBDAS_DIR/$name.zip" . -x "*.pyc" -x "__pycache__/*" -x "*__pycache__*")
+  python3 "$REPO_ROOT/scripts/zip_lambda.py" "$BUILD_DIR" "$LAMBDAS_DIR/$name.zip"
   # Remove this package so next iteration gets a clean copy
   rm -rf "$BUILD_DIR/$name"
 done

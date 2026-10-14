@@ -8,6 +8,11 @@ const rawUrl = process.env.NEXT_PUBLIC_API_URL || 'https://ggszk3v52a.execute-ap
 const API_URL = rawUrl.replace(/\/api\/?$/, '');
 
 class ApiService {
+  async learningRequest<T>(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', url: string, data?: unknown): Promise<T> {
+    const response = await this.client.request<T>({ method, url, data });
+    return response.data;
+  }
+
   private client: AxiosInstance;
   private clearLocalAuth() {
     if (typeof window === 'undefined') return;

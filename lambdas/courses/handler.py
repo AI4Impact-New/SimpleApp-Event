@@ -118,10 +118,13 @@ def list_courses(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     from courses.service import CourseService
     params = event.get("queryStringParameters") or {}
     service = CourseService()
-    status_filter = params.get("status")
+    from shared.entitlements import is_admin
+    from shared.auth import get_current_user
+    status_filter = params.get("status") if is_admin(get_current_user(event) or {}) else "published"
     full = (params.get("full") or "").lower() in ("1", "true", "yes")
     limit = _parse_limit(params.get("limit", 50))
     result = service.list_courses(limit=limit, status_filter=status_filter, full=full)
+    result = [_catalog_content(item, event) for item in result]
     return create_response(200, result)
 
 
@@ -135,7 +138,11 @@ def get_course(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     result = service.get_course(course_id)
     if not result:
         return create_error_response(404, "Course not found")
-    return create_response(200, result)
+    from shared.auth import get_current_user
+    from shared.entitlements import is_admin
+    if result.get("status") != "published" and not is_admin(get_current_user(event) or {}):
+        return create_error_response(404, "Course not found")
+    return create_response(200, _catalog_content(result, event))
 
 
 @require_role("admin")
@@ -234,7 +241,9 @@ def list_registrations(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     if not course_id:
         return create_error_response(400, "course_id is required")
     params = event.get("queryStringParameters") or {}
-    status_filter = params.get("status")
+    from shared.entitlements import is_admin
+    from shared.auth import get_current_user
+    status_filter = params.get("status") if is_admin(get_current_user(event) or {}) else "published"
     service = CourseService()
     result = service.list_registrations(course_id, status_filter=status_filter)
     return create_response(200, {"registrations": result})
@@ -270,6 +279,13 @@ def get_course_calendar_ics(event: Dict[str, Any], context: Any) -> Dict[str, An
     course_id = _extract_course_id(event)
     if not course_id:
         return create_error_response(400, "course_id is required")
+    from shared.auth import get_current_user
+    from shared.entitlements import enrolled, is_admin
+    from shared.user_repository import get_or_create_user_from_claims
+    claims = get_current_user(event) or {}
+    app_user = get_or_create_user_from_claims(claims) if claims else None
+    if not is_admin(claims) and (not app_user or not enrolled(app_user.id, course_id)):
+        return create_error_response(403, "Registration required for the class calendar")
     service = CourseService()
     ics_content = service.get_course_ics(course_id)
     if not ics_content:
@@ -308,3 +324,20 @@ def update_registration(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     if not success:
         return create_error_response(500, "Failed to update registration")
     return create_response(200, {"updated": True})
+
+
+def _catalog_content(item, event):
+    from shared.auth import get_current_user
+    from shared.entitlements import enrolled, is_admin
+    from shared.user_repository import get_or_create_user_from_claims
+    claims = get_current_user(event) or {}
+    staff = is_admin(claims)
+    if not staff and item.get("status") != "published":
+        return create_error_response(404, "Course not found")
+    user = get_or_create_user_from_claims(claims) if claims else None
+    unlocked = staff or (user and enrolled(user.id, item["id"]))
+    result = dict(item)
+    result["learning_access"] = bool(unlocked)
+    if not unlocked:
+        result["classes"] = [{**cl, "zoom_link":None, "recording_material_id":None} for cl in item.get("classes",[])]
+    return result

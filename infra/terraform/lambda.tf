@@ -7,7 +7,11 @@
 resource "null_resource" "build_lambdas" {
   # Run build before any Lambda is created/updated. Trigger changes when shared/engagement or trigger var changes.
   triggers = {
-    run_build = "${var.lambda_build_trigger}-${filemd5("${path.module}/../../shared/engagement/engagement_repository.py")}"
+    run_build = sha256(join("", concat(
+      [filesha256("${path.module}/../../requirements.txt")],
+      [for f in sort(fileset("${path.module}/../../shared", "**/*.py")) : filesha256("${path.module}/../../shared/${f}")],
+      [for f in sort(fileset("${path.module}/../../lambdas", "**/*.py")) : filesha256("${path.module}/../../lambdas/${f}")]
+    )))
   }
 
   provisioner "local-exec" {
@@ -34,11 +38,12 @@ locals {
 
 # Events Lambda
 resource "aws_lambda_function" "events" {
-  filename      = "../../lambdas/events.zip"
-  function_name = "${var.project_name}-events"
-  role          = aws_iam_role.lambda_exec.arn
-  runtime       = var.python_runtime
-  handler       = "events.handler.handler"
+  filename         = "../../lambdas/events.zip"
+  source_code_hash = filebase64sha256("../../lambdas/events.zip")
+  function_name    = "${var.project_name}-events"
+  role             = aws_iam_role.lambda_exec.arn
+  runtime          = var.python_runtime
+  handler          = "events.handler.handler"
 
   timeout     = var.lambda_timeout
   memory_size = var.lambda_memory_size
@@ -64,11 +69,12 @@ resource "aws_lambda_function" "events" {
 
 # Attendance Lambda
 resource "aws_lambda_function" "attendance" {
-  filename      = "../../lambdas/attendance.zip"
-  function_name = "${var.project_name}-attendance"
-  role          = aws_iam_role.lambda_exec.arn
-  runtime       = var.python_runtime
-  handler       = "attendance.handler.handler"
+  filename         = "../../lambdas/attendance.zip"
+  source_code_hash = filebase64sha256("../../lambdas/attendance.zip")
+  function_name    = "${var.project_name}-attendance"
+  role             = aws_iam_role.lambda_exec.arn
+  runtime          = var.python_runtime
+  handler          = "attendance.handler.handler"
 
   timeout     = var.lambda_timeout
   memory_size = var.lambda_memory_size
@@ -93,11 +99,12 @@ resource "aws_lambda_function" "attendance" {
 
 # Polls Lambda
 resource "aws_lambda_function" "polls" {
-  filename      = "../../lambdas/polls.zip"
-  function_name = "${var.project_name}-polls"
-  role          = aws_iam_role.lambda_exec.arn
-  runtime       = var.python_runtime
-  handler       = "polls.handler.handler"
+  filename         = "../../lambdas/polls.zip"
+  source_code_hash = filebase64sha256("../../lambdas/polls.zip")
+  function_name    = "${var.project_name}-polls"
+  role             = aws_iam_role.lambda_exec.arn
+  runtime          = var.python_runtime
+  handler          = "polls.handler.handler"
 
   timeout     = var.lambda_timeout
   memory_size = var.lambda_memory_size
@@ -122,11 +129,12 @@ resource "aws_lambda_function" "polls" {
 
 # Materials Lambda
 resource "aws_lambda_function" "materials" {
-  filename      = "../../lambdas/materials.zip"
-  function_name = "${var.project_name}-materials"
-  role          = aws_iam_role.lambda_exec.arn
-  runtime       = var.python_runtime
-  handler       = "materials.handler.handler"
+  filename         = "../../lambdas/materials.zip"
+  source_code_hash = filebase64sha256("../../lambdas/materials.zip")
+  function_name    = "${var.project_name}-materials"
+  role             = aws_iam_role.lambda_exec.arn
+  runtime          = var.python_runtime
+  handler          = "materials.handler.handler"
 
   timeout     = var.lambda_timeout
   memory_size = var.lambda_memory_size
@@ -152,11 +160,12 @@ resource "aws_lambda_function" "materials" {
 
 # Analytics Lambda
 resource "aws_lambda_function" "analytics" {
-  filename      = "../../lambdas/analytics.zip"
-  function_name = "${var.project_name}-analytics"
-  role          = aws_iam_role.lambda_exec.arn
-  runtime       = var.python_runtime
-  handler       = "analytics.handler.handler"
+  filename         = "../../lambdas/analytics.zip"
+  source_code_hash = filebase64sha256("../../lambdas/analytics.zip")
+  function_name    = "${var.project_name}-analytics"
+  role             = aws_iam_role.lambda_exec.arn
+  runtime          = var.python_runtime
+  handler          = "analytics.handler.handler"
 
   timeout     = var.lambda_timeout
   memory_size = var.lambda_memory_size
@@ -181,11 +190,12 @@ resource "aws_lambda_function" "analytics" {
 
 # Courses Lambda
 resource "aws_lambda_function" "courses" {
-  filename      = "../../lambdas/courses.zip"
-  function_name = "${var.project_name}-courses"
-  role          = aws_iam_role.lambda_exec.arn
-  runtime       = var.python_runtime
-  handler       = "courses.handler.handler"
+  filename         = "../../lambdas/courses.zip"
+  source_code_hash = filebase64sha256("../../lambdas/courses.zip")
+  function_name    = "${var.project_name}-courses"
+  role             = aws_iam_role.lambda_exec.arn
+  runtime          = var.python_runtime
+  handler          = "courses.handler.handler"
 
   timeout     = var.lambda_timeout
   memory_size = var.lambda_memory_size
@@ -210,11 +220,12 @@ resource "aws_lambda_function" "courses" {
 
 # Users Lambda (admin list + PUT /users/me profile upsert to RDS)
 resource "aws_lambda_function" "users" {
-  filename      = "../../lambdas/users.zip"
-  function_name = "${var.project_name}-users"
-  role          = aws_iam_role.lambda_exec.arn
-  runtime       = var.python_runtime
-  handler       = "users.handler.handler"
+  filename         = "../../lambdas/users.zip"
+  source_code_hash = filebase64sha256("../../lambdas/users.zip")
+  function_name    = "${var.project_name}-users"
+  role             = aws_iam_role.lambda_exec.arn
+  runtime          = var.python_runtime
+  handler          = "users.handler.handler"
 
   vpc_config {
     subnet_ids         = [aws_subnet.private["a"].id, aws_subnet.private["b"].id]
@@ -239,11 +250,12 @@ resource "aws_lambda_function" "users" {
 
 # Cognito Post-Confirmation Lambda (add new sign-ups to Students group)
 resource "aws_lambda_function" "cognito_post_confirm" {
-  filename      = "../../lambdas/cognito_post_confirm.zip"
-  function_name = "${var.project_name}-cognito-post-confirm"
-  role          = aws_iam_role.lambda_exec.arn
-  runtime       = var.python_runtime
-  handler       = "cognito_post_confirm.handler.handler"
+  filename         = "../../lambdas/cognito_post_confirm.zip"
+  source_code_hash = filebase64sha256("../../lambdas/cognito_post_confirm.zip")
+  function_name    = "${var.project_name}-cognito-post-confirm"
+  role             = aws_iam_role.lambda_exec.arn
+  runtime          = var.python_runtime
+  handler          = "cognito_post_confirm.handler.handler"
 
   timeout     = 10
   memory_size = 128

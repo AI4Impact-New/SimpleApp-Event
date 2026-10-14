@@ -27,11 +27,12 @@ export function Navbar({ user }: NavbarProps) {
           <span className="hidden sm:inline text-sm text-gray-500">Admin Dashboard</span>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600 px-3 py-1.5 rounded-lg bg-gray-50">
+          <div className="hidden min-w-0 items-center gap-2 text-sm text-gray-600 px-3 py-1.5 rounded-lg bg-gray-50 sm:flex">
             <User size={16} className="text-gray-500" />
-            <span>{currentUser?.email || user?.username || 'Admin'}</span>
+            <span className="max-w-[180px] truncate lg:max-w-[320px]">{currentUser?.email || user?.username || 'Admin'}</span>
           </div>
           <button
+            aria-label="Logout"
             onClick={handleLogout}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           >

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { isIdToken } from '@/utils/jwt';
+import { isIdToken, isAdminFromToken, decodeJwtPayload } from '@/utils/jwt';
 
 /**
  * Client guard: allow dashboard only when a valid ID token is present.
@@ -20,13 +20,14 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       router.replace('/login');
       return;
     }
-    if (!isIdToken(token)) {
+    const expires = Number(decodeJwtPayload(token)?.exp || 0);
+    if (!isIdToken(token) || expires * 1000 <= Date.now()) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_id_token');
       router.replace('/login');
       return;
     }
-    setAllowed(true);
+    setAllowed(isAdminFromToken(token));
   }, [router]);
 
   if (allowed === null) {
@@ -39,5 +40,6 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
+  if (!allowed) return <div className="mx-auto max-w-lg p-8"><h1 className="text-2xl font-semibold">Admin access required</h1><p className="mt-3 text-gray-600">Your account is signed in, but is not in the Admins group. Ask your administrator for access.</p><a className="mt-5 inline-block text-blue-700 underline" href="/login">Return to sign in</a></div>;
   return <>{children}</>;
 }

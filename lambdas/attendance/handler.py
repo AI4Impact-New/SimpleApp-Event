@@ -72,6 +72,11 @@ def join_event(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         return create_error_response(401, "User identity not found")
     
     service = AttendanceService()
+    from shared.db import execute_query
+    from shared.entitlements import enrolled, is_admin
+    linked = execute_query("SELECT course_id FROM events WHERE id=%s", (event_id,), fetch="one")
+    if linked and linked.get("course_id") and not is_admin(event.get("user", {})) and not enrolled(app_user.id, linked["course_id"]):
+        return create_error_response(403, "Registration is required to join course classes")
     result = service.join_event(user_id=app_user.id, event_id=event_id)
     
     if result is None:

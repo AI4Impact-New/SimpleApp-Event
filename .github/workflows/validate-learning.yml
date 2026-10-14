@@ -1,0 +1,49 @@
+name: Validate PiLearn release
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      AWS_EC2_METADATA_DISABLED: 'true'
+      AWS_DEFAULT_REGION: ap-south-1
+      NEXT_PUBLIC_API_URL: https://ke8dywmhil.execute-api.ap-south-1.amazonaws.com
+      NEXT_PUBLIC_COGNITO_USER_POOL_ID: ap-south-1_kc1sfOoEG
+      NEXT_PUBLIC_COGNITO_APP_CLIENT_ID: 40faprqjpcc6q0pfkdkcrd8p5v
+      NEXT_PUBLIC_COGNITO_REGION: ap-south-1
+      NEXT_PUBLIC_COGNITO_DOMAIN: pilearn-767491588787
+      NEXT_PUBLIC_APP_URL: https://main.d16744ddqs159z.amplifyapp.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: admin-dashboard/package-lock.json
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.16.6'
+      - name: Backend tests
+        run: |
+          python -m pip install -r requirements.txt pytest
+          python -m pytest tests -q
+      - name: Package Lambda functions
+        run: bash scripts/build_lambdas.sh
+      - name: Terraform validation
+        working-directory: infra/terraform
+        run: |
+          terraform fmt -check
+          terraform init -backend=false
+          terraform validate
+      - name: Admin production build
+        working-directory: admin-dashboard
+        run: |
+          npm ci
+          npm run build

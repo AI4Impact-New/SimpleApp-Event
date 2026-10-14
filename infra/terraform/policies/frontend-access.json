@@ -1,0 +1,104 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CreateAndDiscoverHosting",
+      "Effect": "Allow",
+      "Action": [
+        "amplify:CreateApp",
+        "amplify:ListApps"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "ap-south-1"
+        }
+      }
+    },
+    {
+      "Sid": "ManageFrontendHosting",
+      "Effect": "Allow",
+      "Action": [
+        "amplify:CreateBranch",
+        "amplify:CreateDeployment",
+        "amplify:CreateDomainAssociation",
+        "amplify:CreateWebHook",
+        "amplify:DeleteBranch",
+        "amplify:DeleteDomainAssociation",
+        "amplify:DeleteJob",
+        "amplify:DeleteWebHook",
+        "amplify:GenerateAccessLogs",
+        "amplify:GetApp",
+        "amplify:GetArtifactUrl",
+        "amplify:GetBranch",
+        "amplify:GetDomainAssociation",
+        "amplify:GetJob",
+        "amplify:GetWebHook",
+        "amplify:ListArtifacts",
+        "amplify:ListBranches",
+        "amplify:ListDomainAssociations",
+        "amplify:ListJobs",
+        "amplify:ListTagsForResource",
+        "amplify:ListWebHooks",
+        "amplify:StartDeployment",
+        "amplify:StartJob",
+        "amplify:StopJob",
+        "amplify:TagResource",
+        "amplify:UntagResource",
+        "amplify:UpdateApp",
+        "amplify:UpdateBranch",
+        "amplify:UpdateDomainAssociation",
+        "amplify:UpdateWebHook"
+      ],
+      "Resource": "arn:aws:amplify:ap-south-1:767491588787:apps/*"
+    },
+    {
+      "Sid": "SelectHostingRole",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetRole",
+        "iam:ListRolePolicies",
+        "iam:GetRolePolicy"
+      ],
+      "Resource": "arn:aws:iam::767491588787:role/AI4Impact-AmplifyHosting"
+    },
+    {
+      "Sid": "ListHostingRoles",
+      "Effect": "Allow",
+      "Action": "iam:ListRoles",
+      "Resource": "*"
+    },
+    {
+      "Sid": "PassOnlyHostingRole",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::767491588787:role/AI4Impact-AmplifyHosting",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "amplify.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "DiscoverLogs",
+      "Effect": "Allow",
+      "Action": "logs:DescribeLogGroups",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "ap-south-1"
+        }
+      }
+    },
+    {
+      "Sid": "ReadFrontendLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:DescribeLogStreams",
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents"
+      ],
+      "Resource": "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/amplify/*"
+    }
+  ]
+}

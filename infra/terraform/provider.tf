@@ -1,7 +1,7 @@
 # Terraform configuration for PayIntelli Academy backend
 
 terraform {
-  required_version = ">= 1.0"
+  required_version = ">= 1.10"
 
   required_providers {
     aws = {
@@ -10,14 +10,20 @@ terraform {
     }
   }
 
-  backend "local" {
-    path = "terraform.tfstate"
+  backend "s3" {
+    bucket       = "pilearn-terraform-state-767491588787"
+    key          = "pilearn/production/terraform.tfstate"
+    region       = "ap-south-1"
+    profile      = "jm"
+    encrypt      = true
+    use_lockfile = true
   }
 }
 
 provider "aws" {
-  region  = var.aws_region
-  profile = var.aws_profile
+  allowed_account_ids = ["767491588787"]
+  region              = var.aws_region
+  profile             = var.aws_profile
 
   default_tags {
     tags = {

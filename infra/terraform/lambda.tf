@@ -57,7 +57,7 @@ resource "aws_lambda_function" "events" {
 
   # VPC configuration for RDS access
   vpc_config {
-    subnet_ids         = ["${var.private_subnet_1_id}", "${var.private_subnet_2_id}"]
+    subnet_ids         = [aws_subnet.private["a"].id, aws_subnet.private["b"].id]
     security_group_ids = [aws_security_group.lambda.id]
   }
 }
@@ -86,7 +86,7 @@ resource "aws_lambda_function" "attendance" {
   ]
 
   vpc_config {
-    subnet_ids         = ["${var.private_subnet_1_id}", "${var.private_subnet_2_id}"]
+    subnet_ids         = [aws_subnet.private["a"].id, aws_subnet.private["b"].id]
     security_group_ids = [aws_security_group.lambda.id]
   }
 }
@@ -115,7 +115,7 @@ resource "aws_lambda_function" "polls" {
   ]
 
   vpc_config {
-    subnet_ids         = ["${var.private_subnet_1_id}", "${var.private_subnet_2_id}"]
+    subnet_ids         = [aws_subnet.private["a"].id, aws_subnet.private["b"].id]
     security_group_ids = [aws_security_group.lambda.id]
   }
 }
@@ -145,7 +145,7 @@ resource "aws_lambda_function" "materials" {
   ]
 
   vpc_config {
-    subnet_ids         = ["${var.private_subnet_1_id}", "${var.private_subnet_2_id}"]
+    subnet_ids         = [aws_subnet.private["a"].id, aws_subnet.private["b"].id]
     security_group_ids = [aws_security_group.lambda.id]
   }
 }
@@ -174,7 +174,7 @@ resource "aws_lambda_function" "analytics" {
   ]
 
   vpc_config {
-    subnet_ids         = ["${var.private_subnet_1_id}", "${var.private_subnet_2_id}"]
+    subnet_ids         = [aws_subnet.private["a"].id, aws_subnet.private["b"].id]
     security_group_ids = [aws_security_group.lambda.id]
   }
 }
@@ -203,7 +203,7 @@ resource "aws_lambda_function" "courses" {
   ]
 
   vpc_config {
-    subnet_ids         = ["${var.private_subnet_1_id}", "${var.private_subnet_2_id}"]
+    subnet_ids         = [aws_subnet.private["a"].id, aws_subnet.private["b"].id]
     security_group_ids = [aws_security_group.lambda.id]
   }
 }
@@ -216,6 +216,11 @@ resource "aws_lambda_function" "users" {
   runtime       = var.python_runtime
   handler       = "users.handler.handler"
 
+  vpc_config {
+    subnet_ids         = [aws_subnet.private["a"].id, aws_subnet.private["b"].id]
+    security_group_ids = [aws_security_group.lambda.id]
+  }
+
   timeout     = var.lambda_timeout
   memory_size = var.lambda_memory_size
 
@@ -227,7 +232,8 @@ resource "aws_lambda_function" "users" {
     null_resource.build_lambdas,
     aws_iam_role_policy_attachment.lambda_basic,
     aws_iam_role_policy_attachment.lambda_cognito,
-    aws_iam_role_policy_attachment.lambda_rds
+    aws_iam_role_policy_attachment.lambda_rds,
+    aws_iam_role_policy_attachment.lambda_vpc
   ]
 }
 

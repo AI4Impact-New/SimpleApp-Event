@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
     company VARCHAR(255),
     role VARCHAR(20) NOT NULL DEFAULT 'attendee' CHECK (role IN ('admin', 'organizer', 'attendee')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
+
     CONSTRAINT users_cognito_id_unique UNIQUE (cognito_id),
     CONSTRAINT users_email_unique UNIQUE (email)
 );
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS attendance (
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     event_id UUID REFERENCES events(id) ON DELETE CASCADE,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
+
     CONSTRAINT attendance_user_event_unique UNIQUE (user_id, event_id),
     CONSTRAINT attendance_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT attendance_event_fk FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
@@ -64,6 +64,24 @@ CREATE TABLE IF NOT EXISTS attendance (
 CREATE INDEX IF NOT EXISTS idx_attendance_user_id ON attendance(user_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_event_id ON attendance(event_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_timestamp ON attendance(timestamp);
+
+-- ============================================
+-- MATERIALS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS materials (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    file_url TEXT NOT NULL,
+    file_type VARCHAR(100),
+    uploaded_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT materials_event_fk FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_materials_event_id ON materials(event_id);
+CREATE INDEX IF NOT EXISTS idx_materials_uploaded_by ON materials(uploaded_by);
 
 -- ============================================
 -- POLLS TABLE
@@ -90,7 +108,7 @@ CREATE TABLE IF NOT EXISTS poll_options (
     poll_id UUID REFERENCES polls(id) ON DELETE CASCADE,
     option_text TEXT NOT NULL,
     is_correct BOOLEAN NOT NULL DEFAULT false,
-    
+
     CONSTRAINT poll_options_poll_fk FOREIGN KEY (poll_id) REFERENCES polls(id) ON DELETE CASCADE
 );
 
@@ -105,7 +123,7 @@ CREATE TABLE IF NOT EXISTS votes (
     option_id UUID REFERENCES poll_options(id) ON DELETE CASCADE,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
+
     CONSTRAINT votes_user_poll_unique UNIQUE (user_id, poll_id),
     CONSTRAINT votes_poll_fk FOREIGN KEY (poll_id) REFERENCES polls(id) ON DELETE CASCADE,
     CONSTRAINT votes_option_fk FOREIGN KEY (option_id) REFERENCES poll_options(id) ON DELETE CASCADE,
@@ -115,24 +133,6 @@ CREATE TABLE IF NOT EXISTS votes (
 CREATE INDEX IF NOT EXISTS idx_votes_poll_id ON votes(poll_id);
 CREATE INDEX IF NOT EXISTS idx_votes_option_id ON votes(option_id);
 CREATE INDEX IF NOT EXISTS idx_votes_user_id ON votes(user_id);
-
--- ============================================
--- MATERIALS TABLE
--- ============================================
-CREATE TABLE IF NOT EXISTS materials (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    event_id UUID REFERENCES events(id) ON DELETE CASCADE,
-    title VARCHAR(255) NOT NULL,
-    file_url TEXT NOT NULL,
-    file_type VARCHAR(100),
-    uploaded_by UUID REFERENCES users(id) ON DELETE SET NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
-    CONSTRAINT materials_event_fk FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS idx_materials_event_id ON materials(event_id);
-CREATE INDEX IF NOT EXISTS idx_materials_uploaded_by ON materials(uploaded_by);
 
 -- ============================================
 -- COURSES TABLE
@@ -262,6 +262,6 @@ CREATE INDEX IF NOT EXISTS idx_course_registrations_user_id ON course_registrati
 -- ============================================
 
 -- Insert default admin user (password should be set via Cognito)
--- INSERT INTO users (cognito_id, email, name, role) 
+-- INSERT INTO users (cognito_id, email, name, role)
 -- VALUES ('admin-cognito-sub', 'admin@payintelli.com', 'Admin User', 'admin')
 -- ON CONFLICT (cognito_id) DO NOTHING;

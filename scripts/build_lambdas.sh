@@ -18,9 +18,8 @@ cd "$REPO_ROOT"
 echo "Installing dependencies for Lambda (Linux, Python 3.12)..."
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
-pip install -q -r "$REQUIREMENTS" -t "$BUILD_DIR" --upgrade \
-  --platform manylinux2014_x86_64 --python-version 3.12 --only-binary=:all: 2>/dev/null || \
-  pip install -q -r "$REQUIREMENTS" -t "$BUILD_DIR" --upgrade
+python3 -m pip install -q -r "$REQUIREMENTS" -t "$BUILD_DIR" --upgrade \
+  --platform manylinux2014_x86_64 --python-version 3.12 --only-binary=:all:
 
 # Copy shared module into build dir
 echo "Adding shared module..."

@@ -29,7 +29,7 @@ resource "aws_cognito_user_pool" "main" {
     email_sending_account = "COGNITO_DEFAULT"
   }
 
-  # Post-confirmation: add new sign-ups to Students group (run scripts/create_cognito_groups.sh once so group exists)
+  # Post-confirmation: add new sign-ups to the Terraform-managed Students group.
   lambda_config {
     post_confirmation = aws_lambda_function.cognito_post_confirm.arn
   }
@@ -112,5 +112,13 @@ resource "aws_cognito_user_pool_domain" "main" {
   user_pool_id = aws_cognito_user_pool.main.id
 }
 
-# Cognito groups (Admins, Students) are created by scripts/create_cognito_groups.sh
-# so Terraform does not require cognito-idp:GetGroup/CreateGroup. Run after first apply.
+# Cognito groups are managed with the rest of the infrastructure.
+
+resource "aws_cognito_user_group" "admins" {
+  name         = "Admins"
+  user_pool_id = aws_cognito_user_pool.main.id
+}
+resource "aws_cognito_user_group" "students" {
+  name         = "Students"
+  user_pool_id = aws_cognito_user_pool.main.id
+}

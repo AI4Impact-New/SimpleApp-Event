@@ -4924,6 +4924,18 @@
                 }
               }
             }
+          },
+          "302": {
+            "description": "Browser requests accepting HTML redirect to the public verification page. API requests continue returning JSON.",
+            "headers": {
+              "Location": {
+                "description": "Public landing-page verification URL for this certificate",
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
           }
         },
         "security": [],

@@ -2,6 +2,8 @@
 import base64
 import json
 import logging
+import os
+from urllib.parse import quote
 from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
@@ -56,7 +58,14 @@ def handler(event, context):
         if method == "OPTIONS": return {"statusCode":204,"body":""}
         parts = path.strip("/").split("/")
         if len(parts)==3 and parts[0]=="certificates" and parts[2]=="verify" and method=="GET":
-            return _response(200,certificates.public_verify(parts[1]))
+            result = certificates.public_verify(parts[1])
+            headers = event.get("headers") or {}
+            accept = (headers.get("accept") or headers.get("Accept") or "").lower()
+            page = os.environ.get("CERTIFICATE_VERIFY_PAGE_URL")
+            if page and "text/html" in accept and "application/json" not in accept:
+                return {"statusCode":302,"headers":{"Location":page.rstrip("/") + "/?id=" + quote(result["id"],safe=""),
+                        "Cache-Control":"no-store","Access-Control-Allow-Origin":"*"},"body":""}
+            return _response(200,result)
         actor = _actor(event)
         if parts[0]=="admin": service.admin(actor)
         body = _body(event) if method in ("POST","PUT","PATCH") else {}

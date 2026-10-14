@@ -162,3 +162,21 @@ def test_course_with_issued_certificates_is_preserved(monkeypatch):
     monkeypatch.setattr(repository,'get_db_cursor',context)
     with pytest.raises(repository.CourseDeletionConflict): repository.CourseRepository().delete(UID)
     assert all('DELETE FROM courses' not in call.args[0] for call in cursor.execute.call_args_list)
+
+
+def test_public_browser_verify_redirect_keeps_id_and_no_login(monkeypatch):
+    monkeypatch.setattr(certificates, "public_verify", lambda cid: {"id": cid, "valid": True})
+    monkeypatch.setenv("CERTIFICATE_VERIFY_PAGE_URL", "https://site.example/verify")
+    result = handler.handler({"path": f"/certificates/{UID}/verify", "httpMethod": "GET", "headers": {"accept": "text/html,application/xhtml+xml"}}, None)
+    assert result["statusCode"] == 302
+    assert result["headers"]["Location"] == f"https://site.example/verify/?id={UID}"
+    assert result["headers"]["Cache-Control"] == "no-store"
+
+
+@pytest.mark.parametrize("accept", ["", "*/*", "application/json", "application/json,text/html"])
+def test_public_api_verify_remains_json(monkeypatch, accept):
+    monkeypatch.setattr(certificates, "public_verify", lambda cid: {"id": cid, "valid": True})
+    monkeypatch.setenv("CERTIFICATE_VERIFY_PAGE_URL", "https://site.example/verify")
+    result = handler.handler({"path": f"/certificates/{UID}/verify", "httpMethod": "GET", "headers": {"accept": accept}}, None)
+    assert result["statusCode"] == 200
+    assert json.loads(result["body"])["valid"] is True

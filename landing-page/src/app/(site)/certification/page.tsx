@@ -172,9 +172,9 @@ export default function CertificationPage() {
           theme="dark"
           eyebrow="Verification"
           title="Anyone can check it."
-          lead="Employers scan the QR code or enter the credential ID to see the learner, track, capstone, result and issue date."
+          lead="Employers scan the QR code or enter the credential ID to check the recipient, course, issuing organization and issue date."
           aside={
-            <Button variant="light" icon={ArrowRight} href="#">
+            <Button variant="light" icon={ArrowRight} href="/verify">
               Verify a certificate
             </Button>
           }

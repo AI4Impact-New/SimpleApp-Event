@@ -142,6 +142,7 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Career tracks", href: "/courses" },
   { label: "Programme+", href: "/programme-plus" },
   { label: "Certification", href: "/certification" },
+  { label: "Verify certificate", href: "/verify" },
   { label: "Trainers", href: "/trainers" },
   { label: "Hire from us", href: "/hire-from-us" },
 ];
@@ -220,7 +221,7 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
     links: [
       { label: "Programme+", href: "/programme-plus" },
       { label: "Certification", href: "/certification" },
-      { label: "Verify a certificate", href: "/certification#verify" },
+      { label: "Verify a certificate", href: "/verify" },
       { label: "Trainers", href: "/trainers" },
     ],
   },

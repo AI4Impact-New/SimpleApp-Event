@@ -13,3 +13,21 @@ resource "aws_iam_user_policy" "frontend_hosting" {
   user   = "GayathriAI4"
   policy = file("${path.module}/policies/frontend-access.json")
 }
+
+# Reusable inspection permissions for frontend integration and troubleshooting.
+resource "aws_iam_group" "frontend_engineers" {
+  name = "AI4ImpactFrontendEngineers"
+}
+resource "aws_iam_policy" "frontend_backend_read" {
+  name        = "AI4ImpactFrontendBackendRead"
+  description = "Project API, Lambda, Cognito, logs, metrics and media configuration inspection"
+  policy      = file("${path.module}/policies/frontend-backend-read.json")
+}
+resource "aws_iam_group_policy_attachment" "frontend_backend_read" {
+  group      = aws_iam_group.frontend_engineers.name
+  policy_arn = aws_iam_policy.frontend_backend_read.arn
+}
+resource "aws_iam_user_group_membership" "gayathri_frontend" {
+  user   = "GayathriAI4"
+  groups = [aws_iam_group.frontend_engineers.name]
+}

@@ -7,7 +7,7 @@ import logging
 import uuid
 from typing import Optional, List, Dict, Any
 
-from shared.db import execute_query
+from shared.db import execute_query, get_db_cursor
 from shared.models import (
     Course,
     CourseStatus,
@@ -54,6 +54,10 @@ def _row_to_course(row: dict) -> Course:
         updated_at=row.get("updated_at"),
         delivery_modes=delivery_modes if isinstance(delivery_modes, list) else [],
     )
+
+
+class CourseDeletionConflict(Exception):
+    """Issued qualifications keep their course reference and must not be deleted."""
 
 
 class CourseRepository(ICourseRepository):
@@ -590,8 +594,15 @@ class CourseRepository(ICourseRepository):
         return course
 
     def delete(self, course_id: str) -> bool:
-        """Delete course (CASCADE deletes children)."""
-        execute_query("DELETE FROM courses WHERE id = %s", (course_id,), fetch="none")
+        """Delete a course only when no issued certificates depend on it."""
+        with get_db_cursor() as cursor:
+            cursor.execute("SELECT id FROM courses WHERE id=%s FOR UPDATE", (course_id,))
+            if not cursor.fetchone():
+                return False
+            cursor.execute("SELECT 1 FROM certificates_issued WHERE course_id=%s LIMIT 1", (course_id,))
+            if cursor.fetchone():
+                raise CourseDeletionConflict("This course has issued certificates; set it to draft instead of deleting it")
+            cursor.execute("DELETE FROM courses WHERE id=%s", (course_id,))
         logger.info("Deleted course: %s", course_id)
         return True
 

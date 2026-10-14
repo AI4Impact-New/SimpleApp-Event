@@ -184,7 +184,11 @@ def delete_course(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     if not course_id:
         return create_error_response(400, "course_id is required")
     service = CourseService()
-    success = service.delete_course(course_id)
+    from courses.repository import CourseDeletionConflict
+    try:
+        success = service.delete_course(course_id)
+    except CourseDeletionConflict as error:
+        return create_error_response(409, str(error))
     if not success:
         return create_error_response(404, "Course not found")
     return create_response(200, {"message": "Course deleted"})

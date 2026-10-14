@@ -31,8 +31,9 @@ def issue(actor, course_id):
         if existing:
             if existing["revoked_at"]: raise ApiError(409,"This certificate was revoked; contact an administrator")
             return {"id":str(existing["id"]),"issued_at":existing["issued_at"],"download_path":f"/certificates/{existing['id']}/download"}
-        cur.execute("SELECT c.title,cc.provider FROM courses c LEFT JOIN course_certificate cc ON cc.course_id=c.id WHERE c.id=%s",(course_id,))
+        cur.execute("SELECT c.title,cc.provider FROM courses c LEFT JOIN course_certificate cc ON cc.course_id=c.id WHERE c.id=%s FOR SHARE OF c",(course_id,))
         course = cur.fetchone()
+        if not course: raise ApiError(404,"Course no longer exists")
         cur.execute("SELECT now() AS issued_at")
         issued_at = cur.fetchone()["issued_at"]
         cid = str(uuid.uuid4())

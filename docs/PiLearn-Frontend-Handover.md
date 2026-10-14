@@ -211,3 +211,5 @@ Production target: `https://main.d16744ddqs159z.amplifyapp.com`. This becomes li
 GitHub organization authorization must be completed by someone with access to the company repository. The backend is deployed independently using Terraform and additive database migrations. Terraform state is encrypted/versioned in S3 with locking; do not run `terraform init` against a different account/backend.
 
 The machine-readable new-learning API contract is in `PiLearn-Learning-OpenAPI.json`. Deployment and test results are recorded separately in the release report.
+
+Certified courses cannot be deleted: `DELETE /courses/{course_id}` returns 409 when issued certificates exist. Set the course status to `draft` to remove it from student discovery while preserving certificate verification history.

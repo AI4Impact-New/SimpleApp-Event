@@ -162,6 +162,7 @@ resource "aws_lambda_function" "learning" {
       VIDEO_KEY_ID                = aws_cloudfront_public_key.videos.id
       VIDEO_SIGNER_SECRET_ARN     = aws_secretsmanager_secret.video_signer.arn
       CERTIFICATE_VERIFY_BASE_URL = aws_apigatewayv2_api.main.api_endpoint
+      CERTIFICATE_VERIFY_PAGE_URL = "https://main.${aws_amplify_app.landing.default_domain}/verify"
       EXPO_PROJECT_ID             = var.expo_project_id
     })
   }

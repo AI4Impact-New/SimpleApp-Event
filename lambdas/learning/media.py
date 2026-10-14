@@ -93,7 +93,9 @@ def certificate_pdf(name, course, provider, certificate_id, issued_at):
     pdf.setFont("Helvetica", 11)
     pdf.drawCentredString(width / 2, 145, "Issued " + issued_at.strftime("%d %B %Y"))
     pdf.drawCentredString(width / 2, 122, "Certificate ID: " + certificate_id)
-    verify = os.environ["CERTIFICATE_VERIFY_BASE_URL"].rstrip("/") + "/certificates/" + certificate_id + "/verify"
+    page = os.environ.get("CERTIFICATE_VERIFY_PAGE_URL")
+    verify = (page.rstrip("/") + "/?id=" + quote(certificate_id, safe="")) if page else (
+        os.environ["CERTIFICATE_VERIFY_BASE_URL"].rstrip("/") + "/certificates/" + certificate_id + "/verify")
     qr = QrCodeWidget(verify)
     bounds = qr.getBounds()
     drawing = Drawing(65, 65, transform=[65 / (bounds[2] - bounds[0]), 0, 0, 65 / (bounds[3] - bounds[1]), 0, 0])

@@ -13,3 +13,23 @@ resource "aws_iam_user_policy" "frontend_hosting" {
   user   = "GayathriAI4"
   policy = file("${path.module}/policies/frontend-access.json")
 }
+
+# Reusable inspection permissions for frontend integration and troubleshooting.
+resource "aws_iam_group" "frontend_engineers" {
+  name = "AI4ImpactFrontendEngineers"
+}
+resource "aws_iam_policy" "frontend_backend_read" {
+  # Restore environment visibility only after credentials leave function configuration.
+  depends_on  = [aws_lambda_function.events, aws_lambda_function.attendance, aws_lambda_function.polls, aws_lambda_function.materials, aws_lambda_function.analytics, aws_lambda_function.users, aws_lambda_function.courses, aws_lambda_function.learning, aws_lambda_function.notifications]
+  name        = "AI4ImpactFrontendBackendRead"
+  description = "Project API, Lambda, Cognito, logs, metrics and media configuration inspection"
+  policy      = file("${path.module}/policies/frontend-backend-read.json")
+}
+resource "aws_iam_group_policy_attachment" "frontend_backend_read" {
+  group      = aws_iam_group.frontend_engineers.name
+  policy_arn = aws_iam_policy.frontend_backend_read.arn
+}
+resource "aws_iam_user_group_membership" "gayathri_frontend" {
+  user   = "GayathriAI4"
+  groups = [aws_iam_group.frontend_engineers.name]
+}

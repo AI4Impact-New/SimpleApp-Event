@@ -1,0 +1,200 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DiscoverProjectServices",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:ListFunctions",
+        "cognito-idp:ListUserPools",
+        "logs:DescribeLogGroups",
+        "cloudwatch:ListMetrics",
+        "cloudwatch:GetMetricData",
+        "cloudwatch:GetMetricStatistics",
+        "cloudwatch:DescribeAlarms",
+        "cloudwatch:DescribeAlarmHistory"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "ap-south-1"
+        }
+      }
+    },
+    {
+      "Sid": "ReadProjectApi",
+      "Effect": "Allow",
+      "Action": [
+        "apigateway:GET"
+      ],
+      "Resource": [
+        "arn:aws:apigateway:ap-south-1::/apis",
+        "arn:aws:apigateway:ap-south-1::/apis/ke8dywmhil",
+        "arn:aws:apigateway:ap-south-1::/apis/ke8dywmhil/*"
+      ]
+    },
+    {
+      "Sid": "ReadProjectLambdaCodeAndConfiguration",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:GetFunction",
+        "lambda:GetFunctionConfiguration",
+        "lambda:GetPolicy",
+        "lambda:ListTags",
+        "lambda:ListAliases",
+        "lambda:GetAlias",
+        "lambda:GetFunctionConcurrency",
+        "lambda:GetRuntimeManagementConfig",
+        "lambda:ListFunctionEventInvokeConfigs",
+        "lambda:GetFunctionEventInvokeConfig"
+      ],
+      "Resource": [
+        "arn:aws:lambda:ap-south-1:767491588787:function:pilearn-learning",
+        "arn:aws:lambda:ap-south-1:767491588787:function:pilearn-materials",
+        "arn:aws:lambda:ap-south-1:767491588787:function:pilearn-users",
+        "arn:aws:lambda:ap-south-1:767491588787:function:pilearn-attendance",
+        "arn:aws:lambda:ap-south-1:767491588787:function:pilearn-analytics",
+        "arn:aws:lambda:ap-south-1:767491588787:function:pilearn-notifications",
+        "arn:aws:lambda:ap-south-1:767491588787:function:pilearn-polls",
+        "arn:aws:lambda:ap-south-1:767491588787:function:pilearn-courses",
+        "arn:aws:lambda:ap-south-1:767491588787:function:pilearn-events",
+        "arn:aws:lambda:ap-south-1:767491588787:function:pilearn-cognito-post-confirm"
+      ]
+    },
+    {
+      "Sid": "ReadProjectAuthenticationSettings",
+      "Effect": "Allow",
+      "Action": [
+        "cognito-idp:DescribeUserPool",
+        "cognito-idp:DescribeUserPoolClient",
+        "cognito-idp:ListUserPoolClients",
+        "cognito-idp:GetUserPoolMfaConfig",
+        "cognito-idp:GetUICustomization",
+        "cognito-idp:ListIdentityProviders",
+        "cognito-idp:DescribeIdentityProvider",
+        "cognito-idp:ListGroups",
+        "cognito-idp:GetGroup",
+        "cognito-idp:ListTagsForResource"
+      ],
+      "Resource": [
+        "arn:aws:cognito-idp:ap-south-1:767491588787:userpool/ap-south-1_kc1sfOoEG"
+      ]
+    },
+    {
+      "Sid": "ReadHostedLoginDomain",
+      "Effect": "Allow",
+      "Action": [
+        "cognito-idp:DescribeUserPoolDomain"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "ap-south-1"
+        }
+      }
+    },
+    {
+      "Sid": "ReadProjectRuntimeLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:DescribeLogStreams",
+        "logs:FilterLogEvents",
+        "logs:StartQuery",
+        "logs:GetQueryResults",
+        "logs:GetLogEvents"
+      ],
+      "Resource": [
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-learning",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-materials",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-users",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-attendance",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-analytics",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-notifications",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-polls",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-courses",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-events",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-cognito-post-confirm",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/apigateway/pilearn",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-learning:*",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-materials:*",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-users:*",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-attendance:*",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-analytics:*",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-notifications:*",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-polls:*",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-courses:*",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-events:*",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-cognito-post-confirm:*",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/apigateway/pilearn:*"
+      ]
+    },
+    {
+      "Sid": "DiscoverMediaDelivery",
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:ListDistributions"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "ReadProjectVideoDistribution",
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:GetDistribution",
+        "cloudfront:GetDistributionConfig",
+        "cloudfront:ListTagsForResource"
+      ],
+      "Resource": [
+        "arn:aws:cloudfront::767491588787:distribution/EYNLYF9QVLVRP"
+      ]
+    },
+    {
+      "Sid": "ReadMediaBucketIntegrationSettings",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetBucketLocation",
+        "s3:GetBucketCORS",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:GetEncryptionConfiguration",
+        "s3:GetBucketVersioning"
+      ],
+      "Resource": [
+        "arn:aws:s3:::pilearn-videos-767491588787",
+        "arn:aws:s3:::pilearn-certificates-767491588787",
+        "arn:aws:s3:::pilearn-materials-767491588787-767491588787"
+      ]
+    },
+    {
+      "Sid": "DiscoverProjectSchedules",
+      "Effect": "Allow",
+      "Action": [
+        "events:ListRules"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "ap-south-1"
+        }
+      }
+    },
+    {
+      "Sid": "ReadProjectNotificationSchedule",
+      "Effect": "Allow",
+      "Action": [
+        "events:DescribeRule",
+        "events:ListTargetsByRule"
+      ],
+      "Resource": [
+        "arn:aws:events:ap-south-1:767491588787:rule/pilearn-push-outbox"
+      ]
+    }
+  ]
+}

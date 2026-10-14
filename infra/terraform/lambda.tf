@@ -28,7 +28,7 @@ locals {
     DB_PORT               = "5432"
     DB_NAME               = var.db_name
     DB_USER               = var.db_username
-    DB_PASSWORD           = var.db_password
+    DB_SECRET_ARN         = aws_secretsmanager_secret.db_credentials.arn
     S3_MATERIALS_BUCKET   = aws_s3_bucket.materials.id
     COGNITO_USER_POOL_ID  = aws_cognito_user_pool.main.id
     COGNITO_APP_CLIENT_ID = aws_cognito_user_pool_client.main.id

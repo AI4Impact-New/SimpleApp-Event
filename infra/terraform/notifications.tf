@@ -25,7 +25,7 @@ resource "aws_lambda_function" "notifications" {
     security_group_ids = [aws_security_group.lambda.id]
   }
   environment { variables = merge(local.lambda_env, { EXPO_ACCESS_TOKEN = var.expo_push_access_token, EXPO_PROJECT_ID = var.expo_project_id }) }
-  depends_on = [aws_iam_role_policy_attachment.notifications_vpc, aws_cloudwatch_log_group.notifications, null_resource.build_lambdas]
+  depends_on = [aws_iam_role_policy_attachment.notifications_db_secret, aws_iam_role_policy_attachment.notifications_vpc, aws_cloudwatch_log_group.notifications, null_resource.build_lambdas]
 }
 resource "aws_cloudwatch_event_rule" "notifications" {
   name                = "${var.project_name}-push-outbox"
@@ -42,4 +42,9 @@ resource "aws_lambda_permission" "notifications_schedule" {
   function_name = aws_lambda_function.notifications.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.notifications.arn
+}
+
+resource "aws_iam_role_policy_attachment" "notifications_db_secret" {
+  role       = aws_iam_role.notifications.name
+  policy_arn = aws_iam_policy.lambda_secrets.arn
 }

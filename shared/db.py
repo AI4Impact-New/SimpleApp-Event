@@ -6,6 +6,10 @@ Uses psycopg2 with connection pooling for Lambda execution.
 import os
 import json
 import logging
+import time
+
+import boto3
+from botocore.config import Config
 from contextlib import contextmanager
 from typing import Generator, Any, Dict, List, Optional
 
@@ -19,14 +23,42 @@ logger = logging.getLogger(__name__)
 _connection_pool: Optional[pool.ThreadedConnectionPool] = None
 
 
+_secret_client = None
+_password_cache = None
+
+
+def _database_password() -> str:
+    """Retrieve production credentials without exposing them in Lambda configuration."""
+    global _secret_client, _password_cache
+    secret_arn = os.environ.get("DB_SECRET_ARN")
+    if not secret_arn:
+        # Local development and compatibility during the code/config rollout.
+        return os.environ.get("DB_PASSWORD", "")
+    now = time.monotonic()
+    if _password_cache and _password_cache[0] == secret_arn and now < _password_cache[2]:
+        return _password_cache[1]
+    if _secret_client is None:
+        _secret_client = boto3.client(
+            "secretsmanager",
+            config=Config(connect_timeout=3, read_timeout=5,
+                          retries={"mode": "standard", "total_max_attempts": 3}),
+        )
+    value = json.loads(_secret_client.get_secret_value(SecretId=secret_arn)["SecretString"])
+    password = value.get("password")
+    if not isinstance(password, str) or not password:
+        raise ValueError("Database credentials are missing a password")
+    _password_cache = (secret_arn, password, now + 300)
+    return password
+
+
 def get_db_config() -> Dict[str, str]:
-    """Get database configuration from environment variables."""
+    """Read connection settings and resolve the password from Secrets Manager."""
     return {
         "host": os.environ.get("DB_HOST", "localhost"),
         "port": os.environ.get("DB_PORT", "5432"),
         "database": os.environ.get("DB_NAME", "payintelli"),
         "user": os.environ.get("DB_USER", "postgres"),
-        "password": os.environ.get("DB_PASSWORD", ""),
+        "password": _database_password(),
     }
 
 

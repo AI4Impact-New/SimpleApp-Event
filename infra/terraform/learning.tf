@@ -165,7 +165,7 @@ resource "aws_lambda_function" "learning" {
       EXPO_PROJECT_ID             = var.expo_project_id
     })
   }
-  depends_on = [aws_iam_role_policy.learning_runtime, aws_iam_role_policy_attachment.learning_vpc, aws_cloudwatch_log_group.learning, null_resource.build_lambdas, aws_secretsmanager_secret_version.video_signer]
+  depends_on = [aws_iam_role_policy_attachment.learning_db_secret, aws_iam_role_policy.learning_runtime, aws_iam_role_policy_attachment.learning_vpc, aws_cloudwatch_log_group.learning, null_resource.build_lambdas, aws_secretsmanager_secret_version.video_signer]
 }
 resource "aws_apigatewayv2_integration" "learning" {
   api_id                 = aws_apigatewayv2_api.main.id
@@ -205,4 +205,9 @@ resource "aws_apigatewayv2_route" "learning_preflight" {
   route_key          = each.value
   authorization_type = "NONE"
   target             = "integrations/${aws_apigatewayv2_integration.learning.id}"
+}
+
+resource "aws_iam_role_policy_attachment" "learning_db_secret" {
+  role       = aws_iam_role.learning.name
+  policy_arn = aws_iam_policy.lambda_secrets.arn
 }

@@ -17,3 +17,21 @@ applications:
         paths:
           - node_modules/**/*
           - .next/cache/**/*
+  - appRoot: landing-page
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - nvm use 22
+            - npm ci
+        build:
+          commands:
+            - AMPLIFY_LANDING_EXPORT=true npm run build
+      artifacts:
+        baseDirectory: out
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+          - .next/cache/**/*

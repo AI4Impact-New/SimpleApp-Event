@@ -1,4 +1,4 @@
-# PiLearn frontend integration handover
+# AI4Impact frontend integration handover
 
 Release: 14 October 2026. AWS account **767491588787**, Mumbai **ap-south-1**. This release covers learning, enrollment, assessments, attendance, certificates and notifications. **Payments are excluded.** The student app source has not been modified; this document is the implementation contract for its frontend team.
 
@@ -157,7 +157,7 @@ A user may register at most ten devices; a token belonging to another account ca
 
 ## 9. Admin console and staff responsibilities
 
-Admin frontend code is in `admin-dashboard/`; the AWS console is separate from the PiLearn admin portal. Staff must be a Cognito `Admins` group member to enter the portal; AWS IAM hosting access alone does not grant PiLearn app-admin access.
+Admin frontend code is in `admin-dashboard/`; the AWS console is separate from the AI4Impact admin portal. Staff must be a Cognito `Admins` group member to enter the portal; AWS IAM hosting access alone does not grant AI4Impact app-admin access.
 
 Use **Learning Studio** → course:
 
@@ -204,12 +204,16 @@ Before releasing the app, verify two separate users cannot read each other's att
 
 ## 11. Hosting and release workflow
 
-AWS Amplify app: **pilearn-admin**, ID **d16744ddqs159z**. Git repository: `AI4Impact-New/SimpleApp-Event`. App root: `admin-dashboard`; build command `npm run build`; SSR artifacts `.next`; repository build specification `amplify.yml`; hosting role `AI4Impact-AmplifyHosting`.
+AWS Amplify app: **AI4Impact Admin**, ID **d16744ddqs159z**. Git repository: `AI4Impact-New/SimpleApp-Event`. App root: `admin-dashboard`; build command `npm run build`; SSR artifacts `.next`; repository build specification `amplify.yml`; hosting role `AI4Impact-AmplifyHosting`.
 
-Production target: `https://main.d16744ddqs159z.amplifyapp.com`. This becomes live only after company GitHub connection and successful Amplify build. Terraform configures the app, branches, API/auth environment and Cognito callback/logout URLs. The PR branch is `feat/pilearn-learning-platform`; the tested changes are then published to `main` as requested. Do not confuse a provisioned Amplify app with a successful deployment.
+Production target: `https://main.d16744ddqs159z.amplifyapp.com`. The company GitHub connection is complete and the main release build succeeded. Terraform configures the app, branches, API/auth environment and Cognito callback/logout URLs. The PR branch is `feat/pilearn-learning-platform`; the tested changes are then published to `main` as requested. Do not confuse a provisioned Amplify app with a successful deployment.
 
 GitHub organization authorization must be completed by someone with access to the company repository. The backend is deployed independently using Terraform and additive database migrations. Terraform state is encrypted/versioned in S3 with locking; do not run `terraform init` against a different account/backend.
 
-The machine-readable new-learning API contract is in `PiLearn-Learning-OpenAPI.json`. Deployment and test results are recorded separately in the release report.
+The machine-readable new-learning API contract is in `AI4Impact-Learning-OpenAPI.json`. Deployment and test results are recorded separately in the release report.
 
-Certified courses cannot be deleted: `DELETE /courses/{course_id}` returns 409 when issued certificates exist. Set the course status to `draft` to remove it from student discovery while preserving certificate verification history.
+Certified courses cannot be deleted: `DELETE /courses/{course_id}` returns 409 when issued certificates exist. Set status to `draft` to hide the course from discovery while preserving certificate verification history.
+
+## Public landing-page hosting
+
+The public site is deployed separately at https://main.d3revsgd6isklp.amplifyapp.com from `landing-page/`. Its static export keeps Next.js 16 and serves generated HTML from `out/`. The admin app remains https://main.d16744ddqs159z.amplifyapp.com. Staff use Cognito for the admin app; public landing pages require no login. Future branding should use **AI4Impact**. The two apps share a repository and main branch with separate monorepo roots in `amplify.yml`.

@@ -105,7 +105,8 @@
         "logs:DescribeLogStreams",
         "logs:FilterLogEvents",
         "logs:StartQuery",
-        "logs:GetQueryResults"
+        "logs:GetQueryResults",
+        "logs:GetLogEvents"
       ],
       "Resource": [
         "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-learning:*",
@@ -119,26 +120,6 @@
         "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-events:*",
         "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-cognito-post-confirm:*",
         "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/apigateway/pilearn:*"
-      ]
-    },
-    {
-      "Sid": "ReadProjectLogStreams",
-      "Effect": "Allow",
-      "Action": [
-        "logs:GetLogEvents"
-      ],
-      "Resource": [
-        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-learning:log-stream:*",
-        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-materials:log-stream:*",
-        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-users:log-stream:*",
-        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-attendance:log-stream:*",
-        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-analytics:log-stream:*",
-        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-notifications:log-stream:*",
-        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-polls:log-stream:*",
-        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-courses:log-stream:*",
-        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-events:log-stream:*",
-        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-cognito-post-confirm:log-stream:*",
-        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/apigateway/pilearn:log-stream:*"
       ]
     },
     {

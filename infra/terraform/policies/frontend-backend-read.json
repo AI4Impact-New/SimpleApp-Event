@@ -108,6 +108,17 @@
         "logs:GetLogEvents"
       ],
       "Resource": [
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-learning",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-materials",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-users",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-attendance",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-analytics",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-notifications",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-polls",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-courses",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-events",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-cognito-post-confirm",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/apigateway/pilearn",
         "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-learning:*",
         "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-materials:*",
         "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-users:*",

@@ -152,3 +152,13 @@ def test_unexpected_route_suffix_is_not_accepted(monkeypatch):
 def test_cors_preflight_does_not_require_a_jwt(monkeypatch):
     monkeypatch.setattr(handler,'_actor',Mock(side_effect=AssertionError('Preflight must not authenticate')))
     assert handler.handler({'path':'/admin/learning/overview','httpMethod':'OPTIONS'},None)['statusCode']==204
+
+
+def test_course_with_issued_certificates_is_preserved(monkeypatch):
+    from courses import repository
+    cursor=Mock();cursor.fetchone.side_effect=[{'id':UID},{'exists':1}]
+    @contextmanager
+    def context(): yield cursor
+    monkeypatch.setattr(repository,'get_db_cursor',context)
+    with pytest.raises(repository.CourseDeletionConflict): repository.CourseRepository().delete(UID)
+    assert all('DELETE FROM courses' not in call.args[0] for call in cursor.execute.call_args_list)

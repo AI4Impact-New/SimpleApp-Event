@@ -11,7 +11,7 @@ from uuid import UUID
 from shared.auth import get_current_user, _normalize_groups
 from shared.user_repository import get_or_create_user_from_claims
 from shared.db import execute_query
-from learning import service, exams, certificates, devices
+from learning import service, exams, certificates, devices, enquiries
 from learning.validation import ApiError, identifier
 
 logger = logging.getLogger(__name__)
@@ -66,11 +66,15 @@ def handler(event, context):
                 return {"statusCode":302,"headers":{"Location":page.rstrip("/") + "/?id=" + quote(result["id"],safe=""),
                         "Cache-Control":"no-store","Access-Control-Allow-Origin":"*"},"body":""}
             return _response(200,result)
+        if path == "/enquiries" and method == "POST":
+            return _response(202,enquiries.submit(_body(event)))
         actor = _actor(event)
         if parts[0]=="admin": service.admin(actor)
         body = _body(event) if method in ("POST","PUT","PATCH") else {}
         result, status = None, 200
-        if path=="/admin/learning/overview" and method=="GET": result=service.overview(actor)
+        if path=="/admin/enquiries" and method=="GET": result=enquiries.listing(actor,event.get("queryStringParameters") or {})
+        elif len(parts)==3 and parts[:2]==["admin","enquiries"] and method=="PATCH": result=enquiries.update(actor,parts[2],body)
+        elif path=="/admin/learning/overview" and method=="GET": result=service.overview(actor)
         elif path=="/me/learning" and method=="GET":
             result=execute_query("""SELECT c.id,c.title,c.status,r.status AS registration_status,
                 (SELECT count(*) FROM lecture_progress p JOIN video_assets a ON a.id=p.asset_id WHERE a.course_id=c.id AND p.user_id=r.user_id AND p.completed=true) AS completed_lectures,

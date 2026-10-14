@@ -212,3 +212,10 @@ resource "aws_iam_role_policy_attachment" "learning_db_secret" {
   role       = aws_iam_role.learning.name
   policy_arn = aws_iam_policy.lambda_secrets.arn
 }
+
+resource "aws_apigatewayv2_route" "public_enquiries" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "POST /enquiries"
+  authorization_type = "NONE"
+  target             = "integrations/${aws_apigatewayv2_integration.learning.id}"
+}

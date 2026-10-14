@@ -4,6 +4,7 @@ import { Certificate } from "@/components/cards/Certificate";
 import { CheckCard } from "@/components/cards/CheckCard";
 import { SectionHeader } from "@/components/navigation/SectionHeader";
 import { Section } from "@/components/layout/Section";
+import { CERT_TIERS } from "@/content/site";
 
 export function CertificationSection() {
   return (
@@ -22,7 +23,7 @@ export function CertificationSection() {
             lead="Professional certificates are issued by the AI4Impact Institute of Applied AI (IIAA) and can be verified by any employer."
           />
           <div className="mt-(--space-8)">
-            <Button size="sm" icon={ArrowRight} href="#">
+            <Button size="sm" icon={ArrowRight} href="/certification#standards">
               Explore certification standards
             </Button>
           </div>
@@ -30,25 +31,8 @@ export function CertificationSection() {
         <Certificate />
       </div>
       <div className="mt-(--space-16) grid gap-(--space-4) md:grid-cols-2">
-        <CheckCard
-          eyebrow="What you get by finishing"
-          title="Course completion"
-          subtitle="You watched the lessons and submitted the work."
-          items={["90%+ of lessons completed", "All weekly assignments submitted", "Quizzes attempted"]}
-          footer="Record of completion in your learner profile"
-        />
-        <CheckCard
-          highlighted
-          eyebrow="What employers can verify"
-          title="Professional certificate"
-          subtitle="You proved you can do the work, under assessment."
-          items={[
-            "Overall assessed score of 70% or more",
-            "Capstone passed by an independent reviewer",
-            "Capstone defence: a recorded walkthrough and Q&A",
-          ]}
-          footer="Verifiable certificate with credential ID and QR code"
-        />
+        <CheckCard {...CERT_TIERS.completion} />
+        <CheckCard highlighted {...CERT_TIERS.professional} />
       </div>
     </Section>
   );

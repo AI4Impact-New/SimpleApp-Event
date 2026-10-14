@@ -19,11 +19,11 @@ export function TrainersSection() {
       />
       <div className="mt-(--space-10) grid gap-(--space-4) sm:grid-cols-2 lg:grid-cols-3">
         {TRAINERS.map((t) => (
-          <TrainerCard key={t.name} {...t} />
+          <TrainerCard key={t.name} name={t.name} initials={t.initials} subtitle={t.subtitle} />
         ))}
       </div>
       <div className="mt-(--space-6)">
-        <Button variant="outline" size="sm" href="#">
+        <Button variant="outline" size="sm" href="/trainers">
           Meet all trainers
         </Button>
       </div>

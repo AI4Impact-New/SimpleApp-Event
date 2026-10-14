@@ -9,7 +9,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <AnnouncementBar items={ANNOUNCEMENTS} ctaLabel="Register free" ctaHref="#guidance" />
-      <NavBar links={NAV_LINKS} guidanceHref="#guidance" loginHref="#" />
+      <NavBar links={NAV_LINKS} guidanceHref="#guidance" loginHref="/login" />
       <main className="flex flex-1 flex-col">{children}</main>
       <Footer columns={FOOTER_COLUMNS} {...FOOTER_COPY} />
     </>

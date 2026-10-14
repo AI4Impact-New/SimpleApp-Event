@@ -5,6 +5,7 @@ type InputProps = {
   name: string;
   type?: HTMLInputTypeAttribute;
   defaultValue?: string;
+  placeholder?: string;
   autoComplete?: string;
   required?: boolean;
   theme?: "dark" | "light";
@@ -15,6 +16,7 @@ export function Input({
   name,
   type = "text",
   defaultValue,
+  placeholder,
   autoComplete,
   required,
   theme = "dark",
@@ -31,9 +33,10 @@ export function Input({
         name={name}
         type={type}
         defaultValue={defaultValue}
+        placeholder={placeholder}
         autoComplete={autoComplete}
         required={required}
-        className={`h-(--h-input) w-full rounded-(--radius-input) border px-(--space-3) text-(length:--fs-sm) leading-none outline-none transition-colors duration-(--dur-base) ease-(--ease-out) focus:border-(--teal-500) ${dark ? "border-(--border-dark-strong) bg-(--surface-dark-input) text-(--text-on-dark)" : "border-(--border-default) bg-(--surface-card) text-(--text-strong)"}`}
+        className={`h-(--h-input) w-full rounded-(--radius-input) border px-(--space-3) text-(length:--fs-sm) leading-none outline-none transition-colors duration-(--dur-base) ease-(--ease-out) focus:border-(--teal-500) ${dark ? "border-(--border-dark-strong) bg-(--surface-dark-input) text-(--text-on-dark) placeholder:text-(--text-on-dark-muted)" : "border-(--border-default) bg-(--surface-card) text-(--text-strong) placeholder:text-(--text-muted)"}`}
       />
     </label>
   );

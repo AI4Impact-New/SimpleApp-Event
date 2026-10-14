@@ -122,19 +122,61 @@ export const ANNOUNCEMENTS = [
 
 export const NAV_LINKS: NavLink[] = [
   { label: "Career tracks", href: "/courses" },
-  { label: "Programme+", href: "/#programme" },
-  { label: "Certification", href: "/#certification" },
-  { label: "Trainers", href: "/#trainers" },
-  { label: "Hire from us", href: "#" },
+  { label: "Programme+", href: "/programme-plus" },
+  { label: "Certification", href: "/certification" },
+  { label: "Trainers", href: "/trainers" },
+  { label: "Hire from us", href: "/hire-from-us" },
 ];
 
-export const TRAINERS = [
-  { name: "Bhaskar M", initials: "BM", subtitle: "Azure data engineering, Databricks and lakehouse design" },
-  { name: "Kamal K Naidu", initials: "KN", subtitle: "Analytics, SQL, KPIs and business storytelling" },
-  { name: "Shuja L P", initials: "SL", subtitle: "Data visualisation, storytelling and dashboards" },
-  { name: "Naveen G", initials: "NG", subtitle: "Statistics, machine learning and model evaluation" },
-  { name: "Puneet Nischal", initials: "PN", subtitle: "LLM applications, RAG and agentic systems" },
-  { name: "Ritesh", initials: "R", subtitle: "Product discovery, PRDs, metrics and launches" },
+export type Trainer = {
+  name: string;
+  initials: string;
+  /** Specialism line, shown on the home row and the trainer card. */
+  subtitle: string;
+  /** Optional job title under the name on the trainers page. */
+  role?: string;
+  /** e.g. "Lead trainer · DAPE"; codes are the short track names used in timetables. */
+  assignments: string[];
+};
+
+export const TRAINERS: Trainer[] = [
+  {
+    name: "Bhaskar M",
+    initials: "BM",
+    role: "Hands-on Azure Data Engineer & Analyst",
+    subtitle: "Azure data engineering, Databricks and Microsoft Fabric",
+    assignments: ["Lead trainer · DAPE"],
+  },
+  {
+    name: "Kamal K Naidu",
+    initials: "KN",
+    subtitle: "Analytics, SQL, KPIs and business dashboards",
+    assignments: ["Lead trainer · DSDI"],
+  },
+  {
+    name: "Shuja L P",
+    initials: "SL",
+    subtitle: "Data visualisation, storytelling and web visuals",
+    assignments: ["Co-trainer · DSDI"],
+  },
+  {
+    name: "Naveen G",
+    initials: "NG",
+    subtitle: "Statistics, machine learning and explainable models",
+    assignments: ["Lead trainer · AIML", "Lead trainer · DSDI"],
+  },
+  {
+    name: "Puneet Nischal",
+    initials: "PN",
+    subtitle: "LLM applications, RAG and agentic systems",
+    assignments: ["Lead trainer · GENAI", "Lead trainer · FDE"],
+  },
+  {
+    name: "Ritesh",
+    initials: "R",
+    subtitle: "Product discovery, PRDs, metrics and AI products",
+    assignments: ["Lead trainer · APAB"],
+  },
 ];
 
 export const FOOTER_COLUMNS: FooterColumn[] = [
@@ -142,17 +184,17 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
   {
     title: "Programme",
     links: [
-      { label: "Programme+", href: "/#programme" },
-      { label: "Certification", href: "/#certification" },
-      { label: "Verify a certificate", href: "#" },
-      { label: "Trainers", href: "/#trainers" },
+      { label: "Programme+", href: "/programme-plus" },
+      { label: "Certification", href: "/certification" },
+      { label: "Verify a certificate", href: "/certification#verify" },
+      { label: "Trainers", href: "/trainers" },
     ],
   },
   {
     title: "For employers",
     links: [
-      { label: "Hire from us", href: "#" },
-      { label: "Become a partner consultancy", href: "#" },
+      { label: "Hire from us", href: "/hire-from-us" },
+      { label: "Become a partner consultancy", href: "/hire-from-us#consultancies" },
     ],
   },
 ];
@@ -170,3 +212,148 @@ export const FOOTER_COPY = {
   legal: "© 2026 AI4Impact. Professional certificates are not academic degrees. Career support does not guarantee employment.",
   legalRight: "Learner data is handled in line with the DPDP Act 2023.",
 };
+
+export const CERT_TIERS = {
+  completion: {
+    eyebrow: "What you get by finishing",
+    title: "Course completion",
+    subtitle: "You watched the lessons and submitted the work.",
+    items: ["90%+ of lessons completed", "All weekly assignments submitted", "Quizzes attempted"],
+    footer: "Record of completion in your learner profile",
+  },
+  professional: {
+    eyebrow: "What employers can verify",
+    title: "Professional certificate",
+    subtitle: "You proved you can do the work, under assessment.",
+    items: [
+      "Overall assessed score of 70% or more",
+      "Capstone passed by an independent reviewer",
+      "Capstone defence: a recorded walkthrough and Q&A",
+    ],
+    footer: "Verifiable certificate with credential ID and QR code",
+  },
+};
+
+export const CERT_ISSUERS = [
+  { icon: "shield", title: "IIAA", body: "Sets the assessment standard, reviews capstones and issues certificates." },
+  { icon: "university", title: "XYZ University", body: "Academic collaboration on curriculum and assessment design." },
+  { icon: "employer", title: "Employers", body: "Verify any certificate by credential ID or QR code." },
+] as const;
+
+/** Numbered to match the markers on `<Certificate annotated />`. */
+export const CERT_ANATOMY = [
+  { title: "Learner name", body: "The legal name you register with, checked at enrolment." },
+  { title: "Professional certificate title", body: "Names the role-led track, not a generic course." },
+  { title: "Course", body: "The track and core weeks you completed." },
+  { title: "Capstone", body: "The capstone you built and defended." },
+  { title: "Assessment", body: "Your result band after independent review." },
+  { title: "Issue date", body: "When the certificate was awarded." },
+  { title: "Credential ID", body: "A unique ID that employers can look up." },
+  { title: "Verification QR / URL", body: "Scan or visit to confirm it is genuine." },
+  { title: "Authorised signatures", body: "Signed for IIAA and the academic partner." },
+];
+
+export const SCORE_WEIGHTS = [
+  { label: "Capstone", weight: 40, color: "bg-(--teal-600)" },
+  { label: "Projects", weight: 30, color: "bg-(--navy-800)" },
+  { label: "Weekly assignments", weight: 20, color: "bg-(--amber-500)" },
+  { label: "Quizzes", weight: 10, color: "bg-(--slate-300)" },
+];
+
+export const PROGRAMME_PLUS = {
+  price: "₹24,999",
+  internationalPrice: "$329",
+  journey: ["Learn", "Build", "Intern", "Practise", "Apply", "Interview"],
+  modules: [
+    {
+      number: "01",
+      title: "Real-World Internship",
+      description: "3 months on a live project, with mentor reviews.",
+      note: "Freshers and recent graduates only. Subject to eligibility and project availability.",
+      items: [
+        "Fintech-first or alternative-domain project",
+        "Weekly mentor reviews",
+        "Internship certificate and recommendation letter on successful completion",
+      ],
+    },
+    {
+      number: "02",
+      title: "Interview Builder",
+      description: "CV review, 10 AI-assisted mock interviews and a plan to improve.",
+      items: [
+        "CV and LinkedIn review against target roles",
+        "10 AI-assisted mock interview sessions",
+        "Written feedback after each session",
+        "Personal improvement plan",
+      ],
+    },
+    {
+      number: "03",
+      title: "Recruitment Support",
+      description: "Recommendations through 10+ recruitment and consultancy relationships.",
+      items: [
+        "Profile shared with suitable recruitment and consultancy partners",
+        "Recommendations for Indian and international opportunities",
+        "Application guidance for each recommendation",
+      ],
+    },
+    {
+      number: "04",
+      title: "Weekly Group Clarification",
+      description: "A recurring live session every week for questions and reviews.",
+      items: [
+        "Live group session each week",
+        "Bring blockers from labs, projects and interviews",
+        "Recordings available afterwards",
+      ],
+    },
+    {
+      number: "05",
+      title: "Personal Handholding",
+      description: "Five individual 30-minute sessions, booked when you need them.",
+      items: [
+        "Five 30-minute one-to-one sessions",
+        "Use them for scoping, reviews or career direction",
+        "Booked through your learner dashboard",
+      ],
+    },
+  ] as { number: string; title: string; description: string; note?: string; items: string[] }[],
+  notGuaranteed: [
+    "Employment, interviews or a specific salary — hiring decisions are made by employers.",
+    "An internship for every learner — places depend on eligibility and project availability.",
+    "Visa sponsorship or work authorisation for international roles.",
+  ],
+};
+
+export const HIRE = {
+  benefits: [
+    {
+      icon: "verified",
+      title: "Verified skills",
+      body: "Every candidate carries a verifiable credential ID and a scored capstone.",
+    },
+    {
+      icon: "tested",
+      title: "Project-tested",
+      body: "Fintech-first capstones mean candidates have shipped realistic, domain-relevant work.",
+    },
+    {
+      icon: "shortlist",
+      title: "Role-matched shortlists",
+      body: "We shortlist by role, level and location so you only see relevant profiles.",
+    },
+  ] as const,
+  consultancy: {
+    title: "Recruitment consultancies",
+    body: "Join our Exclusive Hiring Network to receive pre-screened candidates in India and abroad. Partner consultancies must never charge learners.",
+  },
+  disclaimer:
+    "AI4Impact provides career support and recommendations. It does not guarantee employment, interviews, a specific salary or visa sponsorship. Hiring decisions are made by employers.",
+};
+
+export const LOGIN_FEATURES = [
+  { icon: "recordings", title: "Recorded sessions", body: "Pick up every module where you left off." },
+  { icon: "calls", title: "Weekly clarification calls", body: "Join live calls and see the recordings." },
+  { icon: "projects", title: "Projects & capstone", body: "Submit work and read your mentor’s feedback." },
+  { icon: "certificates", title: "Certificates", body: "Download and share verifiable credentials." },
+] as const;

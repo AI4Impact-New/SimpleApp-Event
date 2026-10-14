@@ -14,6 +14,7 @@ export default function CoursesPage() {
   return (
     <>
       <PageHero
+        eyebrow="Career tracks"
         title={
           <>
             Pick the role

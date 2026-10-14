@@ -4,9 +4,10 @@ import { Chip } from "@/components/core/Chip";
 import { CellGrid } from "@/components/cards/CellGrid";
 import { ModuleCell } from "@/components/cards/ModuleCell";
 import { SectionHeader } from "@/components/navigation/SectionHeader";
+import { PROGRAMME_PLUS } from "@/content/site";
 import { Section } from "@/components/layout/Section";
 
-const JOURNEY = ["Learn", "Build", "Intern", "Practise", "Apply", "Interview"];
+const { journey: JOURNEY, modules: MODULES, price } = PROGRAMME_PLUS;
 
 export function ProgrammeSection() {
   return (
@@ -27,7 +28,7 @@ export function ProgrammeSection() {
             lead={
               <>
                 Add it to any track. Five modules that take you from a finished capstone to real interviews, for{" "}
-                <b className="font-semibold text-(--text-strong)">₹24,999</b>.
+                <b className="font-semibold text-(--text-strong)">{price}</b>.
               </>
             }
           />
@@ -45,23 +46,22 @@ export function ProgrammeSection() {
             ))}
           </ol>
           <div className="mt-(--space-8)">
-            <Button size="sm" icon={ArrowRight} href="#">
+            <Button size="sm" icon={ArrowRight} href="/programme-plus">
               See what Programme+ includes
             </Button>
           </div>
         </div>
         <CellGrid columns="sm:grid-cols-2">
-          <ModuleCell
-            className="sm:col-span-2"
-            number="01"
-            title="Real-World Internship"
-            description="3 months on a live project, with mentor reviews."
-            note="Freshers and recent graduates only. Subject to eligibility and project availability."
-          />
-          <ModuleCell number="02" title="Interview Builder" description="CV review, 10 AI-assisted mock interviews and a plan to improve." />
-          <ModuleCell number="03" title="Recruitment Support" description="Recommendations through 10+ recruitment and consultancy relationships." />
-          <ModuleCell number="04" title="Weekly Group Clarification" description="A recurring live session every week for questions and reviews." />
-          <ModuleCell number="05" title="Personal Handholding" description="Five individual 30-minute sessions, booked when you need them." />
+          {MODULES.map((m, i) => (
+            <ModuleCell
+              key={m.number}
+              className={i === 0 ? "sm:col-span-2" : ""}
+              number={m.number}
+              title={m.title}
+              description={m.description}
+              note={m.note}
+            />
+          ))}
         </CellGrid>
       </div>
     </Section>

@@ -18,7 +18,7 @@ export function TrackFamilySection({ family, eyebrow, title, tone }: TrackFamily
       <TrackGrid
         className="mt-(--space-10)"
         tracks={TRACKS.filter((t) => t.family === family)}
-        links={{ explore: "#compare", enrol: "#guidance", prerequisites: "/#finder", programme: "/#programme" }}
+        links={{ explore: "#compare", enrol: "#guidance", prerequisites: "/#finder", programme: "/programme-plus" }}
         renumber
       />
     </Section>

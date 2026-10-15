@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title></head>
+<body style="margin:0;padding:0;background-color:#f3f6fa;font-family:Arial,Helvetica,sans-serif;color:#14243b;">
+  <div style="display:none;max-height:0;overflow:hidden;">${preview}</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f3f6fa;">
+    <tr><td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;">
+        <tr><td style="padding:32px 32px 24px;border-bottom:1px solid #e2e8f0;">
+          <a href="${website_url}" style="text-decoration:none;"><img src="${logo_url}" alt="AI4Impact" width="218" height="69" style="display:block;width:218px;max-width:100%;height:auto;border:0;"></a>
+        </td></tr>
+        <tr><td style="padding:32px;">
+          <p style="margin:0 0 12px;color:#008c7d;font-size:12px;font-weight:bold;letter-spacing:2px;">YOUR AI4IMPACT JOURNEY</p>
+          <h1 style="margin:0 0 18px;font-size:30px;line-height:1.2;color:#0b162a;">${title}</h1>
+          <p style="margin:0 0 24px;font-size:16px;line-height:1.7;color:#506077;">${intro}</p>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f3f6fa;border:1px solid #e2e8f0;border-radius:8px;">
+            <tr><td style="padding:20px;font-size:15px;line-height:1.8;overflow-wrap:anywhere;">${credentials}</td></tr>
+          </table>
+          <p style="margin:24px 0;font-size:15px;line-height:1.7;color:#506077;">${instructions}</p>
+          ${signin_links}
+          <p style="margin:24px 0 0;font-size:14px;line-height:1.7;color:#506077;">We’re glad you’re here.<br><strong style="color:#14243b;">The AI4Impact team</strong></p>
+        </td></tr>
+        <tr><td style="padding:24px 32px;background-color:#f8fafc;border-top:1px solid #e2e8f0;font-size:12px;line-height:1.7;color:#64748b;">${security_note}<br>This is an automated account message. Please don’t reply to this email.</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

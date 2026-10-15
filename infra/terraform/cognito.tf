@@ -1,4 +1,4 @@
-# Cognito User Pool for PayIntelli Academy
+# Cognito User Pool for AI4Impact
 
 # Unique domain for hosted UI (Cognito domains are unique per account/region; default includes account ID to avoid conflicts)
 locals {
@@ -34,9 +34,42 @@ resource "aws_cognito_user_pool" "main" {
     post_confirmation = aws_lambda_function.cognito_post_confirm.arn
   }
 
-  # Admin create user (disabled for security)
+  # Branded messages apply to student and employee accounts in this pool.
+  verification_message_template {
+    default_email_option = "CONFIRM_WITH_CODE"
+    sms_message          = "Your AI4Impact verification code is {####}."
+    email_subject        = "AI4Impact | Your verification code"
+    email_message = templatefile("${path.module}/templates/cognito-email.html.tftpl", {
+      title         = "Your next step starts here"
+      preview       = "Use your AI4Impact verification code to continue."
+      intro         = "Welcome to the inner circle, where curious minds build the future. Use the code below to continue the account action you requested."
+      credentials   = "<strong>Your verification code</strong><br><span style='font-size:28px;font-family:monospace;letter-spacing:4px;'>{####}</span>"
+      instructions  = "Return to the AI4Impact screen where you requested this code and enter it there. Keep this code private."
+      signin_links  = ""
+      security_note = "If you didn’t request this code, you can ignore this email. Never share your verification code with anyone."
+      website_url   = "https://main.${aws_amplify_app.landing.default_domain}"
+      logo_url      = "https://main.${aws_amplify_app.landing.default_domain}/email-logo.png"
+    })
+  }
+
+  # Keep public student signup enabled alongside staff-created invitations.
   admin_create_user_config {
     allow_admin_create_user_only = false
+    invite_message_template {
+      sms_message   = "Welcome to AI4Impact. Username: {username}. Temporary password: {####}."
+      email_subject = "Welcome to the inner circle | AI4Impact"
+      email_message = templatefile("${path.module}/templates/cognito-email.html.tftpl", {
+        title         = "Welcome to the inner circle"
+        preview       = "Your AI4Impact account is ready. Let’s build what comes next."
+        intro         = "You’re part of AI4Impact, where curious minds learn, create and build the future. Whether you’re here to learn or help others grow, we’re excited to have you with us."
+        credentials   = "<strong>Sign-in username</strong><br>{username}<br><br><strong>Temporary password</strong><br><span style='font-size:20px;font-family:monospace;'>{####}</span>"
+        instructions  = "Sign in with these details and follow the prompt to choose your own password. Students: open the AI4Impact learning app supplied by your course team. Employees: use the staff console below. Your account permissions determine which features you can access."
+        signin_links  = "<p style='margin:0 0 12px;font-size:15px;'><a href='https://main.${aws_amplify_app.admin.default_domain}/login' style='color:#008c7d;font-weight:bold;'>Employee sign-in</a></p><p style='margin:0;font-size:15px;'><a href='https://main.${aws_amplify_app.landing.default_domain}' style='color:#008c7d;'>Explore AI4Impact</a></p>"
+        security_note = "Keep your temporary password private. If you weren’t expecting this invitation or need a fresh invitation, contact the AI4Impact team through your usual channel."
+        website_url   = "https://main.${aws_amplify_app.landing.default_domain}"
+        logo_url      = "https://main.${aws_amplify_app.landing.default_domain}/email-logo.png"
+      })
+    }
   }
 
   # Device tracking

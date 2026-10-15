@@ -51,7 +51,9 @@ class ApiService {
         if (status === 401) {
           if (typeof window !== 'undefined') {
             this.clearLocalAuth();
-            window.location.href = '/login';
+            const studentPage = ['/student', '/checkout'].includes(window.location.pathname);
+            if (studentPage) sessionStorage.setItem('post_login_path', window.location.pathname + window.location.search);
+            window.location.href = studentPage ? '/login?portal=student' : '/login';
           }
         }
         if (status === 403 && typeof window !== 'undefined') {

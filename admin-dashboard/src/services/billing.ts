@@ -66,6 +66,17 @@ export const billing = {
     const r = await fetch(`${base}/billing/orders/${id}/invoice`, {
       headers: { Authorization: `Bearer ${token}` },
     });
+    if (r.status === 401) {
+      const studentPage = ["/student", "/checkout"].includes(
+        window.location.pathname,
+      );
+      if (studentPage)
+        sessionStorage.setItem(
+          "post_login_path",
+          window.location.pathname + window.location.search,
+        );
+      window.location.assign(studentPage ? "/login?portal=student" : "/login");
+    }
     if (!r.ok)
       throw new Error(
         "Invoice could not be downloaded. Please sign in again or retry.",

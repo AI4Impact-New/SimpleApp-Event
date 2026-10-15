@@ -45,7 +45,7 @@ export function StudentCommerce({ checkout = false }: { checkout?: boolean }) {
     setAuthenticated(ok);
     setReady(true);
     if (ok) void load().catch((e) => setError(errorMessage(e)));
-  }, [oid, checkout]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [oid, checkout, selectedSlug]); // eslint-disable-line react-hooks/exhaustive-deps
   async function act(fn: () => Promise<void>) {
     setBusy(true);
     setError("");

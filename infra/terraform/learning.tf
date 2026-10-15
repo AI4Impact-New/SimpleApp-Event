@@ -164,6 +164,7 @@ resource "aws_lambda_function" "learning" {
       CERTIFICATE_VERIFY_BASE_URL = aws_apigatewayv2_api.main.api_endpoint
       CERTIFICATE_VERIFY_PAGE_URL = "https://main.${aws_amplify_app.landing.default_domain}/verify"
       EXPO_PROJECT_ID             = var.expo_project_id
+      CHECKOUT_PAGE_URL           = "https://main.${aws_amplify_app.admin.default_domain}/checkout"
     })
   }
   depends_on = [aws_iam_role_policy_attachment.learning_db_secret, aws_iam_role_policy.learning_runtime, aws_iam_role_policy_attachment.learning_vpc, aws_cloudwatch_log_group.learning, null_resource.build_lambdas, aws_secretsmanager_secret_version.video_signer]
@@ -182,7 +183,7 @@ resource "aws_lambda_permission" "api_learning" {
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }
 resource "aws_apigatewayv2_route" "learning" {
-  for_each           = toset(["ANY /learning/{proxy+}", "ANY /admin/{proxy+}", "GET /me/learning", "GET /me/certificates", "GET /me/notifications", "GET /me/devices", "POST /me/devices", "DELETE /me/devices/{id}", "PATCH /me/notifications/{id}", "GET /certificates/{id}/download"])
+  for_each           = toset(["ANY /learning/{proxy+}", "ANY /admin/{proxy+}", "GET /me/learning", "GET /me/purchases", "ANY /billing/{proxy+}", "GET /me/certificates", "GET /me/notifications", "GET /me/devices", "POST /me/devices", "DELETE /me/devices/{id}", "PATCH /me/notifications/{id}", "GET /certificates/{id}/download"])
   api_id             = aws_apigatewayv2_api.main.id
   route_key          = each.value
   authorization_type = "JWT"
@@ -201,7 +202,7 @@ output "certificate_bucket" { value = aws_s3_bucket.certificates.id }
 
 # Explicit unauthenticated preflight outranks the JWT-protected ANY proxy routes.
 resource "aws_apigatewayv2_route" "learning_preflight" {
-  for_each           = toset(["OPTIONS /admin/{proxy+}", "OPTIONS /learning/{proxy+}"])
+  for_each           = toset(["OPTIONS /admin/{proxy+}", "OPTIONS /learning/{proxy+}", "OPTIONS /billing/{proxy+}"])
   api_id             = aws_apigatewayv2_api.main.id
   route_key          = each.value
   authorization_type = "NONE"
@@ -216,6 +217,14 @@ resource "aws_iam_role_policy_attachment" "learning_db_secret" {
 resource "aws_apigatewayv2_route" "public_enquiries" {
   api_id             = aws_apigatewayv2_api.main.id
   route_key          = "POST /enquiries"
+  authorization_type = "NONE"
+  target             = "integrations/${aws_apigatewayv2_integration.learning.id}"
+}
+
+# Only course titles/prices are public; every order and invoice requires a JWT.
+resource "aws_apigatewayv2_route" "public_prices" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "GET /billing/catalog"
   authorization_type = "NONE"
   target             = "integrations/${aws_apigatewayv2_integration.learning.id}"
 }

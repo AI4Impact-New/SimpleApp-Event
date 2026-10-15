@@ -247,7 +247,7 @@ class CourseRepository(ICourseRepository):
             rows = execute_query(
                 """
                 SELECT * FROM courses
-                WHERE status = %s
+                WHERE status = %s AND archived=false
                 ORDER BY display_order ASC, created_at DESC
                 LIMIT %s
                 """,
@@ -258,6 +258,7 @@ class CourseRepository(ICourseRepository):
             rows = execute_query(
                 """
                 SELECT * FROM courses
+                WHERE archived=false
                 ORDER BY display_order ASC, created_at DESC
                 LIMIT %s
                 """,
@@ -602,6 +603,9 @@ class CourseRepository(ICourseRepository):
             cursor.execute("SELECT 1 FROM certificates_issued WHERE course_id=%s LIMIT 1", (course_id,))
             if cursor.fetchone():
                 raise CourseDeletionConflict("This course has issued certificates; set it to draft instead of deleting it")
+            cursor.execute("SELECT 1 FROM demo_orders WHERE course_id=%s LIMIT 1", (course_id,))
+            if cursor.fetchone():
+                raise CourseDeletionConflict("This course has purchase history; set it to draft instead of deleting it")
             cursor.execute("DELETE FROM courses WHERE id=%s", (course_id,))
         logger.info("Deleted course: %s", course_id)
         return True

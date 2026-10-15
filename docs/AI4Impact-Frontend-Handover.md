@@ -225,3 +225,41 @@ The landing career-guidance form now saves public enquiries without requiring a 
 App admins inspect leads through `GET /admin/enquiries?status=new&search=...&offset=0`, returning `{enquiries,total,offset,limit:50}`. `PATCH /admin/enquiries/{id}` accepts `{status,notes}`. Status values are `new`, `contacted`, `registered`, `dropped`. These are marketing follow-up states and never automatically create accounts or grant course enrollment. Public callers cannot list or update contact data. The existing student app interest API and registration flow remain separate.
 
 In the admin Course Enquiries screen, **Website enquiries** shows name, email, phone/WhatsApp, interest, contact consent/time/version, source, submission date and follow-up notes. **Student app interest** retains the existing signed-in course-interest workflow. No automated email, SMS, WhatsApp or appointment booking is configured by this form; authorized staff follow up manually. Stakeholders still need to choose named marketing users, enquiry-only role requirements, lead retention and the contact/booking process.
+
+## Catalog, video windows and demo commerce — October 15 update
+
+The active catalog now matches the six landing career tracks. Earlier courses are archived/draft and hidden from active lists; issued certificate references remain intact. Catalog snapshot: `docs/landing-course-catalog.json`. Fees use integer **paise**, INR only. `marked_price_paise` is the displayed marked/list price; admin `discount_percentage` accepts 0–100 with at most two decimals. Discount paise rounds half up, then total = marked price − discount. No tax is calculated: legal issuer/tax configuration and real Paintly integration are future work.
+
+### Video access
+
+Student class responses include `access_state` (`available`, `locked`, `expired`, `not_ready`), `unlocked_at`, `access_expires_at`, `access_days: 7`, and `prerequisite_class_id`. First recording unlocks when enrolled course content is first requested; subsequent recordings unlock when all prior recordings are completed (existing 90% unique-watch rule). The next seven-day window begins at the previous completion time, or when the next recording was published, whichever is later. It does not reset on login, reload or playback URL renewal. Missing/unpublished earlier recordings block the sequence. Expired completed recordings cannot be replayed, but completion remains credited. Changing lesson order changes prerequisites; staff should finalise ordering before launch. Replacing an MP4 resets watched progress but does not extend its existing window.
+
+Playback and heartbeat enforce deadlines on the server; signed video URLs and sessions cannot extend beyond them. Handle 403 locked, 409 not-ready/session conflict and 410 expired with useful UI. Admin preview bypasses student windows. Admin can `POST /admin/classes/{class_id}/access-reset` with `{"user_id":"UUID"}` to reopen a lesson for seven days, without bypassing prerequisites. The Content tab provides this control; student IDs appear in Learners.
+
+### Demo commerce API
+
+All routes except public course pricing require a Cognito **ID token**. All order/invoice retrieval is owner-or-admin; completing/cancelling a checkout requires its owner. No route collects money or grants enrollment.
+
+| Method/path | Purpose / body |
+| --- | --- |
+| `GET /billing/catalog` | Public active course prices (no customer details) |
+| `GET /admin/billing/courses` | Admin pricing list |
+| `PUT /admin/billing/courses/{id}` | `{"marked_price_paise":6999900,"discount_percentage":"10"}` |
+| `POST /billing/orders` | Owner checkout: `{"course_id":"UUID","request_id":"UUID"}` |
+| `POST /admin/billing/orders` | Pay-by-link: same body plus `buyer_email` of an existing student account |
+| `GET /admin/billing/orders` | Latest 200 demo orders across students |
+| `GET /me/purchases` | Latest 200 own demo orders/history |
+| `GET /billing/orders/{id}` | Saved quote, status, expiry and checkout URL |
+| `POST /billing/orders/{id}/demo-checkout` | `{"action":"complete_demo"}` or `{"action":"cancel"}` |
+| `GET /billing/orders/{id}/invoice` | Binary PDF attachment; authenticated fetch then share/save blob |
+
+Use a fresh UUID per intentional new order. Retry the same request UUID after a network failure; it returns the original immutable quote, even if fees changed. Reusing it for another course returns 409. Order status is `pending`, `demo_completed` or `cancelled`; link expiry is seven days. Repeating the same completed action is safe; reversing a finalised state returns 409. Expired pending links return 410. Client-supplied prices, customer identity and unsupported fields are rejected.
+
+Web preview: `https://main.d16744ddqs159z.amplifyapp.com/student`. Checkout: `/checkout?order=UUID`. Cognito login returns to the selected student/checkout page through a restricted same-origin destination. PDFs embed the landing logo and saved price/discount/total; they are explicitly **DEMO / PRO FORMA**, not paid/tax invoices. Demo completion does not prove settlement. Live webhooks, payment verification, tax details, refunds and actual paid enrollment remain deferred.
+
+```bash
+curl -X POST "$API/billing/orders" -H "Authorization: Bearer $ID_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"course_id":"COURSE_UUID","request_id":"NEW_UUID"}'
+curl "$API/me/purchases" -H "Authorization: Bearer $ID_TOKEN"
+curl "$API/billing/orders/ORDER_UUID/invoice" -H "Authorization: Bearer $ID_TOKEN" --output invoice.pdf
+```

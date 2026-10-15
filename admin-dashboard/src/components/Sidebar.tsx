@@ -18,6 +18,7 @@ const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/events', label: 'Events', icon: Calendar },
   { href: '/dashboard/courses', label: 'Courses', icon: BookOpen },
+  { href: '/dashboard/fees', label: 'Fees & payment links', icon: FileText },
   { href: '/dashboard/learning', label: 'Learning Studio', icon: BarChart3 },
   { href: '/dashboard/course-enquiries', label: 'Course Enquiries', icon: MessageCircle },
   { href: '/dashboard/polls', label: 'Polls', icon: Vote },

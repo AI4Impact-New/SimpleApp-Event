@@ -1,3 +1,4 @@
+import {LivePrice} from "./LivePrice";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/core/Button";
@@ -33,8 +34,8 @@ export function CourseHero({ track, course }: CourseHeroProps) {
             {course.hero.lead}
           </p>
           <div className="mt-(--space-8) flex flex-wrap gap-(--space-3)">
-            <Button variant="light" size="lg" icon={ArrowRight} href="#guidance" className="whitespace-normal">
-              {course.enrolLabel}
+            <Button variant="light" size="lg" icon={ArrowRight} href={`https://main.d16744ddqs159z.amplifyapp.com/student?course=${track.href?.split("/").pop()}`} className="whitespace-normal">
+              View demo checkout
             </Button>
             <Button variant="dark-ghost" size="lg" href="#curriculum">
               View curriculum
@@ -55,7 +56,7 @@ export function CourseHero({ track, course }: CourseHeroProps) {
           <div className="mt-(--space-6) flex flex-wrap items-end justify-between gap-(--space-4) border-t border-(--border-dark-strong) pt-(--space-6)">
             <div className="flex flex-col gap-(--space-1)">
               <span className="font-(family-name:--font-display) text-(length:--fs-h3) font-bold leading-none tracking-(--ls-heading) text-(--text-on-dark)">
-                {track.fee}
+                <LivePrice slug={track.href?.split("/").pop()||""} initial={track.fee}/>
               </span>
               <span className="text-(length:--fs-xs) leading-(--lh-snug) text-(--text-on-dark-body)">
                 {course.pricing.instalments} · {course.pricing.international}

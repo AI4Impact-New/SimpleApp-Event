@@ -54,11 +54,11 @@ def _signer(key_id, secret_arn, cache_window):
     return CloudFrontSigner(key_id, lambda message: private_key.sign(message, padding.PKCS1v15(), hashes.SHA1()))
 
 
-def playback_url(key):
+def playback_url(key, expires_in=3600):
     now = datetime.now(timezone.utc)
     signer = _signer(os.environ["VIDEO_KEY_ID"], os.environ["VIDEO_SIGNER_SECRET_ARN"], int(now.timestamp() // 600))
     url = "https://" + os.environ["VIDEO_DOMAIN"] + "/" + quote(key, safe="/")
-    return signer.generate_presigned_url(url, date_less_than=now + timedelta(hours=1))
+    return signer.generate_presigned_url(url, date_less_than=now + timedelta(seconds=expires_in))
 
 
 def certificate_pdf(name, course, provider, certificate_id, issued_at):

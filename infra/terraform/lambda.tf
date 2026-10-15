@@ -10,7 +10,8 @@ resource "null_resource" "build_lambdas" {
     run_build = sha256(join("", concat(
       [filesha256("${path.module}/../../requirements.txt")],
       [for f in sort(fileset("${path.module}/../../shared", "**/*.py")) : filesha256("${path.module}/../../shared/${f}")],
-      [for f in sort(fileset("${path.module}/../../lambdas", "**/*.py")) : filesha256("${path.module}/../../lambdas/${f}")]
+      [for f in sort(fileset("${path.module}/../../lambdas", "**/*.py")) : filesha256("${path.module}/../../lambdas/${f}")],
+      [for f in sort(fileset("${path.module}/../../lambdas/learning/assets", "**")) : filesha256("${path.module}/../../lambdas/learning/assets/${f}")]
     )))
   }
 

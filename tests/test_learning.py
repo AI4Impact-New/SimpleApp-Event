@@ -134,6 +134,8 @@ def test_unregistered_student_cannot_access_recordings(monkeypatch):
 
 
 def test_wrong_playback_session_cannot_update_progress(monkeypatch):
+    from learning import access_windows
+    monkeypatch.setattr(access_windows,"require_window",lambda *args:None)
     monkeypatch.setattr(service,"class_row",lambda *args:{"course_id":UID})
     monkeypatch.setattr(service,"access",lambda *args:{})
     cursor=Mock(); cursor.fetchone.return_value=None

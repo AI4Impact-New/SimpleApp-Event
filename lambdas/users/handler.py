@@ -19,24 +19,9 @@ def _parse_limit(value: Any, default: int = 50) -> int:
     return max(1, min(limit, 200))
 
 
-def _normalize_group_values(raw_groups: Any) -> list[str]:
-    if raw_groups is None:
-        return []
-    if isinstance(raw_groups, list):
-        return [str(group).strip() for group in raw_groups if str(group).strip()]
-    if isinstance(raw_groups, str):
-        value = raw_groups.strip()
-        if not value:
-            return []
-        if value.startswith("[") and value.endswith("]"):
-            inner = value[1:-1].strip()
-            if not inner:
-                return []
-            return [part.strip().strip("'\"") for part in inner.split(",") if part.strip().strip("'\"")]
-        if "," in value:
-            return [part.strip() for part in value.split(",") if part.strip()]
-        return [value]
-    return [str(raw_groups).strip()]
+def _normalize_group_values(raw_groups):
+    from shared.auth import _normalize_groups
+    return list(_normalize_groups(raw_groups))
 
 
 def _enrich_users_with_profile(users: list) -> list:

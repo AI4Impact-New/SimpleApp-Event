@@ -263,3 +263,13 @@ curl -X POST "$API/billing/orders" -H "Authorization: Bearer $ID_TOKEN" -H 'Cont
 curl "$API/me/purchases" -H "Authorization: Bearer $ID_TOKEN"
 curl "$API/billing/orders/ORDER_UUID/invoice" -H "Authorization: Bearer $ID_TOKEN" --output invoice.pdf
 ```
+
+## Employer enquiries, Marketing access and operations
+
+New public `POST /employer-enquiries` accepts `{request_id,name,email,phone,organisation,roles,consent,source_page,website}`. Hiring roles allow up to 2000 characters, organisation 255; contact/consent and retry rules match guidance. Success is HTTP 202 `{id,message}`. No external message or booking is sent.
+
+`GET /admin/enquiries` now supports `kind=guidance|employer` and returns `kind`, `organisation`, `hiring_roles` alongside existing contact/follow-up fields. Cognito **Marketing** members can list/update these leads and read `GET /admin/marketing/interests`; they cannot change course enrollment or use other admin APIs. Admins manage existing-account membership through `GET/PUT /admin/marketing/users` (PUT `{email,enabled}`). Group changes need refreshed sign-in claims. Follow-up edits write audit records.
+
+Admins can inspect `GET /admin/operations/readiness` for database/content/push readiness. Native push remains disabled without the real EAS project; operational alert delivery also needs an approved, confirmed recipient. See `runbooks/AI4Impact-Operations-and-Release.md` for the actual restore/load evidence and release gates.
+
+**Mobile team:** use `AI4Impact-Mobile-Screen-Implementation-Guide.md` as the page-by-page build specification. It covers 21 sections, navigation, new-account environment values, each screen/API, video windows, exams, certificates, inbox/push, demo checkout/history/invoices and a device acceptance matrix. Mobile source has not been changed by this backend release.

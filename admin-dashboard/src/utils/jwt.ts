@@ -84,3 +84,7 @@ export function getCurrentUserFromToken(token: string): CurrentUser | null {
     role,
   };
 }
+
+export function isMarketingFromToken(token:string):boolean{
+ const payload=decodeJwtPayload(token);return !!payload&&extractGroups(payload).some(g=>g.toLowerCase()==='marketing');
+}

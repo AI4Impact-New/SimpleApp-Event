@@ -1,5 +1,6 @@
 'use client';
 
+import {MarketingAccess} from '@/components/MarketingAccess';
 import { useMemo, useState } from 'react';
 import { Loader2, Plus } from 'lucide-react';
 import { useAdminUsers, useCreateAdminUser } from '@/hooks/useUsers';
@@ -46,6 +47,7 @@ export default function AdminUsersPage() {
         <p className="mt-1 text-sm text-gray-500">Create and manage dashboard admin accounts from Cognito</p>
       </header>
 
+      <MarketingAccess/>
       <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Create Admin User</h2>
         <form onSubmit={onCreate} className="space-y-4">

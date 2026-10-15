@@ -434,7 +434,7 @@ resource "aws_apigatewayv2_route" "users_me_privacy_consent_post" {
 
 # Default stage ($default = no stage prefix in URL; path is /events not /v1/events)
 resource "aws_apigatewayv2_stage" "main" {
-  depends_on  = [aws_apigatewayv2_route.public_enquiries]
+  depends_on  = [aws_apigatewayv2_route.public_enquiries, aws_apigatewayv2_route.employer_enquiries]
   api_id      = aws_apigatewayv2_api.main.id
   name        = "$default"
   auto_deploy = true
@@ -446,6 +446,12 @@ resource "aws_apigatewayv2_stage" "main" {
 
   route_settings {
     route_key              = "POST /enquiries"
+    throttling_rate_limit  = 2
+    throttling_burst_limit = 4
+  }
+
+  route_settings {
+    route_key              = "POST /employer-enquiries"
     throttling_rate_limit  = 2
     throttling_burst_limit = 4
   }

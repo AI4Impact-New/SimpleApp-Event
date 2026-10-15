@@ -66,15 +66,15 @@ resource "aws_cognito_user_pool_client" "main" {
   # Callback URLs: where Cognito redirects after sign-in (Hosted UI).
   # Sign out URLs: where Cognito may redirect after sign-out; must match logout_uri/redirect_uri in app.
   supported_identity_providers = ["COGNITO"]
-  callback_urls                = ["https://app.payintelli.com/callback", "http://localhost:3000/callback", "https://main.${aws_amplify_app.admin.default_domain}/callback"]
-  logout_urls = [
+  callback_urls                = concat(["https://app.payintelli.com/callback", "http://localhost:3000/callback", "https://main.${aws_amplify_app.admin.default_domain}/callback"], [for origin in var.admin_custom_origins : "${origin}/callback"])
+  logout_urls = concat([
     "https://app.payintelli.com/logout",
     "http://localhost:3000/logout",
     "https://app.payintelli.com/login",
     "http://localhost:3000/login",
     "https://main.${aws_amplify_app.admin.default_domain}/login",
     "https://main.${aws_amplify_app.admin.default_domain}/logout",
-  ]
+  ], flatten([for origin in var.admin_custom_origins : ["${origin}/login", "${origin}/logout"]]))
 
   allowed_oauth_flows                  = ["code", "implicit"]
   allowed_oauth_flows_user_pool_client = true
@@ -123,4 +123,10 @@ resource "aws_cognito_user_group" "admins" {
 resource "aws_cognito_user_group" "students" {
   name         = "Students"
   user_pool_id = aws_cognito_user_pool.main.id
+}
+
+resource "aws_cognito_user_group" "marketing" {
+  name         = "Marketing"
+  user_pool_id = aws_cognito_user_pool.main.id
+  description  = "Enquiry contacts and follow-up only; no course, learner-account or infrastructure administration"
 }

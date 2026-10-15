@@ -228,3 +228,15 @@ resource "aws_apigatewayv2_route" "public_prices" {
   authorization_type = "NONE"
   target             = "integrations/${aws_apigatewayv2_integration.learning.id}"
 }
+
+resource "aws_apigatewayv2_route" "employer_enquiries" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "POST /employer-enquiries"
+  authorization_type = "NONE"
+  target             = "integrations/${aws_apigatewayv2_integration.learning.id}"
+}
+resource "aws_iam_role_policy" "learning_marketing_membership" {
+  name   = "marketing-membership"
+  role   = aws_iam_role.learning.id
+  policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Allow", Action = ["cognito-idp:ListUsers", "cognito-idp:ListUsersInGroup", "cognito-idp:AdminAddUserToGroup", "cognito-idp:AdminRemoveUserFromGroup"], Resource = aws_cognito_user_pool.main.arn }] })
+}

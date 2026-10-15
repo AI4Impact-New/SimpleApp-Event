@@ -15,8 +15,7 @@ export function useLearningHome(courseId: string) {
     queryKey: ['learning', 'course', courseId],
     queryFn: () => api.getLearningHome(courseId),
     enabled: !!courseId,
-    // 403 = not enrolled; retrying will not change that
-    retry: (count, error: any) => error?.response?.status !== 403 && count < 1,
+    staleTime: 0, // server-authoritative progress: refetch on every foreground
   });
 }
 
@@ -25,6 +24,7 @@ export function useCourseExams(courseId: string) {
     queryKey: ['learning', 'exams', courseId],
     queryFn: () => api.getCourseExams(courseId),
     enabled: !!courseId,
+    staleTime: 0,
   });
 }
 
@@ -74,9 +74,4 @@ export function useMarkNotificationRead() {
       queryClient.invalidateQueries({ queryKey: ['me', 'notifications'] });
     },
   });
-}
-
-/** Pull the API's `{error}` message out of an axios error. */
-export function apiErrorMessage(err: any, fallback: string): string {
-  return err?.response?.data?.error ?? err?.response?.data?.message ?? fallback;
 }

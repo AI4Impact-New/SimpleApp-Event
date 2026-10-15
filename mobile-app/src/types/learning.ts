@@ -10,6 +10,8 @@ export interface MyLearningCourse {
   total_recorded_lectures: number;
 }
 
+export type AccessState = 'available' | 'locked' | 'expired' | 'not_ready';
+
 export interface LearningClass {
   id: string;
   course_id: string;
@@ -29,6 +31,12 @@ export interface LearningClass {
   completed: boolean;
   resume_seconds: number;
   minutes_attended?: number | null;
+  // Sequential seven-day recording windows (recorded classes only)
+  access_state?: AccessState;
+  unlocked_at?: string | null;
+  access_expires_at?: string | null;
+  access_days?: number;
+  prerequisite_class_id?: string | null;
 }
 
 export interface CompletionRules {
@@ -61,11 +69,6 @@ export interface Completion {
 
 export interface LearningHome {
   course: Course;
-  classes: LearningClass[];
-  completion: Completion;
-}
-
-export interface CourseProgress {
   classes: LearningClass[];
   completion: Completion;
 }

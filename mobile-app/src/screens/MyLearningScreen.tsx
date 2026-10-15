@@ -19,6 +19,7 @@ interface MyLearningScreenProps {
   onCoursePress: (courseId: string) => void;
   onCertificatesPress: () => void;
   onNotificationsPress: () => void;
+  onPurchasesPress: () => void;
   onBrowseCourses: () => void;
 }
 
@@ -26,6 +27,7 @@ export function MyLearningScreen({
   onCoursePress,
   onCertificatesPress,
   onNotificationsPress,
+  onPurchasesPress,
   onBrowseCourses,
 }: MyLearningScreenProps) {
   const { data: courses = [], isLoading, error, refetch, isRefetching } = useMyLearning();
@@ -69,6 +71,9 @@ export function MyLearningScreen({
           <Text style={styles.heading}>My Learning</Text>
           <Text style={styles.subtitle}>Continue your enrolled courses</Text>
         </View>
+        <TouchableOpacity style={styles.iconBtn} onPress={onPurchasesPress} activeOpacity={0.7}>
+          <Ionicons name="receipt-outline" size={26} color={colors.primary} />
+        </TouchableOpacity>
         <TouchableOpacity style={styles.iconBtn} onPress={onCertificatesPress} activeOpacity={0.7}>
           <Ionicons name="ribbon-outline" size={26} color={colors.primary} />
         </TouchableOpacity>

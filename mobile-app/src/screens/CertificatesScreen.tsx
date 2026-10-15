@@ -12,21 +12,22 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { File, Paths } from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
 import { useQueryClient } from '@tanstack/react-query';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { api } from '@/services/api';
-import { apiErrorMessage, useMyCertificates } from '@/hooks/useLearning';
+import { useMyCertificates } from '@/hooks/useLearning';
+import { apiErrorMessage } from '@/services/apiErrors';
 import type { MyCertificate } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { formatLocalDate } from '@/utils/datetime';
+import { downloadAndSharePdf } from '@/utils/sharePdf';
 
 interface CertificatesScreenProps {
   onBack: () => void;
+  onVerify: () => void;
 }
 
-export function CertificatesScreen({ onBack }: CertificatesScreenProps) {
+export function CertificatesScreen({ onBack, onVerify }: CertificatesScreenProps) {
   const queryClient = useQueryClient();
   const { data: certificates = [], isLoading, error, refetch, isRefetching } = useMyCertificates();
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -36,18 +37,11 @@ export function CertificatesScreen({ onBack }: CertificatesScreenProps) {
     try {
       // Five-minute signed URL; fetch it right before downloading
       const { url } = await api.getCertificateDownload(cert.id);
-      const target = new File(Paths.cache, `certificate-${cert.id}.pdf`);
-      if (target.exists) target.delete();
-      const file = await File.downloadFileAsync(url, target);
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(file.uri, {
-          mimeType: 'application/pdf',
-          UTI: 'com.adobe.pdf',
-          dialogTitle: cert.course_title ?? 'Certificate',
-        });
-      } else {
-        Alert.alert('Downloaded', 'Sharing is not available on this device.');
-      }
+      await downloadAndSharePdf({
+        url,
+        fileName: `certificate-${cert.id}.pdf`,
+        dialogTitle: cert.course_title ?? 'Certificate',
+      });
     } catch (err: any) {
       if (err?.response?.status === 410) {
         Alert.alert('Certificate revoked', 'This certificate has been revoked and can no longer be downloaded.');
@@ -92,7 +86,15 @@ export function CertificatesScreen({ onBack }: CertificatesScreenProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScreenHeader title="My certificates" onBack={onBack} />
+      <ScreenHeader
+        title="My certificates"
+        onBack={onBack}
+        right={
+          <TouchableOpacity onPress={onVerify} style={styles.headerBtn} activeOpacity={0.7}>
+            <Ionicons name="shield-checkmark-outline" size={24} color={colors.primary} />
+          </TouchableOpacity>
+        }
+      />
       {isLoading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -193,6 +195,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.error,
     marginTop: 2,
+  },
+  headerBtn: {
+    padding: spacing.sm,
   },
   shareBtn: {
     width: 44,

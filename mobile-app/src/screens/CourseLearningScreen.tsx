@@ -1,5 +1,5 @@
 // Course Learning Screen – classes, progress, exams, completion and certificate for an enrolled course
-import React, { useCallback, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -11,20 +11,14 @@ import {
   RefreshControl,
   Alert,
   Linking,
-  AppState,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import {
-  useLearningHome,
-  useCourseExams,
-  useIssueCertificate,
-  apiErrorMessage,
-} from '@/hooks/useLearning';
-import type { Completion, Exam, LearningClass } from '@/types/learning';
+import { useLearningHome, useCourseExams, useIssueCertificate } from '@/hooks/useLearning';
+import { apiErrorMessage } from '@/services/apiErrors';
+import type { AccessState, Completion, Exam, LearningClass } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
-import { formatLocalDateTime, formatDuration } from '@/utils/datetime';
+import { formatLocalDate, formatLocalDateTime, formatDuration } from '@/utils/datetime';
 
 interface CourseLearningScreenProps {
   courseId: string;
@@ -51,25 +45,13 @@ export function CourseLearningScreen({
   const home = useLearningHome(courseId);
   const exams = useCourseExams(courseId);
   const issueCertificate = useIssueCertificate();
+  // Progress refreshes on app foreground (focusManager + staleTime 0) and when the player/exam invalidate it.
   const { refetch: refetchHome } = home;
   const { refetch: refetchExams } = exams;
-
-  // Refresh progress whenever the screen regains focus (e.g. leaving the player) or the app returns to foreground
-  useFocusEffect(
-    useCallback(() => {
-      refetchHome();
-      refetchExams();
-    }, [refetchHome, refetchExams])
-  );
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') {
-        refetchHome();
-        refetchExams();
-      }
-    });
-    return () => sub.remove();
-  }, [refetchHome, refetchExams]);
+  const refetchAll = () => {
+    refetchHome();
+    refetchExams();
+  };
 
   const handleIssue = async () => {
     try {
@@ -131,10 +113,7 @@ export function CourseLearningScreen({
         refreshControl={
           <RefreshControl
             refreshing={home.isRefetching}
-            onRefresh={() => {
-              refetchHome();
-              refetchExams();
-            }}
+            onRefresh={refetchAll}
             tintColor={colors.primary}
             colors={[colors.primary]}
           />
@@ -271,31 +250,54 @@ function Indicator({ icon, label, value, done }: { icon: any; label: string; val
   );
 }
 
+const ACCESS_ICONS: Record<AccessState, keyof typeof Ionicons.glyphMap> = {
+  available: 'play-circle',
+  locked: 'lock-closed',
+  expired: 'hourglass-outline',
+  not_ready: 'time-outline',
+};
+
+/** Combine recording readiness with the server's seven-day access window. */
+function lectureAccess(lecture: LearningClass): AccessState {
+  if (lecture.video_status !== 'ready') return 'not_ready';
+  return lecture.access_state ?? 'available';
+}
+
 function RecordedRow({ lecture, onPress }: { lecture: LearningClass; onPress: () => void }) {
-  const ready = lecture.video_status === 'ready';
+  const access = lectureAccess(lecture);
+  const playable = access === 'available';
   const duration = Number(lecture.duration_seconds) || 0;
   const watched = Number(lecture.watched_seconds) || 0;
   const pct = duration > 0 ? Math.min(100, Math.round((watched * 100) / duration)) : 0;
+
+  let detail: string;
+  if (access === 'not_ready') detail = 'Recording not available yet';
+  else if (access === 'locked') detail = 'Locked · complete the previous lecture to unlock';
+  else if (access === 'expired') {
+    detail = lecture.completed
+      ? `Completed · ${lecture.access_days ?? 7}-day viewing window ended`
+      : `Viewing window ended ${formatLocalDate(lecture.access_expires_at)} · ask an administrator to reopen it`;
+  } else if (lecture.completed) detail = `Completed · ${formatDuration(duration)}`;
+  else if (duration > 0) detail = `${pct}% watched · ${formatDuration(duration)}`;
+  else detail = 'Ready to watch';
+
+  const icon = lecture.completed ? 'checkmark-circle' : ACCESS_ICONS[access];
+
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} disabled={!ready} activeOpacity={0.7}>
+    <TouchableOpacity style={styles.row} onPress={onPress} disabled={!playable} activeOpacity={0.7}>
       <Ionicons
-        name={lecture.completed ? 'checkmark-circle' : ready ? 'play-circle' : 'time-outline'}
+        name={icon}
         size={32}
-        color={lecture.completed ? colors.success : ready ? colors.primary : colors.textMuted}
+        color={lecture.completed ? colors.success : playable ? colors.primary : colors.textMuted}
       />
       <View style={styles.rowBody}>
         <Text style={styles.rowTitle} numberOfLines={2}>{lecture.title}</Text>
-        <Text style={styles.muted}>
-          {!ready
-            ? 'Recording not available yet'
-            : lecture.completed
-              ? `Completed · ${formatDuration(duration)}`
-              : duration > 0
-                ? `${pct}% watched · ${formatDuration(duration)}`
-                : 'Ready to watch'}
-        </Text>
+        <Text style={styles.muted}>{detail}</Text>
+        {playable && lecture.access_expires_at ? (
+          <Text style={styles.windowText}>Available until {formatLocalDateTime(lecture.access_expires_at)}</Text>
+        ) : null}
       </View>
-      {ready ? <Ionicons name="chevron-forward" size={20} color={colors.textMuted} /> : null}
+      {playable ? <Ionicons name="chevron-forward" size={20} color={colors.textMuted} /> : null}
     </TouchableOpacity>
   );
 }
@@ -466,6 +468,11 @@ const styles = StyleSheet.create({
   attended: {
     fontSize: 13,
     color: colors.success,
+    marginTop: 2,
+  },
+  windowText: {
+    fontSize: 12,
+    color: colors.primaryDark,
     marginTop: 2,
   },
   joinBtn: {

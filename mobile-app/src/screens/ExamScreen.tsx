@@ -11,14 +11,14 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { api } from '@/services/api';
-import { authService } from '@/services/auth';
-import { apiErrorMessage, useSubmitExamAttempt } from '@/hooks/useLearning';
+import { useSubmitExamAttempt } from '@/hooks/useLearning';
+import { apiErrorMessage } from '@/services/apiErrors';
 import type { Exam, ExamAnswers, ExamAttempt } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { formatDuration } from '@/utils/datetime';
+import { userStore } from '@/utils/userStorage';
 
 interface ExamScreenProps {
   exam: Exam;
@@ -26,30 +26,6 @@ interface ExamScreenProps {
 }
 
 type StoredAttempt = { attemptId: string; answers: ExamAnswers };
-
-async function storageKey(examId: string) {
-  const current = await authService.getCurrentUser();
-  return `exam_attempt:${current.user?.id ?? 'anon'}:${examId}`;
-}
-
-async function loadStored(examId: string): Promise<StoredAttempt | null> {
-  try {
-    const raw = await AsyncStorage.getItem(await storageKey(examId));
-    return raw ? (JSON.parse(raw) as StoredAttempt) : null;
-  } catch {
-    return null;
-  }
-}
-
-async function saveStored(examId: string, value: StoredAttempt | null) {
-  try {
-    const key = await storageKey(examId);
-    if (value) await AsyncStorage.setItem(key, JSON.stringify(value));
-    else await AsyncStorage.removeItem(key);
-  } catch {
-    // Persistence is best-effort; the server still owns the attempt.
-  }
-}
 
 export function ExamScreen({ exam, onBack }: ExamScreenProps) {
   const [attempt, setAttempt] = useState<ExamAttempt | null>(null);
@@ -59,22 +35,25 @@ export function ExamScreen({ exam, onBack }: ExamScreenProps) {
   const [remaining, setRemaining] = useState<number | null>(null);
   const submit = useSubmitExamAttempt();
   const autoSubmittedRef = useRef(false);
+  // Active attempt + answers persisted per user/exam so a timed exam survives an app restart
+  const storeRef = useRef<ReturnType<typeof userStore<StoredAttempt>> | null>(null);
+  const store = () => (storeRef.current ??= userStore<StoredAttempt>('exam_attempt', exam.id));
 
   // Restore a pending (or just-finished) attempt saved for this user/exam
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const stored = await loadStored(exam.id);
+      const stored = await (await store()).read();
       if (stored) {
         try {
           const restored = await api.getExamAttempt(stored.attemptId);
           if (!cancelled) {
             setAttempt(restored);
             setAnswers(stored.answers ?? {});
-            if (restored.status !== 'pending') await saveStored(exam.id, null);
+            if (restored.status !== 'pending') await (await store()).write(null);
           }
         } catch {
-          await saveStored(exam.id, null);
+          await (await store()).write(null);
         }
       }
       if (!cancelled) setRestoring(false);
@@ -89,7 +68,7 @@ export function ExamScreen({ exam, onBack }: ExamScreenProps) {
     try {
       const result = await submit.mutateAsync({ attemptId: attempt.id, answers });
       setAttempt(result);
-      await saveStored(exam.id, null);
+      await (await store()).write(null);
     } catch (err: any) {
       if (!err?.response) {
         // Connection error: resubmitting is safe (a finalized attempt returns its existing score)
@@ -127,12 +106,12 @@ export function ExamScreen({ exam, onBack }: ExamScreenProps) {
     setStarting(true);
     try {
       const started = await api.startExamAttempt(exam.id);
-      const stored = await loadStored(exam.id);
+      const stored = await (await store()).read();
       const restoredAnswers = stored?.attemptId === started.id ? stored.answers : {};
       autoSubmittedRef.current = false;
       setAttempt(started);
       setAnswers(restoredAnswers);
-      await saveStored(exam.id, { attemptId: started.id, answers: restoredAnswers });
+      await (await store()).write({ attemptId: started.id, answers: restoredAnswers });
     } catch (err) {
       Alert.alert('Cannot start exam', apiErrorMessage(err, 'Could not start the exam.'));
     } finally {
@@ -144,7 +123,7 @@ export function ExamScreen({ exam, onBack }: ExamScreenProps) {
     if (!attempt || attempt.status !== 'pending') return;
     const next = { ...answers, [questionId]: optionId };
     setAnswers(next);
-    saveStored(exam.id, { attemptId: attempt.id, answers: next });
+    store().then((st) => st.write({ attemptId: attempt.id, answers: next }));
   };
 
   const confirmSubmit = () => {

@@ -43,25 +43,29 @@ export function formatCompactDateTimeInIst(dateString?: string): string {
   }).format(date);
 }
 
+// Built once: Intl formatter construction is costly on Hermes and these run per list row.
+const localDateTimeFormat = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+});
+const localDateFormat = new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+
 /** Learning API timestamps carry a timezone; render them in the device's timezone. */
 export function formatLocalDateTime(dateString?: string | null): string {
   if (!dateString) return 'TBD';
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) return 'TBD';
-  return new Intl.DateTimeFormat(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(date);
+  return localDateTimeFormat.format(date);
 }
 
 export function formatLocalDate(dateString?: string | null): string {
   if (!dateString) return '';
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) return '';
-  return new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).format(date);
+  return localDateFormat.format(date);
 }
 
 /** 125 -> "2:05", 3725 -> "1:02:05" */

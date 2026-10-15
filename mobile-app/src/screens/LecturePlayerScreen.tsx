@@ -15,7 +15,7 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { useQueryClient } from '@tanstack/react-query';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { api } from '@/services/api';
-import { apiErrorMessage } from '@/hooks/useLearning';
+import { apiErrorMessage } from '@/services/apiErrors';
 import type { LectureProgress } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { formatDuration } from '@/utils/datetime';
@@ -32,11 +32,27 @@ const MAX_SPEED = 1.5;
 const HEARTBEAT_MS = 20_000;
 // Renew the signed URL/session this long before its expiry.
 const RENEW_BEFORE_EXPIRY_MS = 2 * 60_000;
+// Auto-renew the signed URL after a player error (e.g. CloudFront 403) at most once per this interval.
+const AUTO_RENEW_COOLDOWN_MS = 60_000;
+
+/** Map access-window errors (playback or heartbeat) to a terminal state. */
+function blockedState(err: any): LoadState | null {
+  const status = err?.response?.status;
+  if (status === 403) {
+    return { kind: 'blocked', reason: 'locked', message: apiErrorMessage(err, 'Complete the previous lecture to unlock this one.') };
+  }
+  if (status === 410) {
+    return { kind: 'blocked', reason: 'expired', message: apiErrorMessage(err, 'The viewing window for this lecture has ended.') };
+  }
+  return null;
+}
 
 type LoadState =
   | { kind: 'loading' }
   | { kind: 'ready' }
   | { kind: 'unavailable' }
+  // Server-enforced access window: 403 locked behind an earlier lecture, 410 seven-day window over. Retrying won't help.
+  | { kind: 'blocked'; reason: 'locked' | 'expired'; message: string }
   | { kind: 'error'; message: string };
 
 export function LecturePlayerScreen({ classId, title, onBack }: LecturePlayerScreenProps) {
@@ -56,6 +72,18 @@ export function LecturePlayerScreen({ classId, title, onBack }: LecturePlayerScr
   const pendingSeekRef = useRef<number | null>(null);
   const renewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
+  const lastAutoRenewRef = useRef(0);
+
+  /** Access window closed or lecture locked: stop playback and heartbeats for good. */
+  const enterBlocked = useCallback(
+    (state: LoadState) => {
+      sessionRef.current = null;
+      if (!mountedRef.current) return;
+      player.pause();
+      setLoadState(state);
+    },
+    [player]
+  );
 
   // Heartbeats are serialized: one request in flight, and only the newest queued position is sent next,
   // so an older position can never arrive after a newer one.
@@ -79,17 +107,21 @@ export function LecturePlayerScreen({ classId, title, onBack }: LecturePlayerScr
         player.playbackRate = speedRef.current;
         if (autoplay) player.play();
         setLoadState({ kind: 'ready' });
+        // expires_in may be shortened by the lecture's access window; renew ahead of it either way.
+        const ttlMs = playback.expires_in * 1000;
         renewTimerRef.current = setTimeout(
           () => openSession(positionRef.current, playingRef.current),
-          Math.max(30_000, playback.expires_in * 1000 - RENEW_BEFORE_EXPIRY_MS)
+          Math.max(5_000, ttlMs - Math.min(RENEW_BEFORE_EXPIRY_MS, ttlMs / 4))
         );
       } catch (err: any) {
         if (!mountedRef.current) return;
-        if (err?.response?.status === 409) setLoadState({ kind: 'unavailable' });
+        const blocked = blockedState(err);
+        if (blocked) enterBlocked(blocked);
+        else if (err?.response?.status === 409) setLoadState({ kind: 'unavailable' });
         else setLoadState({ kind: 'error', message: apiErrorMessage(err, 'Could not load this lecture.') });
       }
     },
-    [classId, player]
+    [classId, player, enterBlocked]
   );
 
   const flushHeartbeats = useCallback(async () => {
@@ -104,7 +136,9 @@ export function LecturePlayerScreen({ classId, title, onBack }: LecturePlayerScr
           if (mountedRef.current) setProgress(result);
         } catch (err: any) {
           const status = err?.response?.status;
-          if (status === 409) {
+          const blocked = blockedState(err);
+          if (blocked) enterBlocked(blocked);
+          else if (status === 409) {
             // Session expired or replaced: start a fresh one at the current position.
             if (mountedRef.current) await openSession(positionRef.current, playingRef.current);
           }
@@ -116,7 +150,7 @@ export function LecturePlayerScreen({ classId, title, onBack }: LecturePlayerScr
     } finally {
       inFlightRef.current = false;
     }
-  }, [classId, openSession]);
+  }, [classId, openSession, enterBlocked]);
 
   const heartbeat = useCallback(() => {
     if (!sessionRef.current) return;
@@ -132,9 +166,11 @@ export function LecturePlayerScreen({ classId, title, onBack }: LecturePlayerScr
       mountedRef.current = false;
       if (renewTimerRef.current) clearTimeout(renewTimerRef.current);
       queuedRef.current = positionRef.current;
-      flushHeartbeats();
-      queryClient.invalidateQueries({ queryKey: ['learning'] });
-      queryClient.invalidateQueries({ queryKey: ['me', 'learning'] });
+      // Refresh course progress once the final heartbeat has landed, not before.
+      flushHeartbeats().finally(() => {
+        queryClient.invalidateQueries({ queryKey: ['learning'] });
+        queryClient.invalidateQueries({ queryKey: ['me', 'learning'] });
+      });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
@@ -150,7 +186,15 @@ export function LecturePlayerScreen({ classId, title, onBack }: LecturePlayerScr
     }
     if (status === 'error') {
       // Typically an expired/forbidden signed URL (CloudFront 403) or a network failure.
-      setLoadState({ kind: 'error', message: error?.message ?? 'Playback failed.' });
+      // Fetch a fresh signed URL once; if that also fails, show the retry state.
+      const now = Date.now();
+      if (now - lastAutoRenewRef.current > AUTO_RENEW_COOLDOWN_MS) {
+        lastAutoRenewRef.current = now;
+        setLoadState({ kind: 'loading' });
+        openSession(positionRef.current || undefined, playingRef.current);
+      } else {
+        setLoadState({ kind: 'error', message: error?.message ?? 'Playback failed.' });
+      }
     }
   });
 
@@ -217,6 +261,18 @@ export function LecturePlayerScreen({ classId, title, onBack }: LecturePlayerScr
               <ActivityIndicator size="large" color={colors.white} />
             ) : loadState.kind === 'unavailable' ? (
               <Text style={styles.overlayText}>Recording not available yet</Text>
+            ) : loadState.kind === 'blocked' ? (
+              <>
+                <Ionicons
+                  name={loadState.reason === 'locked' ? 'lock-closed' : 'hourglass-outline'}
+                  size={32}
+                  color={colors.white}
+                />
+                <Text style={styles.overlayText}>{loadState.message}</Text>
+                <TouchableOpacity style={styles.retryBtn} onPress={onBack} activeOpacity={0.75}>
+                  <Text style={styles.retryText}>Back to course</Text>
+                </TouchableOpacity>
+              </>
             ) : (
               <>
                 <Text style={styles.overlayText}>{loadState.message}</Text>

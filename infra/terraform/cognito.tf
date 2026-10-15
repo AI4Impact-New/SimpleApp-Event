@@ -37,6 +37,7 @@ resource "aws_cognito_user_pool" "main" {
   # Branded messages apply to student and employee accounts in this pool.
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"
+    sms_message          = "Your AI4Impact verification code is {####}."
     email_subject        = "AI4Impact | Your verification code"
     email_message = templatefile("${path.module}/templates/cognito-email.html.tftpl", {
       title         = "Your next step starts here"
@@ -55,6 +56,7 @@ resource "aws_cognito_user_pool" "main" {
   admin_create_user_config {
     allow_admin_create_user_only = false
     invite_message_template {
+      sms_message   = "Welcome to AI4Impact. Username: {username}. Temporary password: {####}."
       email_subject = "Welcome to the inner circle | AI4Impact"
       email_message = templatefile("${path.module}/templates/cognito-email.html.tftpl", {
         title         = "Welcome to the inner circle"

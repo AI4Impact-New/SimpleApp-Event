@@ -5,6 +5,7 @@ Handles token verification and user extraction from JWT tokens.
 
 import os
 import json
+import re
 import logging
 from typing import Optional, Dict, Any, Iterable
 from functools import wraps
@@ -209,7 +210,7 @@ def _normalize_groups(raw_groups: Any) -> Iterable[str]:
                     return []
                 return [
                     part.strip().strip("'\"")
-                    for part in inner.split(",")
+                    for part in re.split(r"[,\s]+",inner)
                     if part.strip().strip("'\"")
                 ]
 

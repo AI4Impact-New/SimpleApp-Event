@@ -57,3 +57,16 @@ def test_unknown_enquiry_kind_rejected():
 def test_public_employer_route_does_not_require_login(monkeypatch):
     monkeypatch.setattr(enquiries,'submit',lambda body,employer:{'id':ID})
     assert handler.handler({'rawPath':'/employer-enquiries','httpMethod':'POST','body':'{}'},None)['statusCode']==202
+
+@pytest.mark.parametrize('claim',[['Marketing','Students'],'[Marketing Students]','Marketing,Students','["Marketing","Students"]','[Marketing, Students]'])
+def test_multi_group_authorizer_shapes(claim,monkeypatch):
+    from types import SimpleNamespace
+    monkeypatch.setattr(handler,'get_current_user',lambda event:{'cognito:groups':claim})
+    monkeypatch.setattr(handler,'get_or_create_user_from_claims',lambda claims:SimpleNamespace(id=ID,name='QA'))
+    actor=handler._actor({})
+    assert actor['marketing'] is True and actor['admin'] is False
+
+
+def test_bracketed_admin_and_student_groups_preserve_admin_access():
+    from shared.auth import _normalize_groups
+    assert set(_normalize_groups('[Admins Students]'))=={'Admins','Students'}

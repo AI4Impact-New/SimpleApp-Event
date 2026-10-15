@@ -1,5 +1,6 @@
 import type { FooterColumn } from "@/components/navigation/Footer";
 import type { NavLink } from "@/components/navigation/NavBar";
+import { POLICY_LINKS } from "@/content/legal";
 
 export type Track = {
   id: string;
@@ -246,6 +247,7 @@ export const FOOTER_COPY = {
   note: "Issued by the AI4Impact Institute of Applied AI (IIAA) in academic collaboration with XYZ University. Final wording is subject to the approved collaboration language.",
   legal: "© 2026 AI4Impact. Professional certificates are not academic degrees. Career support does not guarantee employment.",
   legalRight: "Learner data is handled in line with the DPDP Act 2023.",
+  policies: POLICY_LINKS,
 };
 
 export const CERT_TIERS = {

@@ -37,7 +37,8 @@
         {
           "cameraPermission": "Allow PiLearn to access your camera to scan QR codes"
         }
-      ]
+      ],
+      "expo-video"
     ]
   }
 }

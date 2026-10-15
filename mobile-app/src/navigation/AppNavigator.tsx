@@ -23,6 +23,12 @@ import { EditProfileScreen } from '@/screens/EditProfileScreen';
 import { CoursesScreen } from '@/screens/CoursesScreen';
 import { CourseDetailScreen } from '@/screens/CourseDetailScreen';
 import { PrivacyPolicyScreen } from '@/screens/PrivacyPolicyScreen';
+import { MyLearningScreen } from '@/screens/MyLearningScreen';
+import { CourseLearningScreen } from '@/screens/CourseLearningScreen';
+import { LecturePlayerScreen } from '@/screens/LecturePlayerScreen';
+import { ExamScreen } from '@/screens/ExamScreen';
+import { CertificatesScreen } from '@/screens/CertificatesScreen';
+import { NotificationsScreen } from '@/screens/NotificationsScreen';
 import { colors, spacing } from '@/theme/colors';
 
 const Stack = createNativeStackNavigator();
@@ -140,7 +146,7 @@ function MainTabs({ onLogout }: { onLogout: (() => void) | null }) {
         {() => (
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="CoursesMain">
-              {({ navigation }) => (
+              {({ navigation }: any) => (
                 <CoursesScreen
                   onCoursePress={(course) =>
                     navigation.navigate('CourseDetail', { courseId: course.id })
@@ -149,10 +155,80 @@ function MainTabs({ onLogout }: { onLogout: (() => void) | null }) {
               )}
             </Stack.Screen>
             <Stack.Screen name="CourseDetail">
-              {({ route, navigation }) => (
+              {({ route, navigation }: any) => (
                 <CourseDetailScreen
                   courseId={route.params?.courseId ?? ''}
                   onBack={() => navigation.goBack()}
+                  onOpenLearning={(courseId) =>
+                    navigation.navigate('Learning', {
+                      screen: 'CourseLearning',
+                      params: { courseId },
+                      initial: false,
+                    })
+                  }
+                />
+              )}
+            </Stack.Screen>
+          </Stack.Navigator>
+        )}
+      </Tab.Screen>
+
+      <Tab.Screen
+        name="Learning"
+        options={{
+          tabBarLabel: 'Learning',
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'school' : 'school-outline'} size={size ?? 24} color={color} />
+          ),
+        }}
+      >
+        {() => (
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="MyLearningMain">
+              {({ navigation }: any) => (
+                <MyLearningScreen
+                  onCoursePress={(courseId) => navigation.navigate('CourseLearning', { courseId })}
+                  onCertificatesPress={() => navigation.navigate('Certificates')}
+                  onNotificationsPress={() => navigation.navigate('Notifications')}
+                  onBrowseCourses={() => navigation.navigate('Courses')}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="CourseLearning">
+              {({ route, navigation }: any) => (
+                <CourseLearningScreen
+                  courseId={route.params?.courseId ?? ''}
+                  onBack={() => navigation.goBack()}
+                  onPlayLecture={(lecture) =>
+                    navigation.navigate('LecturePlayer', { classId: lecture.id, title: lecture.title })
+                  }
+                  onOpenExam={(exam) => navigation.navigate('Exam', { exam })}
+                  onCertificateIssued={() => navigation.navigate('Certificates')}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="LecturePlayer">
+              {({ route, navigation }: any) => (
+                <LecturePlayerScreen
+                  classId={route.params?.classId ?? ''}
+                  title={route.params?.title ?? 'Lecture'}
+                  onBack={() => navigation.goBack()}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="Exam">
+              {({ route, navigation }: any) => (
+                <ExamScreen exam={route.params?.exam} onBack={() => navigation.goBack()} />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="Certificates">
+              {({ navigation }: any) => <CertificatesScreen onBack={() => navigation.goBack()} />}
+            </Stack.Screen>
+            <Stack.Screen name="Notifications">
+              {({ navigation }: any) => (
+                <NotificationsScreen
+                  onBack={() => navigation.goBack()}
+                  onOpenCourse={(courseId) => navigation.navigate('CourseLearning', { courseId })}
                 />
               )}
             </Stack.Screen>

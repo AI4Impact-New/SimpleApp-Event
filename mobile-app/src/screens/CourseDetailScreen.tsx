@@ -35,9 +35,10 @@ const cardShadow = Platform.select({
 interface CourseDetailScreenProps {
   courseId: string;
   onBack: () => void;
+  onOpenLearning: (courseId: string) => void;
 }
 
-export function CourseDetailScreen({ courseId, onBack }: CourseDetailScreenProps) {
+export function CourseDetailScreen({ courseId, onBack, onOpenLearning }: CourseDetailScreenProps) {
   const { data: course, isLoading, error, refetch, isRefetching } = useCourse(courseId);
   const registerCourse = useRegisterCourse();
   const markInterest = useMarkCourseInterest();
@@ -48,7 +49,10 @@ export function CourseDetailScreen({ courseId, onBack }: CourseDetailScreenProps
     try {
       await registerCourse.mutateAsync(courseId);
       setRegistered(true);
-      Alert.alert('Success', 'You have registered for this course.');
+      Alert.alert('Registered', 'You now have access to this course.', [
+        { text: 'Open course', onPress: () => onOpenLearning(courseId) },
+        { text: 'Later' },
+      ]);
     } catch (err: any) {
       const msg =
         err?.response?.data?.message ?? err?.response?.data?.error ?? 'Failed to register for course.';
@@ -74,7 +78,6 @@ export function CourseDetailScreen({ courseId, onBack }: CourseDetailScreenProps
       await Share.share({
         message: ics,
         title: `${course?.title ?? 'Course'} schedule`,
-        type: 'text/calendar',
       });
     } catch (e) {
       Alert.alert('Error', 'Could not load calendar. Try again later.');
@@ -120,6 +123,7 @@ export function CourseDetailScreen({ courseId, onBack }: CourseDetailScreenProps
   const audience = course.audience ?? [];
   const careerOutcomes = course.career_outcomes ?? [];
   const certificate = course.certificate;
+  const hasAccess = !!course.learning_access || registered;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -273,11 +277,15 @@ export function CourseDetailScreen({ courseId, onBack }: CourseDetailScreenProps
         )}
 
         <View style={styles.registerSection}>
-          {registered ? (
-            <View style={[styles.registerBtn, styles.registeredBtn]}>
-              <Ionicons name="checkmark-circle" size={22} color={colors.success} />
-              <Text style={styles.registeredText}>Registered</Text>
-            </View>
+          {hasAccess ? (
+            <TouchableOpacity
+              style={styles.registerBtn}
+              onPress={() => onOpenLearning(courseId)}
+              activeOpacity={0.75}
+            >
+              <Ionicons name="play-circle-outline" size={22} color={colors.white} />
+              <Text style={styles.registerBtnText}>Open course</Text>
+            </TouchableOpacity>
           ) : interested ? (
             <View style={[styles.registerBtn, styles.registeredBtn, { backgroundColor: '#dbeafe' }]}>
               <Ionicons name="heart" size={22} color="#1d4ed8" />

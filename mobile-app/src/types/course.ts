@@ -95,4 +95,6 @@ export interface Course {
   career_outcomes?: CourseCareerOutcome[];
   certificate?: CourseCertificate | null;
   classes?: CourseClass[];
+  /** True when the caller is enrolled (registered/completed) or staff. */
+  learning_access?: boolean;
 }

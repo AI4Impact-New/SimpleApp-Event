@@ -42,3 +42,33 @@ export function formatCompactDateTimeInIst(dateString?: string): string {
     hour12: true,
   }).format(date);
 }
+
+/** Learning API timestamps carry a timezone; render them in the device's timezone. */
+export function formatLocalDateTime(dateString?: string | null): string {
+  if (!dateString) return 'TBD';
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return 'TBD';
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date);
+}
+
+export function formatLocalDate(dateString?: string | null): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).format(date);
+}
+
+/** 125 -> "2:05", 3725 -> "1:02:05" */
+export function formatDuration(totalSeconds: number): string {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = String(s % 60).padStart(2, '0');
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
+}

@@ -9,7 +9,7 @@ resource "aws_amplify_app" "landing" {
     AMPLIFY_DIFF_DEPLOY       = "false"
   }
   lifecycle {
-    ignore_changes = [repository, access_token, oauth_token]
+    ignore_changes = [repository, access_token, oauth_token, custom_rule]
   }
 }
 resource "aws_amplify_branch" "landing_main" {

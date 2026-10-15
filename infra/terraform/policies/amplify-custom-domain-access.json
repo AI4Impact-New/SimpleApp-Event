@@ -1,0 +1,103 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ManageProjectAmplifyDomains",
+      "Effect": "Allow",
+      "Action": [
+        "amplify:CreateDomainAssociation",
+        "amplify:UpdateDomainAssociation",
+        "amplify:DeleteDomainAssociation",
+        "amplify:GetDomainAssociation"
+      ],
+      "Resource": [
+        "arn:aws:amplify:ap-south-1:767491588787:apps/d16744ddqs159z/domains/*",
+        "arn:aws:amplify:ap-south-1:767491588787:apps/d3revsgd6isklp/domains/*"
+      ]
+    },
+    {
+      "Sid": "DiscoverDNSZones",
+      "Effect": "Allow",
+      "Action": [
+        "route53:ListHostedZones",
+        "route53:ListHostedZonesByName",
+        "route53:GetHostedZoneCount"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CreatePublicDNSZone",
+      "Effect": "Allow",
+      "Action": "route53:CreateHostedZone",
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "route53:VPCs": "true"
+        }
+      }
+    },
+    {
+      "Sid": "InspectAndTagDNSZones",
+      "Effect": "Allow",
+      "Action": [
+        "route53:GetHostedZone",
+        "route53:ListResourceRecordSets",
+        "route53:ListTagsForResource",
+        "route53:ChangeTagsForResource"
+      ],
+      "Resource": "arn:aws:route53:::hostedzone/*"
+    },
+    {
+      "Sid": "ManageHostingAndValidationRecords",
+      "Effect": "Allow",
+      "Action": "route53:ChangeResourceRecordSets",
+      "Resource": "arn:aws:route53:::hostedzone/*",
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "route53:ChangeResourceRecordSetsRecordTypes": [
+            "A",
+            "AAAA",
+            "CNAME",
+            "TXT"
+          ]
+        },
+        "Null": {
+          "route53:ChangeResourceRecordSetsRecordTypes": "false"
+        }
+      }
+    },
+    {
+      "Sid": "CheckDNSPropagation",
+      "Effect": "Allow",
+      "Action": "route53:GetChange",
+      "Resource": "arn:aws:route53:::change/*"
+    },
+    {
+      "Sid": "DiscoverHostingCertificates",
+      "Effect": "Allow",
+      "Action": "acm:ListCertificates",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": [
+            "us-east-1",
+            "ap-south-1"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "InspectHostingCertificates",
+      "Effect": "Allow",
+      "Action": [
+        "acm:DescribeCertificate",
+        "acm:GetCertificate",
+        "acm:ListTagsForCertificate"
+      ],
+      "Resource": [
+        "arn:aws:acm:us-east-1:767491588787:certificate/*",
+        "arn:aws:acm:ap-south-1:767491588787:certificate/*"
+      ]
+    }
+  ]
+}

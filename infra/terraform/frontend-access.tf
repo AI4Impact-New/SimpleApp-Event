@@ -33,3 +33,16 @@ resource "aws_iam_user_group_membership" "gayathri_frontend" {
   user   = "GayathriAI4"
   groups = [aws_iam_group.frontend_engineers.name]
 }
+
+# Gayathri can connect hosting domains, create public zones and edit web/validation
+# records. Domain registration/purchases, zone deletion and mail/delegation record
+# changes are intentionally outside this domain-attachment permission set.
+resource "aws_iam_policy" "amplify_custom_domain_access" {
+  name        = "AmplifyCustomDomainAccess"
+  description = "AI4Impact Amplify domain attachment, public DNS setup and certificate inspection"
+  policy      = file("${path.module}/policies/amplify-custom-domain-access.json")
+}
+resource "aws_iam_user_policy_attachment" "gayathri_custom_domain_access" {
+  user       = "GayathriAI4"
+  policy_arn = aws_iam_policy.amplify_custom_domain_access.arn
+}

@@ -64,7 +64,7 @@ resource "aws_cognito_user_pool" "main" {
       email_message = templatefile("${path.module}/templates/cognito-email.html.tftpl", {
         title         = "Welcome to the inner circle"
         preview       = "Your AI4Impact account is ready. Let’s build what comes next."
-        intro         = "You’re part of AI4Impact, where curious minds learn, create and build the future. We’re excited to have you on the team."
+        intro         = "You’re part of AI4Impact, where curious minds learn, create and build the future. Whether you’re here to learn or help others grow, we’re excited to have you with us."
         credentials   = "<strong>Sign-in username</strong><br>{username}<br><br><strong>Temporary password</strong><br><span style='font-size:20px;font-family:monospace;'>{####}</span>"
         instructions  = "Your workspace is ready. Use the link below to sign in with these details, then follow the prompt to choose your own password."
         signin_links  = "<p style='margin:0;font-size:15px;'><a href='https://main.${aws_amplify_app.admin.default_domain}/login' style='color:#008c7d;font-weight:bold;'>Sign in to AI4Impact</a></p>"

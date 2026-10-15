@@ -11,7 +11,7 @@ from uuid import UUID
 from shared.auth import get_current_user, _normalize_groups
 from shared.user_repository import get_or_create_user_from_claims
 from shared.db import execute_query
-from learning import service, exams, certificates, devices, enquiries
+from learning import service, exams, certificates, devices, enquiries, billing, access_windows
 from learning.validation import ApiError, identifier
 
 logger = logging.getLogger(__name__)
@@ -68,18 +68,34 @@ def handler(event, context):
             return _response(200,result)
         if path == "/enquiries" and method == "POST":
             return _response(202,enquiries.submit(_body(event)))
+        if path == "/billing/catalog" and method == "GET":
+            return _response(200,billing.catalog(None))
         actor = _actor(event)
         if parts[0]=="admin": service.admin(actor)
         body = _body(event) if method in ("POST","PUT","PATCH") else {}
         result, status = None, 200
-        if path=="/admin/enquiries" and method=="GET": result=enquiries.listing(actor,event.get("queryStringParameters") or {})
+        if path=="/billing/catalog" and method=="GET": result=billing.catalog(actor)
+        elif path=="/admin/billing/courses" and method=="GET": result=billing.catalog(actor)
+        elif len(parts)==4 and parts[:3]==['admin','billing','courses'] and method=='PUT': result=billing.set_price(actor,parts[3],body)
+        elif path=="/admin/billing/orders" and method=="GET": result=billing.listing(actor,True)
+        elif path=="/admin/billing/orders" and method=="POST": result=billing.create_order(actor,body,True); status=201
+        elif path=="/me/purchases" and method=="GET": result=billing.listing(actor)
+        elif path=="/billing/orders" and method=="POST": result=billing.create_order(actor,body); status=201
+        elif len(parts)>=3 and parts[:2]==['billing','orders']:
+            if len(parts)==3 and method=='GET':result=billing.get_order(actor,parts[2])
+            elif len(parts)==4 and parts[3]=='demo-checkout' and method=='POST':result=billing.finish(actor,parts[2],body)
+            elif len(parts)==4 and parts[3]=='invoice' and method=='GET':
+                contents=billing.invoice_pdf(actor,parts[2])
+                return {'statusCode':200,'isBase64Encoded':True,'headers':{'Content-Type':'application/pdf','Cache-Control':'no-store','Content-Disposition':'attachment; filename="AI4Impact-demo-invoice.pdf"'},'body':base64.b64encode(contents).decode()}
+        elif len(parts)==4 and parts[:2]==['admin','classes'] and parts[3]=='access-reset' and method=='POST': result=access_windows.reset(actor,parts[2],body)
+        elif path=="/admin/enquiries" and method=="GET": result=enquiries.listing(actor,event.get("queryStringParameters") or {})
         elif len(parts)==3 and parts[:2]==["admin","enquiries"] and method=="PATCH": result=enquiries.update(actor,parts[2],body)
         elif path=="/admin/learning/overview" and method=="GET": result=service.overview(actor)
         elif path=="/me/learning" and method=="GET":
             result=execute_query("""SELECT c.id,c.title,c.status,r.status AS registration_status,
                 (SELECT count(*) FROM lecture_progress p JOIN video_assets a ON a.id=p.asset_id WHERE a.course_id=c.id AND p.user_id=r.user_id AND p.completed=true) AS completed_lectures,
                 (SELECT count(*) FROM course_classes cc WHERE cc.course_id=c.id AND cc.class_type='recorded') AS total_recorded_lectures
-                FROM courses c JOIN course_registrations r ON r.course_id=c.id WHERE r.user_id=%s AND r.status IN ('registered','completed') ORDER BY r.created_at DESC""",(actor["id"],),fetch="all") or []
+                FROM courses c JOIN course_registrations r ON r.course_id=c.id WHERE c.archived=false AND r.user_id=%s AND r.status IN ('registered','completed') ORDER BY r.created_at DESC""",(actor["id"],),fetch="all") or []
         elif path=="/me/devices" and method=="GET": result=devices.listing(actor)
         elif path=="/me/devices" and method=="POST": result=devices.register(actor,body); status=201
         elif len(parts)==3 and parts[:2]==["me","devices"] and method=="DELETE": result=devices.delete(actor,parts[2])

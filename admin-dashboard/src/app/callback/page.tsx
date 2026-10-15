@@ -7,6 +7,7 @@ import { Hub } from 'aws-amplify/utils';
 import { Loader2 } from 'lucide-react';
 import '@/app/amplify-config';
 import 'aws-amplify/auth/enable-oauth-listener';
+import {loginDestination} from '@/utils/login-destination';
 import { getCurrentUserFromToken } from '@/utils/jwt';
 
 function getCodeFromUrl(): string | null {
@@ -50,7 +51,7 @@ export default function CallbackPage() {
             localStorage.setItem('current_user', JSON.stringify(user));
           }
           done.current = true;
-          router.replace('/dashboard');
+          router.replace(loginDestination());
         }
       } catch (_) {
         // Session not ready yet

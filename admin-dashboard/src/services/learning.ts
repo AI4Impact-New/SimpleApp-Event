@@ -18,6 +18,7 @@ export interface LearningOverview { courses: number; enrolled_learners: number; 
 
 const request = <T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', path: string, data?: unknown) => api.learningRequest<T>(method, path, data);
 export const learning = {
+  resetAccess: (id:string,user_id:string) => request('POST', `/admin/classes/${id}/access-reset`, {user_id}),
   overview: () => request<LearningOverview>('GET', '/admin/learning/overview'),
   classes: (course: string) => request<LearningClass[]>('GET', `/admin/courses/${course}/classes`),
   saveClass: (course: string, data: Partial<LearningClass>, id?: string) => request<LearningClass>(id ? 'PUT' : 'POST', `/admin/courses/${course}/classes${id ? '/' + id : ''}`, data),

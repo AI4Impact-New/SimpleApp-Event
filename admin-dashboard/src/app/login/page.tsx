@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { signInWithRedirect, fetchAuthSession, signOut } from 'aws-amplify/auth';
 import { Loader2, LogIn } from 'lucide-react';
 import '@/app/amplify-config';
+import {loginDestination} from '@/utils/login-destination';
 import { getCurrentUserFromToken } from '@/utils/jwt';
 
 function LoginForm() {
@@ -31,12 +32,13 @@ function LoginForm() {
     if (user) {
       localStorage.setItem('current_user', JSON.stringify(user));
     }
-    router.replace('/dashboard');
+    router.replace(loginDestination());
     return true;
   };
 
   const handleSignInWithCognito = async () => {
     setError('');
+    if(searchParams?.get('portal')==='student'&&!sessionStorage.getItem('post_login_path'))sessionStorage.setItem('post_login_path','/student');
     setLoading(true);
     try {
       const usedExistingSession = await handleExistingSession();
@@ -67,7 +69,7 @@ function LoginForm() {
       <div className="max-w-md w-full p-8 sm:p-10 bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-primary-600">AI4Impact</h1>
-          <p className="text-gray-500 mt-1">Admin Dashboard</p>
+          <p className="text-gray-500 mt-1">{searchParams?.get('portal')==='student'?'Student portal':'Admin Dashboard'}</p>
         </div>
 
         {error && (

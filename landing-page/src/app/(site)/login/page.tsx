@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Eyebrow } from "@/components/core/Eyebrow";
 import { Section } from "@/components/layout/Section";
-import { LoginForm } from "@/components/login/LoginForm";
+
 import { LOGIN_FEATURES } from "@/content/site";
 
 export const metadata: Metadata = {
@@ -65,7 +65,7 @@ export default function LoginPage() {
             Use the email or student ID from your enrolment confirmation.
           </p>
           <div className="mt-(--space-8)">
-            <LoginForm />
+            <a href="https://main.d16744ddqs159z.amplifyapp.com/student" className="inline-flex rounded-xl bg-slate-950 text-white px-6 py-3">Open student portal preview</a><p className="mt-3 text-sm">Demo checkout, purchase history and invoice PDFs are available. The full learning portal remains under integration.</p>
           </div>
           <p className="text-(length:--fs-sm) leading-(--lh-body) text-(--text-body)">
             Not enrolled yet?{" "}

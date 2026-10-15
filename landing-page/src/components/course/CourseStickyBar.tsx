@@ -1,3 +1,5 @@
+import {LivePrice} from "./LivePrice";
+import {TRACKS} from "@/content/site";
 import { Button } from "@/components/core/Button";
 
 type CourseStickyBarProps = { title: string; fee: string; nextCohort: string };
@@ -12,15 +14,15 @@ export function CourseStickyBar({ title, fee, nextCohort }: CourseStickyBarProps
             {title}
           </span>
           <span className="text-(length:--fs-2xs) leading-(--lh-snug) text-(--text-body)">
-            {fee} · Next cohort {nextCohort}
+            <LivePrice slug={TRACKS.find(t=>t.title===title)?.href?.split("/").pop()||""} initial={fee}/> · Next cohort {nextCohort}
           </span>
         </div>
         <div className="flex shrink-0 gap-(--space-2)">
           <Button size="sm" variant="outline" href="#curriculum" className="hidden sm:inline-flex">
             View curriculum
           </Button>
-          <Button size="sm" href="#guidance">
-            Enrol now
+          <Button size="sm" href={`https://main.d16744ddqs159z.amplifyapp.com/student?course=${TRACKS.find(t=>t.title===title)?.href?.split("/").pop()||""}`}>
+            Demo checkout
           </Button>
         </div>
       </div>

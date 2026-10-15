@@ -8,6 +8,7 @@ const button = 'inline-flex items-center justify-center gap-2 rounded-lg bg-prim
 const blank: Partial<LearningClass> = { title: '', description: '', class_type: 'recorded', duration_minutes: 30, sort_order: 0 };
 
 export function ContentPanel({ courseId, classes, refresh }: { courseId: string; classes: LearningClass[]; refresh: () => Promise<void> }) {
+  const [accessClass,setAccessClass]=useState(''),[studentId,setStudentId]=useState('');
   const [editing, setEditing] = useState<Partial<LearningClass> | null>(null);
   const [busy, setBusy] = useState(''); const [progress, setProgress] = useState(0);
   const [error, setError] = useState(''); const [notice, setNotice] = useState('');
@@ -24,6 +25,7 @@ export function ContentPanel({ courseId, classes, refresh }: { courseId: string;
   };
   return <div className="space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-lg font-semibold text-gray-900">Classes & recordings</h2><p className="mt-1 text-sm text-gray-500">Arrange recorded lectures alongside live and classroom sessions.</p></div><button className={button} onClick={() => setEditing({ ...blank, sort_order: classes.length })}><Plus size={17} />Add class</button></div>
+    <section className="rounded-xl border bg-white p-5"><h3 className="font-semibold">Sequential video access · seven days per lesson</h3><p className="text-sm text-gray-600 mt-2">The next recording unlocks after the previous one is completed (90% watched). Its seven-day window starts at unlock. Expired videos require a staff reset. Admin preview bypasses the student window.</p><form className="mt-4 grid gap-3 sm:grid-cols-3" onSubmit={event=>{event.preventDefault();void run('access-reset',()=>learning.resetAccess(accessClass,studentId),'Video reopened for seven days. Previous-lesson requirements remain enforced.');}}><label className="text-sm">Recording<select aria-label="Reset access recording" required className={input} value={accessClass} onChange={e=>setAccessClass(e.target.value)}><option value="">Select a recording</option>{classes.filter(c=>c.class_type==='recorded').map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label><label className="text-sm">Student user ID<input aria-label="Reset access student ID" required placeholder="UUID from the Learners tab" className={input} value={studentId} onChange={e=>setStudentId(e.target.value)}/></label><button disabled={!!busy||!accessClass} className={button+' self-end'}>Reopen for seven days</button></form></section>
     {error && <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-800">{error}</div>}
     {notice && <div role="status" className="rounded-lg bg-emerald-50 p-4 text-sm text-emerald-800">{notice}</div>}
     {editing && <form className="space-y-4 rounded-xl border border-primary-200 bg-white p-5" onSubmit={event => { event.preventDefault(); void run('save', async () => { await learning.saveClass(courseId, editing, editing.id); setEditing(null); }, 'Class saved.'); }}>

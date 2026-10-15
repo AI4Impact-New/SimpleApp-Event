@@ -1,7 +1,7 @@
 """Enrollment-gated lectures, server-measured progress, and admin operations."""
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from shared.db import execute_query, get_db_cursor
 from shared.entitlements import enrolled
@@ -44,7 +44,9 @@ def classes(actor, course_id):
         LEFT JOIN lecture_progress p ON p.asset_id=a.id AND p.user_id=%s
         LEFT JOIN class_attendance ca ON ca.class_id=c.id AND ca.user_id=%s
         WHERE c.course_id=%s ORDER BY c.sort_order,c.id""", (actor["id"], actor["id"], course_id), fetch="all")
-    return rows or []
+    from learning.access_windows import windows
+    access_rows=windows(actor,course_id)
+    return [{**r,**access_rows.get(str(r['id']),{})} for r in (rows or [])]
 
 
 def save_class(actor, course_id, body, class_id=None):
@@ -121,7 +123,7 @@ def video_confirm(actor, class_id, body):
         raise ApiError(404, "Video upload not found")
     from learning.media import confirm_upload
     confirm_upload(asset["object_key"], asset["size_bytes"])
-    execute_query("UPDATE video_assets SET status='ready' WHERE id=%s", (asset["id"],), fetch="none")
+    execute_query("UPDATE video_assets SET status='ready',published_at=coalesce(published_at,now()) WHERE id=%s", (asset["id"],), fetch="none")
     return {"asset_id": str(asset["id"]), "status": "ready"}
 
 
@@ -132,7 +134,11 @@ def playback(actor, class_id):
     if not asset:
         raise ApiError(409, "A published recording is not available for this class")
     from learning.media import playback_url
-    url = playback_url(asset["object_key"])
+    from learning.access_windows import require_window
+    deadline=require_window(actor,str(lecture['course_id']),class_id)
+    seconds=min(3600,int((deadline-datetime.now(timezone.utc)).total_seconds())) if deadline else 3600
+    if seconds<1: raise ApiError(410,"The video access window expired")
+    url = playback_url(asset["object_key"],seconds)
     with get_db_cursor() as cur:
         # Serialize session renewal per learner and asset; one active session prevents parallel credit.
         cur.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))", (actor["id"] + str(asset["id"]),))
@@ -141,8 +147,8 @@ def playback(actor, class_id):
         progress = cur.fetchone()
         resume = float(progress["position_seconds"]) if progress else 0
         sid = str(uuid.uuid4())
-        cur.execute("INSERT INTO playback_sessions(id,user_id,asset_id,last_position) VALUES (%s,%s,%s,%s)", (sid,actor["id"],asset["id"],resume))
-    return {"url": url, "session_id": sid, "expires_in": 3600, "duration_seconds": asset["duration_seconds"], "resume_seconds": resume}
+        cur.execute("INSERT INTO playback_sessions(id,user_id,asset_id,last_position,expires_at) VALUES (%s,%s,%s,%s,%s)", (sid,actor["id"],asset["id"],resume,min(deadline,datetime.now(timezone.utc)+timedelta(hours=4)) if deadline else datetime.now(timezone.utc)+timedelta(hours=4)))
+    return {"url": url, "session_id": sid, "expires_in": seconds, "access_expires_at": deadline, "duration_seconds": asset["duration_seconds"], "resume_seconds": resume}
 
 
 def progress_heartbeat(actor, class_id, body):
@@ -150,6 +156,8 @@ def progress_heartbeat(actor, class_id, body):
     access(actor, str(lecture["course_id"]))
     sid = identifier(body.get("session_id"))
     with get_db_cursor() as cur:
+        from learning.access_windows import require_window
+        require_window(actor,str(lecture['course_id']),class_id,cur)
         cur.execute("""SELECT s.*, a.duration_seconds, now() AS server_now FROM playback_sessions s
             JOIN video_assets a ON a.id=s.asset_id WHERE s.id=%s AND s.user_id=%s AND a.class_id=%s
             AND a.status='ready' FOR UPDATE OF s""", (sid,actor["id"],class_id))
@@ -164,8 +172,11 @@ def progress_heartbeat(actor, class_id, body):
         ranges, watched, completed = watched_update(saved["watched_ranges"],float(session["last_position"]),body.get("position_seconds"),min(elapsed,60),session["duration_seconds"])
         position = float(body["position_seconds"])
         cur.execute("UPDATE playback_sessions SET last_position=%s,last_seen_at=now() WHERE id=%s", (position,sid))
-        cur.execute("UPDATE lecture_progress SET watched_ranges=%s::jsonb,watched_seconds=%s,position_seconds=%s,completed=%s,updated_at=now() WHERE user_id=%s AND asset_id=%s",
-                    (json.dumps(ranges),watched,position,completed,actor["id"],session["asset_id"]))
+        cur.execute("UPDATE lecture_progress SET watched_ranges=%s::jsonb,watched_seconds=%s,position_seconds=%s,completed=%s,completed_at=CASE WHEN %s THEN coalesce(completed_at,now()) ELSE completed_at END,updated_at=now() WHERE user_id=%s AND asset_id=%s",
+                    (json.dumps(ranges),watched,position,completed,completed,actor["id"],session["asset_id"]))
+        if completed and not actor['admin']:
+            from learning.access_windows import _windows
+            _windows(actor,str(lecture['course_id']),cur)
     return {"class_id":class_id,"watched_seconds":watched,"duration_seconds":session["duration_seconds"],"completed":completed,
             "progress_percentage":round(watched * 100 / session["duration_seconds"],2)}
 
@@ -266,7 +277,7 @@ def attendance(actor, class_id):
 
 def overview(actor):
     admin(actor)
-    return execute_query("""SELECT (SELECT count(*) FROM courses) AS courses,
+    return execute_query("""SELECT (SELECT count(*) FROM courses WHERE archived=false) AS courses,
         (SELECT count(*) FROM course_registrations WHERE status IN ('registered','completed')) AS enrolled_learners,
         (SELECT count(*) FROM video_assets WHERE status='ready') AS published_recordings,
         (SELECT count(*) FROM lecture_progress WHERE completed=true) AS completed_lectures,

@@ -168,3 +168,13 @@ variable "expo_push_access_token" {
   sensitive   = true
   default     = ""
 }
+
+variable "admin_custom_origins" {
+  description = "Approved HTTPS origins for admin/student Cognito login after domain attachment"
+  type        = list(string)
+  default     = []
+  validation {
+    condition     = alltrue([for origin in var.admin_custom_origins : can(regex("^https://[a-zA-Z0-9.-]+$", origin))])
+    error_message = "Use HTTPS origins only, without a path or trailing slash."
+  }
+}

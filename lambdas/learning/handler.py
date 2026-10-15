@@ -11,7 +11,7 @@ from uuid import UUID
 from shared.auth import get_current_user, _normalize_groups
 from shared.user_repository import get_or_create_user_from_claims
 from shared.db import execute_query
-from learning import service, exams, certificates, devices, enquiries, billing, access_windows
+from learning import service, exams, certificates, devices, enquiries, billing, access_windows, staff, operations
 from learning.validation import ApiError, identifier
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ def _actor(event):
     user = get_or_create_user_from_claims(claims)
     if not user: raise ApiError(401,"User identity could not be resolved")
     groups = {str(g).lower() for g in _normalize_groups(claims.get("cognito:groups"))}
-    return {"id":str(user.id),"name":user.name,"admin":"admins" in groups}
+    return {"id":str(user.id),"name":user.name,"admin":"admins" in groups,"marketing":"marketing" in groups}
 
 
 def handler(event, context):
@@ -70,11 +70,19 @@ def handler(event, context):
             return _response(202,enquiries.submit(_body(event)))
         if path == "/billing/catalog" and method == "GET":
             return _response(200,billing.catalog(None))
+        if path == "/employer-enquiries" and method == "POST":
+            return _response(202,enquiries.submit(_body(event),True))
         actor = _actor(event)
-        if parts[0]=="admin": service.admin(actor)
+        marketing_route=(path=="/admin/enquiries" or (len(parts)==3 and parts[:2]==['admin','enquiries']) or path=="/admin/marketing/interests")
+        if parts[0]=="admin":
+            enquiries.staff(actor) if marketing_route else service.admin(actor)
         body = _body(event) if method in ("POST","PUT","PATCH") else {}
         result, status = None, 200
-        if path=="/billing/catalog" and method=="GET": result=billing.catalog(actor)
+        if path=="/admin/operations/readiness" and method=="GET":result=operations.readiness(actor)
+        elif path=="/admin/marketing/users" and method=='GET':result=staff.members(actor,event.get('queryStringParameters') or {})
+        elif path=="/admin/marketing/users" and method=='PUT':result=staff.membership(actor,body)
+        elif path=="/admin/marketing/interests" and method=="GET": result=enquiries.student_interests(actor)
+        elif path=="/billing/catalog" and method=="GET": result=billing.catalog(actor)
         elif path=="/admin/billing/courses" and method=="GET": result=billing.catalog(actor)
         elif len(parts)==4 and parts[:3]==['admin','billing','courses'] and method=='PUT': result=billing.set_price(actor,parts[3],body)
         elif path=="/admin/billing/orders" and method=="GET": result=billing.listing(actor,True)

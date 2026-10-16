@@ -1,8 +1,8 @@
 import { Amplify } from 'aws-amplify';
 
 const region = process.env.EXPO_PUBLIC_COGNITO_REGION ?? 'ap-south-1';
-const userPoolId = process.env.EXPO_PUBLIC_COGNITO_USER_POOL_ID ?? 'ap-south-1_6SDlpRoIV';
-const userPoolClientId = process.env.EXPO_PUBLIC_COGNITO_APP_CLIENT_ID ?? '73rg2jp451loqmf9ug0jqsb7o6';
+const userPoolId = process.env.EXPO_PUBLIC_COGNITO_USER_POOL_ID ?? 'ap-south-1_kc1sfOoEG';
+const userPoolClientId = process.env.EXPO_PUBLIC_COGNITO_APP_CLIENT_ID ?? '40faprqjpcc6q0pfkdkcrd8p5v';
 
 const awsConfig = {
   Auth: {

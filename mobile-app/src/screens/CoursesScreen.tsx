@@ -50,6 +50,12 @@ export function CoursesScreen({ onCoursePress }: CoursesScreenProps) {
         {item.short_description ? (
           <Text style={styles.description} numberOfLines={2}>{item.short_description}</Text>
         ) : null}
+        {item.learning_access ? (
+          <View style={styles.enrolledBadge}>
+            <Ionicons name="checkmark-circle" size={14} color={colors.success} />
+            <Text style={styles.enrolledText}>Enrolled</Text>
+          </View>
+        ) : null}
       </View>
       <View style={styles.chevronWrap}>
         <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
@@ -212,6 +218,22 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: spacing.xs,
     lineHeight: 20,
+  },
+  enrolledBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.successBg,
+  },
+  enrolledText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.success,
   },
   chevronWrap: {
     padding: spacing.sm,

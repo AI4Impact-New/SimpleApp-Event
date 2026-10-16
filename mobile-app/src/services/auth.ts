@@ -29,6 +29,14 @@ export type StoredUserData = {
 class AuthService {
   private onUnauthorized: UnauthorizedCallback | null = null;
 
+  private beforeSignOut: (() => Promise<void>) | null = null;
+  private signingOut = false;
+
+  /** Runs before every sign-out (manual or forced) while the session can still authenticate requests. */
+  setBeforeSignOut(callback: (() => Promise<void>) | null) {
+    this.beforeSignOut = callback;
+  }
+
   setOnUnauthorized(callback: UnauthorizedCallback | null) {
     this.onUnauthorized = callback;
   }
@@ -202,16 +210,19 @@ class AuthService {
   }
 
   async logout() {
-    try {
-      await signOut();
-    } catch (_) {
-      // ignore
-    }
     await this.clearStorage();
     return { success: true };
   }
 
   async clearStorage() {
+    // A request made by beforeSignOut can 401 and land back here; don't recurse.
+    if (this.signingOut) return;
+    this.signingOut = true;
+    try {
+      await this.beforeSignOut?.();
+    } catch (_) {
+      // best-effort
+    }
     try {
       await signOut();
     } catch (_) {
@@ -224,6 +235,7 @@ class AuthService {
     } catch (_) {
       // ignore
     }
+    this.signingOut = false;
     this.onUnauthorized?.();
   }
 
@@ -302,6 +314,24 @@ class AuthService {
       return await SecureStore.getItemAsync(TOKEN_KEY);
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * Current ID token for requests made outside axios. Amplify returns its cached session and only
+   * refreshes when the token has expired, so this is cheap when the token is still valid.
+   */
+  async getFreshToken(): Promise<string | null> {
+    try {
+      const idToken = (await fetchAuthSession()).tokens?.idToken?.toString();
+      if (!idToken) return this.getToken();
+      if (idToken !== (await this.getToken())) {
+        await SecureStore.setItemAsync(ID_TOKEN_KEY, idToken);
+        await SecureStore.setItemAsync(TOKEN_KEY, idToken);
+      }
+      return idToken;
+    } catch {
+      return this.getToken();
     }
   }
 

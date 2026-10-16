@@ -1,6 +1,23 @@
 // API service
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { authService } from './auth';
+import type {
+  CertificateVerification,
+  Exam,
+  ExamAnswers,
+  ExamAttempt,
+  IssuedCertificate,
+  LearnerNotification,
+  LearningHome,
+  LectureProgress,
+  MyCertificate,
+  MyLearningCourse,
+  Playback,
+  PushDevice,
+  PushDeviceInput,
+  TemporaryDownload,
+} from '@/types/learning';
+import type { CoursePrice, DemoCheckoutAction, DemoOrder } from '@/types/billing';
 
 export type MyProfile = {
   id: string;
@@ -18,11 +35,13 @@ export type MyProfile = {
   access_role?: string;
 };
 
-const rawUrl = process.env.EXPO_PUBLIC_API_URL || 'https://ggszk3v52a.execute-api.ap-south-1.amazonaws.com';
+const rawUrl = process.env.EXPO_PUBLIC_API_URL || 'https://ke8dywmhil.execute-api.ap-south-1.amazonaws.com';
 const API_URL = rawUrl.replace(/\/api\/?$/, '');
 
 class ApiService {
   private client: AxiosInstance;
+  // Unauthenticated routes (public verification, catalog prices): no token, no 401 handling
+  private publicClient = axios.create({ baseURL: API_URL });
 
   constructor() {
     this.client = axios.create({
@@ -156,7 +175,7 @@ class ApiService {
   }
 
   // Courses
-  async getCourses(params?: { status?: string }) {
+  async getCourses(params?: { full?: boolean; limit?: number }) {
     const response = await this.client.get('/courses', { params });
     const raw = response.data;
     return Array.isArray(raw) ? raw : raw?.data ?? raw?.courses ?? [];
@@ -168,7 +187,7 @@ class ApiService {
   }
 
   async registerCourse(courseId: string) {
-    const response = await this.client.post(`/courses/${courseId}/register`, {});
+    const response = await this.client.post(`/courses/${courseId}/register`, { source: 'mobile' });
     return response.data;
   }
 
@@ -206,6 +225,135 @@ class ApiService {
   async submitPrivacyConsent(version: string) {
     const response = await this.client.post('/users/me/privacy-consent', { version });
     return response.data;
+  }
+
+  // Learning — new routes return JSON directly (arrays or objects)
+  async getMyLearning(): Promise<MyLearningCourse[]> {
+    const response = await this.client.get('/me/learning');
+    return Array.isArray(response.data) ? response.data : [];
+  }
+
+  async getLearningHome(courseId: string): Promise<LearningHome> {
+    const response = await this.client.get(`/learning/courses/${courseId}`);
+    return response.data;
+  }
+
+  async getPlayback(classId: string): Promise<Playback> {
+    const response = await this.client.get(`/learning/classes/${classId}/playback`);
+    return response.data;
+  }
+
+  async sendLectureProgress(classId: string, sessionId: string, positionSeconds: number): Promise<LectureProgress> {
+    const response = await this.client.post(`/learning/classes/${classId}/progress`, {
+      session_id: sessionId,
+      position_seconds: positionSeconds,
+    });
+    return response.data;
+  }
+
+  // Exams
+  async getCourseExams(courseId: string): Promise<Exam[]> {
+    const response = await this.client.get(`/learning/courses/${courseId}/exams`);
+    return Array.isArray(response.data) ? response.data : [];
+  }
+
+  async startExamAttempt(examId: string): Promise<ExamAttempt> {
+    const response = await this.client.post(`/learning/exams/${examId}/attempts`, {});
+    return response.data;
+  }
+
+  async getExamAttempt(attemptId: string): Promise<ExamAttempt> {
+    const response = await this.client.get(`/learning/attempts/${attemptId}`);
+    return response.data;
+  }
+
+  async submitExamAttempt(attemptId: string, answers: ExamAnswers): Promise<ExamAttempt> {
+    const response = await this.client.post(`/learning/attempts/${attemptId}/submit`, { answers });
+    return response.data;
+  }
+
+  // Completion & certificates
+  async issueCertificate(courseId: string): Promise<IssuedCertificate> {
+    const response = await this.client.post(`/learning/courses/${courseId}/certificate`, {});
+    return response.data;
+  }
+
+  async getMyCertificates(): Promise<MyCertificate[]> {
+    const response = await this.client.get('/me/certificates');
+    return Array.isArray(response.data) ? response.data : [];
+  }
+
+  async getCertificateDownload(certificateId: string): Promise<TemporaryDownload> {
+    const response = await this.client.get(`/certificates/${certificateId}/download`);
+    return response.data;
+  }
+
+  /** Public — no login required. */
+  async verifyCertificate(certificateId: string): Promise<CertificateVerification> {
+    const response = await this.publicClient.get(`/certificates/${encodeURIComponent(certificateId)}/verify`, {
+      headers: { Accept: 'application/json' },
+    });
+    return response.data;
+  }
+
+  // Notifications
+  async getNotifications(): Promise<LearnerNotification[]> {
+    const response = await this.client.get('/me/notifications');
+    return Array.isArray(response.data) ? response.data : [];
+  }
+
+  async markNotificationRead(notificationId: string) {
+    const response = await this.client.patch(`/me/notifications/${notificationId}`, {});
+    return response.data as { id: string; read_at: string };
+  }
+
+  // Push devices (503 until backend expo_project_id is configured)
+  async registerDevice(input: PushDeviceInput): Promise<PushDevice> {
+    const response = await this.client.post('/me/devices', input);
+    return response.data;
+  }
+
+  async removeDevice(deviceId: string) {
+    const response = await this.client.delete(`/me/devices/${deviceId}`);
+    return response.data as { deleted: boolean };
+  }
+
+  // Demo commerce — no money is collected and no enrollment is granted
+  /** Public active course prices. */
+  async getBillingCatalog(): Promise<CoursePrice[]> {
+    const response = await this.publicClient.get('/billing/catalog');
+    return Array.isArray(response.data) ? response.data : [];
+  }
+
+  /** Reusing the same requestId after a network failure returns the original quote. */
+  async createDemoOrder(courseId: string, requestId: string): Promise<DemoOrder> {
+    const response = await this.client.post('/billing/orders', { course_id: courseId, request_id: requestId });
+    return response.data;
+  }
+
+  async getDemoOrder(orderId: string): Promise<DemoOrder> {
+    const response = await this.client.get(`/billing/orders/${orderId}`);
+    return response.data;
+  }
+
+  async finishDemoCheckout(orderId: string, action: DemoCheckoutAction): Promise<DemoOrder> {
+    const response = await this.client.post(`/billing/orders/${orderId}/demo-checkout`, { action });
+    return response.data;
+  }
+
+  async getMyPurchases(): Promise<DemoOrder[]> {
+    const response = await this.client.get('/me/purchases');
+    return Array.isArray(response.data) ? response.data : [];
+  }
+
+  /** Invoice is a binary PDF behind auth: hand back the URL and headers for a native download. */
+  async getInvoiceRequest(orderId: string): Promise<{ url: string; headers: Record<string, string> }> {
+    // The native downloader bypasses the axios 401 interceptor, so make sure the ID token is current.
+    const token = await authService.getFreshToken();
+    return {
+      url: `${API_URL}/billing/orders/${orderId}/invoice`,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    };
   }
 }
 

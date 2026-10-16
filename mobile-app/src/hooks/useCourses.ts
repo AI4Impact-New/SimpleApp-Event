@@ -6,7 +6,7 @@ import { Course } from '@/types/course';
 export function useCourses() {
   return useQuery({
     queryKey: ['courses'],
-    queryFn: () => api.getCourses({ status: 'published' }),
+    queryFn: () => api.getCourses({ full: true, limit: 50 }),
   });
 }
 
@@ -22,10 +22,10 @@ export function useRegisterCourse() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (courseId: string) => api.registerCourse(courseId),
-    onSuccess: (_, courseId) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
-      queryClient.invalidateQueries({ queryKey: ['courses', courseId] });
       queryClient.invalidateQueries({ queryKey: ['me', 'courses'] });
+      queryClient.invalidateQueries({ queryKey: ['me', 'learning'] });
     },
   });
 }
@@ -34,9 +34,8 @@ export function useMarkCourseInterest() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (courseId: string) => api.markCourseInterest(courseId),
-    onSuccess: (_, courseId) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
-      queryClient.invalidateQueries({ queryKey: ['courses', courseId] });
       queryClient.invalidateQueries({ queryKey: ['me', 'courses'] });
     },
   });

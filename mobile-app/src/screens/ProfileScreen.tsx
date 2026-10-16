@@ -9,11 +9,14 @@ import {
   ActivityIndicator,
   ScrollView,
   RefreshControl,
+  Switch,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { authService, StoredUserData } from '@/services/auth';
 import { api } from '@/services/api';
+import { isPushOptedOut, setPushOptOut } from '@/services/push';
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -26,6 +29,28 @@ export function ProfileScreen({ onBack, onLogout, onEditProfile, onPrivacyPolicy
   const [user, setUser] = useState<StoredUserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(true);
+  const [pushBusy, setPushBusy] = useState(false);
+
+  useEffect(() => {
+    isPushOptedOut().then((optedOut) => setPushEnabled(!optedOut));
+  }, []);
+
+  const togglePush = async (enabled: boolean) => {
+    setPushBusy(true);
+    setPushEnabled(enabled);
+    const result = await setPushOptOut(!enabled);
+    setPushBusy(false);
+    if (enabled && !result.ok) {
+      const messages: Record<string, string> = {
+        not_device: 'Push notifications need a physical device.',
+        no_project: 'Push notifications are not configured in this build yet.',
+        permission_denied: 'Allow notifications for this app in your device settings.',
+        not_configured: 'Push notifications are not enabled on the server yet. Your in-app inbox still works.',
+      };
+      Alert.alert('Notifications', messages[result.reason] ?? result.message ?? 'Could not enable notifications.');
+    }
+  };
 
   const loadProfile = React.useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -175,6 +200,17 @@ export function ProfileScreen({ onBack, onLogout, onEditProfile, onPrivacyPolicy
               <Text style={styles.label}>Email</Text>
               <Text style={styles.value} numberOfLines={1}>{user?.email ?? '—'}</Text>
             </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Notifications</Text>
+          <View style={[styles.card, { flexDirection: 'row', alignItems: 'center' }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.value}>Push notifications</Text>
+              <Text style={styles.label}>Course announcements and certificate updates</Text>
+            </View>
+            <Switch value={pushEnabled} onValueChange={togglePush} disabled={pushBusy} />
           </View>
         </View>
 

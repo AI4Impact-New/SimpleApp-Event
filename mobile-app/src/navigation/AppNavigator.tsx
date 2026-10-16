@@ -1,6 +1,8 @@
 // App Navigator
 import React, { useState, useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
+import { useQueryClient } from '@tanstack/react-query';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
@@ -23,15 +25,87 @@ import { EditProfileScreen } from '@/screens/EditProfileScreen';
 import { CoursesScreen } from '@/screens/CoursesScreen';
 import { CourseDetailScreen } from '@/screens/CourseDetailScreen';
 import { PrivacyPolicyScreen } from '@/screens/PrivacyPolicyScreen';
+import { MyLearningScreen } from '@/screens/MyLearningScreen';
+import { CourseLearningScreen } from '@/screens/CourseLearningScreen';
+import { LecturePlayerScreen } from '@/screens/LecturePlayerScreen';
+import { ExamScreen } from '@/screens/ExamScreen';
+import { CertificatesScreen } from '@/screens/CertificatesScreen';
+import { NotificationsScreen } from '@/screens/NotificationsScreen';
+import { CheckoutScreen } from '@/screens/CheckoutScreen';
+import { PurchasesScreen } from '@/screens/PurchasesScreen';
+import { VerifyCertificateScreen } from '@/screens/VerifyCertificateScreen';
+import { courseIdFromResponse, registerForPush, unregisterPush, watchPushToken } from '@/services/push';
 import { colors, spacing } from '@/theme/colors';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 type SignUpFlowParams = { email?: string; password?: string; name?: string };
+const navigationRef = createNavigationContainerRef<any>();
+
+// Tap that arrived before the navigator was ready (cold start); flushed from NavigationContainer onReady.
+let pendingNotificationTarget: { courseId: string | null } | null = null;
+
+/** Open the course a tapped notification refers to (or the inbox). The payload is a hint, not authorization. */
+function openFromNotification(courseId: string | null) {
+  if (!navigationRef.isReady()) {
+    pendingNotificationTarget = { courseId };
+    return;
+  }
+  if (courseId) {
+    navigationRef.navigate('Learning', { screen: 'CourseLearning', params: { courseId }, initial: false });
+  } else {
+    navigationRef.navigate('Learning', { screen: 'Notifications', initial: false });
+  }
+}
+
+function flushPendingNotification() {
+  const target = pendingNotificationTarget;
+  pendingNotificationTarget = null;
+  if (target) openFromNotification(target.courseId);
+}
+
+/** Registers this device for push once signed in and routes notification taps. Renders nothing. */
+function PushBridge() {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    registerForPush({ prompt: true }).catch(() => {});
+    const unwatch = watchPushToken();
+
+    const handle = (response: Notifications.NotificationResponse | null) => {
+      if (!response) return;
+      // Fetch the inbox first; the server is the source of truth for what the notification says.
+      queryClient.invalidateQueries({ queryKey: ['me', 'notifications'] });
+      openFromNotification(courseIdFromResponse(response));
+    };
+
+    // Cold start: app opened by tapping a notification
+    Notifications.getLastNotificationResponseAsync()
+      .then((response) => {
+        handle(response);
+        if (response) Notifications.clearLastNotificationResponseAsync?.().catch(() => {});
+      })
+      .catch(() => {});
+    const sub = Notifications.addNotificationResponseReceivedListener(handle);
+    // Foreground arrival: refresh the inbox badge
+    const received = Notifications.addNotificationReceivedListener(() => {
+      queryClient.invalidateQueries({ queryKey: ['me', 'notifications'] });
+    });
+    return () => {
+      unwatch();
+      sub.remove();
+      received.remove();
+    };
+  }, [queryClient]);
+
+  return null;
+}
 
 // Main Tab Navigator
 function MainTabs({ onLogout }: { onLogout: (() => void) | null }) {
   return (
+    <>
+    <PushBridge />
     <Tab.Navigator
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
@@ -140,7 +214,7 @@ function MainTabs({ onLogout }: { onLogout: (() => void) | null }) {
         {() => (
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="CoursesMain">
-              {({ navigation }) => (
+              {({ navigation }: any) => (
                 <CoursesScreen
                   onCoursePress={(course) =>
                     navigation.navigate('CourseDetail', { courseId: course.id })
@@ -149,10 +223,110 @@ function MainTabs({ onLogout }: { onLogout: (() => void) | null }) {
               )}
             </Stack.Screen>
             <Stack.Screen name="CourseDetail">
-              {({ route, navigation }) => (
+              {({ route, navigation }: any) => (
                 <CourseDetailScreen
                   courseId={route.params?.courseId ?? ''}
                   onBack={() => navigation.goBack()}
+                  onOpenLearning={(courseId) =>
+                    navigation.navigate('Learning', {
+                      screen: 'CourseLearning',
+                      params: { courseId },
+                      initial: false,
+                    })
+                  }
+                  onOpenCheckout={(orderId) => navigation.navigate('Checkout', { orderId })}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="Checkout">
+              {({ route, navigation }: any) => (
+                <CheckoutScreen orderId={route.params?.orderId ?? ''} onBack={() => navigation.goBack()} />
+              )}
+            </Stack.Screen>
+          </Stack.Navigator>
+        )}
+      </Tab.Screen>
+
+      <Tab.Screen
+        name="Learning"
+        options={{
+          tabBarLabel: 'Learning',
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'school' : 'school-outline'} size={size ?? 24} color={color} />
+          ),
+        }}
+      >
+        {() => (
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="MyLearningMain">
+              {({ navigation }: any) => (
+                <MyLearningScreen
+                  onCoursePress={(courseId) => navigation.navigate('CourseLearning', { courseId })}
+                  onCertificatesPress={() => navigation.navigate('Certificates')}
+                  onNotificationsPress={() => navigation.navigate('Notifications')}
+                  onPurchasesPress={() => navigation.navigate('Purchases')}
+                  onBrowseCourses={() => navigation.navigate('Courses')}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="CourseLearning">
+              {({ route, navigation }: any) => (
+                <CourseLearningScreen
+                  courseId={route.params?.courseId ?? ''}
+                  onBack={() => navigation.goBack()}
+                  onPlayLecture={(lecture) =>
+                    navigation.navigate('LecturePlayer', { classId: lecture.id, title: lecture.title })
+                  }
+                  onOpenExam={(exam) => navigation.navigate('Exam', { exam })}
+                  onCertificateIssued={() => navigation.navigate('Certificates')}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="LecturePlayer">
+              {({ route, navigation }: any) => (
+                <LecturePlayerScreen
+                  classId={route.params?.classId ?? ''}
+                  title={route.params?.title ?? 'Lecture'}
+                  onBack={() => navigation.goBack()}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="Exam">
+              {({ route, navigation }: any) => (
+                <ExamScreen exam={route.params?.exam} onBack={() => navigation.goBack()} />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="Certificates">
+              {({ navigation }: any) => (
+                <CertificatesScreen
+                  onBack={() => navigation.goBack()}
+                  onVerify={() => navigation.navigate('VerifyCertificate')}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="VerifyCertificate">
+              {({ route, navigation }: any) => (
+                <VerifyCertificateScreen initialId={route.params?.id} onBack={() => navigation.goBack()} />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="Purchases">
+              {({ navigation }: any) => (
+                <PurchasesScreen
+                  onBack={() => navigation.goBack()}
+                  onOpenOrder={(orderId) => navigation.navigate('Checkout', { orderId })}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="Checkout">
+              {({ route, navigation }: any) => (
+                <CheckoutScreen orderId={route.params?.orderId ?? ''} onBack={() => navigation.goBack()} />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="Notifications">
+              {({ navigation }: any) => (
+                <NotificationsScreen
+                  onBack={() => navigation.goBack()}
+                  onOpenCourse={(courseId) => navigation.navigate('CourseLearning', { courseId })}
                 />
               )}
             </Stack.Screen>
@@ -191,6 +365,7 @@ function MainTabs({ onLogout }: { onLogout: (() => void) | null }) {
         )}
       </Tab.Screen>
     </Tab.Navigator>
+    </>
   );
 }
 
@@ -264,6 +439,7 @@ export function AppNavigator() {
       .then(({ authService }) => {
         if (cancelled) return;
         authService.setOnUnauthorized(() => setRefreshKey((k) => k + 1));
+        authService.setBeforeSignOut(unregisterPush);
         setLogoutFn(() => () => authService.logout());
         return authService.isAuthenticated();
       })
@@ -291,7 +467,7 @@ export function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef} onReady={flushPendingNotification}>
       {isAuthenticated ? (
         <MainTabs onLogout={logoutFn} />
       ) : (
@@ -310,8 +486,12 @@ function AuthStack({ onLoginSuccess }: { onLoginSuccess: () => void }) {
           <AuthHomeScreen
             onSignIn={() => navigation.navigate('Login')}
             onCreateAccount={() => navigation.navigate('SignUp')}
+            onVerifyCertificate={() => navigation.navigate('VerifyCertificate')}
           />
         )}
+      </Stack.Screen>
+      <Stack.Screen name="VerifyCertificate">
+        {({ navigation }) => <VerifyCertificateScreen onBack={() => navigation.goBack()} />}
       </Stack.Screen>
       <Stack.Screen name="Login">
         {({ navigation }) => (

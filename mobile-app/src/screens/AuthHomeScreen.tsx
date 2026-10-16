@@ -7,9 +7,10 @@ import { PiLogo } from '@/components/PiLogo';
 interface AuthHomeScreenProps {
   onSignIn: () => void;
   onCreateAccount: () => void;
+  onVerifyCertificate?: () => void;
 }
 
-export function AuthHomeScreen({ onSignIn, onCreateAccount }: AuthHomeScreenProps) {
+export function AuthHomeScreen({ onSignIn, onCreateAccount, onVerifyCertificate }: AuthHomeScreenProps) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -27,6 +28,12 @@ export function AuthHomeScreen({ onSignIn, onCreateAccount }: AuthHomeScreenProp
             <Text style={styles.secondaryButtonText}>Create account</Text>
           </TouchableOpacity>
         </View>
+
+        {onVerifyCertificate ? (
+          <TouchableOpacity onPress={onVerifyCertificate} activeOpacity={0.7}>
+            <Text style={styles.verifyLink}>Verify a certificate</Text>
+          </TouchableOpacity>
+        ) : null}
 
         <Text style={styles.footer}>Powered by PiResearch Labs</Text>
       </View>
@@ -88,6 +95,13 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 16,
     fontWeight: '600',
+  },
+  verifyLink: {
+    textAlign: 'center',
+    color: colors.primary,
+    fontSize: 15,
+    fontWeight: '600',
+    marginTop: spacing.sm,
   },
   footer: {
     textAlign: 'center',

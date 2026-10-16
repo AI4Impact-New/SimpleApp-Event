@@ -1,5 +1,5 @@
 // Course Detail Screen
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCourse, useRegisterCourse, useMarkCourseInterest } from '@/hooks/useCourses';
+import { useCoursePrice, useCreateDemoOrder } from '@/hooks/useBilling';
+import { apiErrorMessage } from '@/services/apiErrors';
+import { formatPaise } from '@/utils/money';
+import { uuidv4 } from '@/utils/uuid';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { api } from '@/services/api';
 import type { CoursePhase, CourseClass } from '@/types/course';
@@ -35,24 +39,29 @@ const cardShadow = Platform.select({
 interface CourseDetailScreenProps {
   courseId: string;
   onBack: () => void;
+  onOpenLearning: (courseId: string) => void;
+  onOpenCheckout: (orderId: string) => void;
 }
 
-export function CourseDetailScreen({ courseId, onBack }: CourseDetailScreenProps) {
+export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenCheckout }: CourseDetailScreenProps) {
   const { data: course, isLoading, error, refetch, isRefetching } = useCourse(courseId);
+  const { data: price } = useCoursePrice(courseId);
+  const createOrder = useCreateDemoOrder();
+  // One request UUID per intentional order; kept across network-failure retries so the server returns the same quote.
+  const orderRequestIdRef = useRef<string | null>(null);
   const registerCourse = useRegisterCourse();
   const markInterest = useMarkCourseInterest();
-  const [registered, setRegistered] = useState(false);
   const [interested, setInterested] = useState(false);
 
   const handleRegister = async () => {
     try {
       await registerCourse.mutateAsync(courseId);
-      setRegistered(true);
-      Alert.alert('Success', 'You have registered for this course.');
+      Alert.alert('Registered', 'You now have access to this course.', [
+        { text: 'Open course', onPress: () => onOpenLearning(courseId) },
+        { text: 'Later' },
+      ]);
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ?? err?.response?.data?.error ?? 'Failed to register for course.';
-      Alert.alert('Error', msg);
+      Alert.alert('Error', apiErrorMessage(err, 'Failed to register for course.'));
     }
   };
 
@@ -62,9 +71,26 @@ export function CourseDetailScreen({ courseId, onBack }: CourseDetailScreenProps
       setInterested(true);
       Alert.alert('Done', "You're marked as interested. We'll be in touch.");
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ?? err?.response?.data?.error ?? 'Failed to mark interest.';
-      Alert.alert('Error', msg);
+      Alert.alert('Error', apiErrorMessage(err, 'Failed to mark interest.'));
+    }
+  };
+
+  const handleDemoCheckout = async () => {
+    if (!orderRequestIdRef.current) orderRequestIdRef.current = uuidv4();
+    try {
+      const order = await createOrder.mutateAsync({ courseId, requestId: orderRequestIdRef.current });
+      orderRequestIdRef.current = null;
+      onOpenCheckout(order.id);
+    } catch (err: any) {
+      if (!err?.response) {
+        Alert.alert('Connection problem', 'Your order was not created yet.', [
+          { text: 'Retry', onPress: () => handleDemoCheckout() },
+          { text: 'Cancel', style: 'cancel', onPress: () => (orderRequestIdRef.current = null) },
+        ]);
+      } else {
+        orderRequestIdRef.current = null;
+        Alert.alert('Checkout unavailable', apiErrorMessage(err, 'Could not start checkout.'));
+      }
     }
   };
 
@@ -74,7 +100,6 @@ export function CourseDetailScreen({ courseId, onBack }: CourseDetailScreenProps
       await Share.share({
         message: ics,
         title: `${course?.title ?? 'Course'} schedule`,
-        type: 'text/calendar',
       });
     } catch (e) {
       Alert.alert('Error', 'Could not load calendar. Try again later.');
@@ -120,6 +145,8 @@ export function CourseDetailScreen({ courseId, onBack }: CourseDetailScreenProps
   const audience = course.audience ?? [];
   const careerOutcomes = course.career_outcomes ?? [];
   const certificate = course.certificate;
+  // isSuccess covers the gap until the invalidated course query returns learning_access=true
+  const hasAccess = !!course.learning_access || registerCourse.isSuccess;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -272,12 +299,51 @@ export function CourseDetailScreen({ courseId, onBack }: CourseDetailScreenProps
           </View>
         )}
 
-        <View style={styles.registerSection}>
-          {registered ? (
-            <View style={[styles.registerBtn, styles.registeredBtn]}>
-              <Ionicons name="checkmark-circle" size={22} color={colors.success} />
-              <Text style={styles.registeredText}>Registered</Text>
+        {price && price.marked_price_paise > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Course fee</Text>
+            <View style={styles.benefitsCard}>
+              <View style={styles.priceRow}>
+                <Text style={styles.priceTotal}>{formatPaise(price.total_paise)}</Text>
+                {price.discount_paise > 0 ? (
+                  <>
+                    <Text style={styles.priceMarked}>{formatPaise(price.marked_price_paise)}</Text>
+                    <Text style={styles.priceDiscount}>{Number(price.discount_percentage)}% off</Text>
+                  </>
+                ) : null}
+              </View>
+              <Text style={[styles.bulletDesc, { marginTop: 6 }]}>
+                Demo checkout only. No money is collected and it does not grant access; registration stays free.
+              </Text>
+              <TouchableOpacity
+                style={[styles.registerBtn, { marginTop: 12, backgroundColor: colors.border }]}
+                onPress={handleDemoCheckout}
+                disabled={createOrder.isPending}
+                activeOpacity={0.75}
+              >
+                {createOrder.isPending ? (
+                  <ActivityIndicator size="small" color={colors.text} />
+                ) : (
+                  <>
+                    <Ionicons name="card-outline" size={20} color={colors.text} />
+                    <Text style={[styles.registerBtnText, { color: colors.text }]}>Demo checkout</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
+          </View>
+        ) : null}
+
+        <View style={styles.registerSection}>
+          {hasAccess ? (
+            <TouchableOpacity
+              style={styles.registerBtn}
+              onPress={() => onOpenLearning(courseId)}
+              activeOpacity={0.75}
+            >
+              <Ionicons name="play-circle-outline" size={22} color={colors.white} />
+              <Text style={styles.registerBtnText}>Open course</Text>
+            </TouchableOpacity>
           ) : interested ? (
             <View style={[styles.registerBtn, styles.registeredBtn, { backgroundColor: '#dbeafe' }]}>
               <Ionicons name="heart" size={22} color="#1d4ed8" />
@@ -508,6 +574,27 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: spacing.sm,
     lineHeight: 21,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  priceTotal: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  priceMarked: {
+    fontSize: 15,
+    color: colors.textMuted,
+    textDecorationLine: 'line-through',
+  },
+  priceDiscount: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.success,
   },
   registerSection: {
     marginTop: spacing.xxl,

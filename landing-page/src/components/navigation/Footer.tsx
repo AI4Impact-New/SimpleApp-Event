@@ -8,9 +8,10 @@ type FooterProps = {
   note: string;
   legal: string;
   legalRight: string;
+  policies: { label: string; href: string }[];
 };
 
-export function Footer({ columns, tagline, note, legal, legalRight }: FooterProps) {
+export function Footer({ columns, tagline, note, legal, legalRight, policies }: FooterProps) {
   return (
     <footer className="bg-(--surface-dark)">
       <div className="mx-auto grid max-w-(--container) items-start gap-(--space-12) px-(--container-pad) pt-(--space-12) pb-(--space-10) sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
@@ -39,7 +40,21 @@ export function Footer({ columns, tagline, note, legal, legalRight }: FooterProp
         ))}
       </div>
       <div className="border-t border-(--border-dark)">
-        <div className="mx-auto flex max-w-(--container) flex-col gap-(--space-2) px-(--container-pad) pt-(--space-5) pb-(--space-6) text-(length:--fs-eyebrow) leading-(--lh-body) text-(--text-on-dark-muted) md:flex-row md:justify-between md:gap-(--space-6)">
+        <nav
+          aria-label="Policies"
+          className="mx-auto flex max-w-(--container) flex-wrap gap-x-(--space-6) gap-y-(--space-2) px-(--container-pad) pt-(--space-5)"
+        >
+          {policies.map((p) => (
+            <a
+              key={p.label}
+              href={p.href}
+              className="text-(length:--fs-xs) leading-(--lh-snug) text-(--text-on-dark-body) hover:text-(--text-on-dark) hover:no-underline"
+            >
+              {p.label}
+            </a>
+          ))}
+        </nav>
+        <div className="mx-auto flex max-w-(--container) flex-col gap-(--space-2) px-(--container-pad) pt-(--space-4) pb-(--space-6) text-(length:--fs-eyebrow) leading-(--lh-body) text-(--text-on-dark-muted) md:flex-row md:justify-between md:gap-(--space-6)">
           <span>{legal}</span>
           <span>{legalRight}</span>
         </div>

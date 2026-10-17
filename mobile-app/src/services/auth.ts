@@ -1,6 +1,6 @@
 // Authentication service using AWS Amplify (Cognito)
 import { signIn, signOut, signUp, confirmSignUp, resendSignUpCode, getCurrentUser, fetchAuthSession, fetchUserAttributes } from 'aws-amplify/auth';
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from './secureStorage';
 
 export type SignUpOptions = { givenName?: string; familyName?: string };
 

@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Switch,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '@/theme/colors';
@@ -203,6 +204,7 @@ export function ProfileScreen({ onBack, onLogout, onEditProfile, onPrivacyPolicy
           </View>
         </View>
 
+        {Platform.OS !== 'web' && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Notifications</Text>
           <View style={[styles.card, { flexDirection: 'row', alignItems: 'center' }]}>
@@ -213,6 +215,7 @@ export function ProfileScreen({ onBack, onLogout, onEditProfile, onPrivacyPolicy
             <Switch value={pushEnabled} onValueChange={togglePush} disabled={pushBusy} />
           </View>
         </View>
+        )}
 
         {onPrivacyPolicy && (
           <TouchableOpacity

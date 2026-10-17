@@ -1,5 +1,6 @@
 // Main App Entry – polyfill must load before any Amplify code
 import 'react-native-get-random-values';
+import '@/utils/webAlert';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, AppState, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

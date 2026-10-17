@@ -5,7 +5,7 @@ import * as Notifications from 'expo-notifications';
 import { useQueryClient } from '@tanstack/react-query';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { LoginScreen } from '@/screens/LoginScreen';
@@ -105,7 +105,7 @@ function PushBridge() {
 function MainTabs({ onLogout }: { onLogout: (() => void) | null }) {
   return (
     <>
-    <PushBridge />
+    {Platform.OS !== 'web' && <PushBridge />}
     <Tab.Navigator
       screenOptions={{
         tabBarActiveTintColor: colors.primary,

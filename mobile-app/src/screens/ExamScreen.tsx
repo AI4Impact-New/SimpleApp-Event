@@ -52,8 +52,11 @@ export function ExamScreen({ exam, onBack }: ExamScreenProps) {
             setAnswers(stored.answers ?? {});
             if (restored.status !== 'pending') await (await store()).write(null);
           }
-        } catch {
-          await (await store()).write(null);
+        } catch (err: any) {
+          // Forget the attempt only when the server says it is gone or not ours; keep answers through
+          // connection errors so "Start / resume" can pick them back up.
+          const status = err?.response?.status;
+          if (status === 403 || status === 404) await (await store()).write(null);
         }
       }
       if (!cancelled) setRestoring(false);

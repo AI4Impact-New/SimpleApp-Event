@@ -232,7 +232,6 @@ export function ProfileScreen({
           </View>
         </View>
 
-        {Platform.OS !== 'web' && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Learning</Text>
           <View style={[styles.card, styles.menuCard]}>
@@ -244,6 +243,7 @@ export function ProfileScreen({
           </View>
         </View>
 
+        {Platform.OS !== 'web' && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Notifications</Text>
           <View style={[styles.card, { flexDirection: 'row', alignItems: 'center' }]}>

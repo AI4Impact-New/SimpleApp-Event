@@ -18,17 +18,17 @@ import { colors, spacing, borderRadius } from '@/theme/colors';
 import { formatLocalDateTime } from '@/utils/datetime';
 
 interface NotificationsScreenProps {
-  onBack: () => void;
-  onOpenCourse: (courseId: string) => void;
+  onBack?: () => void;
+  onOpenNotification: (notification: LearnerNotification) => void;
 }
 
-export function NotificationsScreen({ onBack, onOpenCourse }: NotificationsScreenProps) {
+export function NotificationsScreen({ onBack, onOpenNotification }: NotificationsScreenProps) {
   const { data: notifications = [], isLoading, error, refetch, isRefetching } = useNotifications();
   const markRead = useMarkNotificationRead();
 
   const handlePress = (item: LearnerNotification) => {
     if (!item.read_at) markRead.mutate(item.id);
-    if (item.course_id) onOpenCourse(item.course_id);
+    onOpenNotification(item);
   };
 
   const renderItem = ({ item }: { item: LearnerNotification }) => {
@@ -42,17 +42,17 @@ export function NotificationsScreen({ onBack, onOpenCourse }: NotificationsScree
         <View style={[styles.dot, !unread && styles.dotRead]} />
         <View style={styles.cardBody}>
           <Text style={[styles.title, unread && styles.titleUnread]}>{item.title}</Text>
-          <Text style={styles.body}>{item.body}</Text>
+          <Text style={styles.body} numberOfLines={2}>{item.body}</Text>
           <Text style={styles.time}>{formatLocalDateTime(item.created_at)}</Text>
         </View>
-        {item.course_id ? <Ionicons name="chevron-forward" size={18} color={colors.textMuted} /> : null}
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
       </TouchableOpacity>
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScreenHeader title="Notifications" onBack={onBack} />
+      <ScreenHeader title="Inbox" onBack={onBack} />
       {isLoading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />

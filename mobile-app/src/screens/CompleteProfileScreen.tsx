@@ -1,4 +1,4 @@
-// Complete profile after email verification: student vs professional → submit → signIn + PUT /users/me → main app
+// Complete profile after email verification (signIn + PUT /users/me), or for a signed-in user whose profile is incomplete
 import React, { useState } from 'react';
 import {
   View,
@@ -11,21 +11,25 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { PiLogo } from '@/components/PiLogo';
 import { Ionicons } from '@expo/vector-icons';
+import { POLICY_TEXT, PRIVACY_POLICY_VERSION } from '@/screens/PrivacyPolicyScreen';
 
 export type UserType = 'student' | 'professional';
 
 interface CompleteProfileScreenProps {
   email: string;
-  password: string;
+  /** Omitted when the user is already signed in (post-login profile check). */
+  password?: string;
   name?: string; // from sign-up (given + family)
   onComplete: () => void;
+  onSignOut?: () => void;
 }
 
-export function CompleteProfileScreen({ email, password, name, onComplete }: CompleteProfileScreenProps) {
+export function CompleteProfileScreen({ email, password, name, onComplete, onSignOut }: CompleteProfileScreenProps) {
   const [userType, setUserType] = useState<UserType | null>(null);
   const [university, setUniversity] = useState('');
   const [course, setCourse] = useState('');
@@ -36,6 +40,8 @@ export function CompleteProfileScreen({ email, password, name, onComplete }: Com
   const [company, setCompany] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [consented, setConsented] = useState(false);
+  const [policyOpen, setPolicyOpen] = useState(false);
 
   const handleSubmit = async () => {
     if (!userType) {
@@ -74,6 +80,11 @@ export function CompleteProfileScreen({ email, password, name, onComplete }: Com
       }
     }
 
+    if (!consented) {
+      setError('Please accept the Privacy Policy to continue');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -81,11 +92,13 @@ export function CompleteProfileScreen({ email, password, name, onComplete }: Com
       const { authService } = await import('@/services/auth');
       const { api } = await import('@/services/api');
 
-      const loginResult = await authService.login(email, password);
-      if (!loginResult.success) {
-        setError(loginResult.error ?? 'Sign in failed. Please try again.');
-        setLoading(false);
-        return;
+      if (password) {
+        const loginResult = await authService.login(email, password);
+        if (!loginResult.success) {
+          setError(loginResult.error ?? 'Sign in failed. Please try again.');
+          setLoading(false);
+          return;
+        }
       }
 
       const payload: Parameters<typeof api.updateMyProfile>[0] = {
@@ -104,6 +117,7 @@ export function CompleteProfileScreen({ email, password, name, onComplete }: Com
       }
 
       await api.updateMyProfile(payload);
+      await api.submitPrivacyConsent(PRIVACY_POLICY_VERSION);
       await authService.updateStoredUserData(payload);
       onComplete();
     } catch (err: unknown) {
@@ -236,6 +250,24 @@ export function CompleteProfileScreen({ email, password, name, onComplete }: Com
             </View>
           )}
 
+          {userType ? (
+            <View style={styles.consentRow}>
+              <TouchableOpacity onPress={() => setConsented((v) => !v)} disabled={loading} hitSlop={8}>
+                <Ionicons
+                  name={consented ? 'checkbox' : 'square-outline'}
+                  size={24}
+                  color={consented ? colors.primary : colors.textSecondary}
+                />
+              </TouchableOpacity>
+              <Text style={styles.consentText}>
+                I agree to the{' '}
+                <Text style={styles.consentLink} onPress={() => setPolicyOpen(true)}>
+                  AI4Impact Privacy Policy
+                </Text>
+              </Text>
+            </View>
+          ) : null}
+
           {error ? (
             <View style={styles.errorBox}>
               <Text style={styles.errorText}>{error}</Text>
@@ -256,14 +288,79 @@ export function CompleteProfileScreen({ email, password, name, onComplete }: Com
             </TouchableOpacity>
           ) : null}
 
+          {onSignOut ? (
+            <TouchableOpacity style={styles.signOutLink} onPress={onSignOut} disabled={loading}>
+              <Text style={styles.signOutText}>Sign out</Text>
+            </TouchableOpacity>
+          ) : null}
+
           <Text style={styles.footer}>Powered by PiResearch Labs</Text>
         </ScrollView>
+        <Modal visible={policyOpen} animationType="slide" onRequestClose={() => setPolicyOpen(false)}>
+          <SafeAreaView style={styles.container}>
+            <View style={styles.policyHeader}>
+              <Text style={styles.policyTitle}>Privacy Policy</Text>
+              <TouchableOpacity onPress={() => setPolicyOpen(false)} hitSlop={8}>
+                <Ionicons name="close" size={26} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView contentContainerStyle={styles.policyBody}>
+              <Text style={styles.policyText}>{POLICY_TEXT.trim()}</Text>
+            </ScrollView>
+          </SafeAreaView>
+        </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  consentText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.text,
+  },
+  consentLink: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  policyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  policyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  policyBody: {
+    padding: spacing.lg,
+  },
+  policyText: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: colors.text,
+  },
+  signOutLink: {
+    alignItems: 'center',
+    marginTop: spacing.lg,
+    padding: spacing.sm,
+  },
+  signOutText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '500',
+  },
   container: { flex: 1, backgroundColor: colors.background },
   keyboardView: { flex: 1 },
   scrollContent: { padding: spacing.xxl, paddingBottom: 40 },

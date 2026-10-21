@@ -99,7 +99,7 @@ export function SignUpScreen({ onSuccess, onSignIn }: SignUpScreenProps) {
           <View style={styles.header}>
             <PiLogo size={56} />
             <Text style={styles.title}>Create account</Text>
-            <Text style={styles.subtitle}>PiLearn – Student</Text>
+            <Text style={styles.subtitle}>AI4Impact – Student</Text>
           </View>
 
           {error ? (

@@ -25,3 +25,17 @@ export async function userStore<T>(prefix: string, suffix?: string) {
     },
   };
 }
+
+/** Per-user stores dropped on sign-out (in-progress exam answers). */
+const PRIVATE_PREFIXES = ['exam_attempt:'];
+
+/** Remove every user's private stores. Run on sign-out/account switch, before the session is gone. */
+export async function clearPrivateStores() {
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    const doomed = keys.filter((k) => PRIVATE_PREFIXES.some((p) => k.startsWith(p)));
+    if (doomed.length) await AsyncStorage.multiRemove(doomed);
+  } catch {
+    // best-effort
+  }
+}

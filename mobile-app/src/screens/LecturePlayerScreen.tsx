@@ -16,14 +16,16 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { api } from '@/services/api';
 import { apiErrorMessage } from '@/services/apiErrors';
-import type { LectureProgress } from '@/types/learning';
+import type { LearningClass, LectureProgress } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { formatDuration } from '@/utils/datetime';
 
 interface LecturePlayerScreenProps {
   classId: string;
+  courseId?: string;
   title: string;
   onBack: () => void;
+  onPlayNext?: (lecture: LearningClass) => void;
 }
 
 // Backend credits at most elapsed × 1.5 + 2s per heartbeat, so faster speeds would lose credit.
@@ -55,10 +57,22 @@ type LoadState =
   | { kind: 'blocked'; reason: 'locked' | 'expired'; message: string }
   | { kind: 'error'; message: string };
 
-export function LecturePlayerScreen({ classId, title, onBack }: LecturePlayerScreenProps) {
+/** Next recorded lecture after `classId` by sort order — whatever its server-reported access state. */
+function findNextRecorded(classes: LearningClass[], classId: string): LearningClass | null {
+  const recorded = classes
+    .filter((c) => c.class_type === 'recorded')
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  const index = recorded.findIndex((c) => c.id === classId);
+  return index >= 0 ? recorded[index + 1] ?? null : null;
+}
+
+export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNext }: LecturePlayerScreenProps) {
   const queryClient = useQueryClient();
   const [loadState, setLoadState] = useState<LoadState>({ kind: 'loading' });
   const [progress, setProgress] = useState<LectureProgress | null>(null);
+  // Next lecture as reported by the server after this one completes; null = none / not fetched.
+  const [nextLecture, setNextLecture] = useState<LearningClass | null>(null);
+  const [nextLoading, setNextLoading] = useState(false);
   const [speed, setSpeed] = useState(1);
   const speedRef = useRef(1);
 
@@ -229,6 +243,29 @@ export function LecturePlayerScreen({ classId, title, onBack }: LecturePlayerScr
     return () => sub.remove();
   }, [heartbeat]);
 
+  // Once the server marks this lecture complete, refetch course progress for the next lecture's real access state.
+  const completed = !!progress?.completed;
+  useEffect(() => {
+    if (!completed || !courseId) return;
+    let cancelled = false;
+    setNextLoading(true);
+    api
+      .getCourseProgress(courseId)
+      .then((result) => {
+        if (!cancelled) setNextLecture(findNextRecorded(result.classes ?? [], classId));
+      })
+      .catch(() => {
+        if (!cancelled) setNextLecture(null);
+      })
+      .finally(() => {
+        if (!cancelled) setNextLoading(false);
+      });
+    queryClient.invalidateQueries({ queryKey: ['learning', 'course', courseId] });
+    return () => {
+      cancelled = true;
+    };
+  }, [completed, courseId, classId, queryClient]);
+
   const changeSpeed = (value: number) => {
     setSpeed(value);
     speedRef.current = value;
@@ -317,6 +354,40 @@ export function LecturePlayerScreen({ classId, title, onBack }: LecturePlayerScr
           ) : null}
           <Text style={styles.muted}>Skipped or repeated sections don't count toward completion.</Text>
         </View>
+
+        {completed && onPlayNext && (nextLoading || nextLecture) ? (
+          <View style={styles.nextCard}>
+            {nextLoading ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : nextLecture ? (
+              <>
+                <Text style={styles.muted}>Up next</Text>
+                <Text style={styles.progressTitle}>{nextLecture.title}</Text>
+                {(nextLecture.access_state ?? 'available') === 'available' ? (
+                  <TouchableOpacity
+                    style={styles.nextBtn}
+                    onPress={() => {
+                      player.pause();
+                      onPlayNext(nextLecture);
+                    }}
+                    activeOpacity={0.75}
+                  >
+                    <Ionicons name="play" size={18} color={colors.white} />
+                    <Text style={styles.retryText}>Play next lecture</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <Text style={styles.muted}>
+                    {nextLecture.access_state === 'not_ready'
+                      ? 'Recording not published yet.'
+                      : nextLecture.access_state === 'expired'
+                        ? 'Access expired. Contact course staff to reopen access.'
+                        : 'Not unlocked yet. Check back on the course page.'}
+                  </Text>
+                )}
+              </>
+            ) : null}
+          </View>
+        ) : null}
       </View>
     </SafeAreaView>
   );
@@ -418,6 +489,25 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: colors.success,
+  },
+  nextCard: {
+    marginTop: spacing.md,
+    padding: spacing.lg,
+    borderRadius: borderRadius.xl,
+    backgroundColor: colors.backgroundCard,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: spacing.xs,
+  },
+  nextBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
   },
   muted: {
     fontSize: 13,

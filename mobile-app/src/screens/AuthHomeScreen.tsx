@@ -16,7 +16,7 @@ export function AuthHomeScreen({ onSignIn, onCreateAccount, onVerifyCertificate 
       <View style={styles.content}>
         <View style={styles.header}>
             <PiLogo size={72} />
-            <Text style={styles.title}>PiLearn</Text>
+            <Text style={styles.title}>AI4Impact</Text>
           <Text style={styles.subtitle}>Student</Text>
         </View>
 

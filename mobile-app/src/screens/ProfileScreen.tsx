@@ -1,4 +1,4 @@
-// Profile Screen – user info and sign out
+// Profile Screen – user info, learning shortcuts, settings, help and sign out
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -13,19 +13,45 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { authService, StoredUserData } from '@/services/auth';
 import { api } from '@/services/api';
 import { isPushOptedOut, setPushOptOut } from '@/services/push';
 
 interface ProfileScreenProps {
-  onBack: () => void;
+  onBack?: () => void;
   onLogout: () => void;
   onEditProfile: () => void;
   onPrivacyPolicy?: () => void;
+  onCertificates?: () => void;
+  onPurchases?: () => void;
+  onVerifyCertificate?: () => void;
 }
 
-export function ProfileScreen({ onBack, onLogout, onEditProfile, onPrivacyPolicy }: ProfileScreenProps) {
+// Same contact as the landing page (landing-page/src/content/legal.ts)
+const SUPPORT_EMAIL = 'support@ai4impact.in';
+
+function showAccessHelp() {
+  Alert.alert(
+    'Recording access windows',
+    'Each recorded lecture is available for a limited number of days (usually seven). The first window starts the first time you open an enrolled course; each later lecture opens when you finish the previous one or when it is published.\n\nIf a window has ended, contact your course staff to reopen it.'
+  );
+}
+
+function showSupport() {
+  Alert.alert('Support', `Email ${SUPPORT_EMAIL} with your registered email address and the course name.`);
+}
+
+export function ProfileScreen({
+  onBack,
+  onLogout,
+  onEditProfile,
+  onPrivacyPolicy,
+  onCertificates,
+  onPurchases,
+  onVerifyCertificate,
+}: ProfileScreenProps) {
   const [user, setUser] = useState<StoredUserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -119,12 +145,14 @@ export function ProfileScreen({ onBack, onLogout, onEditProfile, onPrivacyPolicy
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity>
-      </View>
+      {onBack ? (
+        <View style={styles.header}>
+          <TouchableOpacity onPress={onBack} style={styles.backButton} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+            <Text style={styles.backText}>Back</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -204,6 +232,17 @@ export function ProfileScreen({ onBack, onLogout, onEditProfile, onPrivacyPolicy
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Learning</Text>
+          <View style={[styles.card, styles.menuCard]}>
+            {onCertificates ? <MenuRow icon="ribbon-outline" label="My certificates" onPress={onCertificates} /> : null}
+            {onPurchases ? <MenuRow icon="receipt-outline" label="Purchase history (demo)" onPress={onPurchases} /> : null}
+            {onVerifyCertificate ? (
+              <MenuRow icon="shield-checkmark-outline" label="Verify a certificate" onPress={onVerifyCertificate} />
+            ) : null}
+          </View>
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Notifications</Text>
           <View style={[styles.card, { flexDirection: 'row', alignItems: 'center' }]}>
             <View style={{ flex: 1 }}>
@@ -214,16 +253,16 @@ export function ProfileScreen({ onBack, onLogout, onEditProfile, onPrivacyPolicy
           </View>
         </View>
 
-        {onPrivacyPolicy && (
-          <TouchableOpacity
-            style={[styles.editButton, { marginTop: 8 }]}
-            onPress={onPrivacyPolicy}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="document-text-outline" size={18} color={colors.primary} />
-            <Text style={styles.editButtonText}>Privacy Policy</Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Help</Text>
+          <View style={[styles.card, styles.menuCard]}>
+            <MenuRow icon="hourglass-outline" label="Recording access windows" onPress={showAccessHelp} />
+            <MenuRow icon="help-buoy-outline" label="Contact support" onPress={showSupport} />
+            {onPrivacyPolicy ? (
+              <MenuRow icon="document-text-outline" label="Privacy Policy" onPress={onPrivacyPolicy} />
+            ) : null}
+          </View>
+        </View>
 
         <TouchableOpacity
           style={styles.signOutButton}
@@ -233,12 +272,45 @@ export function ProfileScreen({ onBack, onLogout, onEditProfile, onPrivacyPolicy
           <Ionicons name="log-out-outline" size={22} color={colors.white} />
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
+
+        <Text style={styles.versionText}>AI4Impact v{Constants.expoConfig?.version ?? '—'}</Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+function MenuRow({ icon, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={styles.menuRow} onPress={onPress} activeOpacity={0.7}>
+      <Ionicons name={icon} size={20} color={colors.primary} />
+      <Text style={styles.menuLabel}>{label}</Text>
+      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
+  menuCard: {
+    paddingVertical: spacing.xs,
+  },
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  menuLabel: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.text,
+    fontWeight: '500',
+  },
+  versionText: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: spacing.lg,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,

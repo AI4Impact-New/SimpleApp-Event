@@ -1,6 +1,6 @@
 # SES production-access support reply
 
-Case display ID: 179257518900594. Region: ap-south-1. Prepared 21 October 2026. This text is a draft for submission in the existing AWS Support case; it has not been sent.
+Case display ID: 179257518900594. Region: ap-south-1. Prepared 21 October 2026. The user submitted the requested details in the existing AWS Support case on 21 October 2026 at 15:46 IST. The text below is the prepared reference; the case correspondence contains the submitted wording.
 
 ---
 

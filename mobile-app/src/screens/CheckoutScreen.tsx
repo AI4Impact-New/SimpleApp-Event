@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -34,23 +35,33 @@ export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
   const [downloading, setDownloading] = useState(false);
 
 
+  const notify = (title: string, message: string) => {
+    if (Platform.OS === 'web') window.alert(`${title}\n\n${message}`);
+    else Alert.alert(title, message);
+  };
+
   const runAction = async (action: DemoCheckoutAction) => {
     try {
       await finish.mutateAsync({ orderId, action });
     } catch (err: any) {
       const status = err?.response?.status;
-      if (status === 410) Alert.alert('Link expired', 'This checkout link has expired. Start a new order from the course page.');
-      else if (status === 409) Alert.alert('Order finalised', apiErrorMessage(err, 'This order is already finalised.'));
-      else Alert.alert('Checkout failed', apiErrorMessage(err, 'Could not update this order.'));
+      if (status === 410) notify('Link expired', 'This checkout link has expired. Start a new order from the course page.');
+      else if (status === 409) notify('Order finalised', apiErrorMessage(err, 'This order is already finalised.'));
+      else notify('Checkout failed', apiErrorMessage(err, 'Could not update this order.'));
       refetch();
     }
   };
 
-  const confirmCancel = () =>
+  const confirmCancel = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Cancel this demo order?')) void runAction('cancel');
+      return;
+    }
     Alert.alert('Cancel order?', 'This demo order will be cancelled.', [
       { text: 'Keep order', style: 'cancel' },
       { text: 'Cancel order', style: 'destructive', onPress: () => runAction('cancel') },
     ]);
+  };
 
   const downloadInvoice = async () => {
     setDownloading(true);
@@ -63,7 +74,7 @@ export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
         dialogTitle: 'Demo invoice',
       });
     } catch {
-      Alert.alert('Download failed', 'The invoice could not be downloaded. Please retry.');
+      notify('Download failed', 'The invoice could not be downloaded. Please retry.');
     } finally {
       setDownloading(false);
     }

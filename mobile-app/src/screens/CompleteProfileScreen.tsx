@@ -253,7 +253,7 @@ export function CompleteProfileScreen({ email, password, name, onComplete, onSig
 
           {userType ? (
             <View style={styles.consentRow}>
-              <TouchableOpacity onPress={() => setConsented((v) => !v)} disabled={loading} hitSlop={8}>
+              <TouchableOpacity accessibilityRole="checkbox" accessibilityLabel="Accept Privacy Policy" accessibilityState={{ checked: consented }} aria-checked={consented} onPress={() => setConsented((v) => !v)} disabled={loading} hitSlop={8}>
                 <Ionicons
                   name={consented ? 'checkbox' : 'square-outline'}
                   size={24}

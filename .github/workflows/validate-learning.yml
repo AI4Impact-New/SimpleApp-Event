@@ -47,6 +47,15 @@ jobs:
         run: |
           npm ci
           npm run build
+      - name: Admin first-save browser regression
+        working-directory: admin-dashboard
+        run: |
+          npx playwright install --with-deps chromium
+          npm run start -- --port 3100 > /tmp/admin-browser-server.log 2>&1 &
+          ADMIN_QA_PID=$!
+          trap 'kill "$ADMIN_QA_PID"' EXIT
+          curl --retry 30 --retry-connrefused --retry-delay 1 --fail http://localhost:3100/login > /dev/null
+          npx playwright test tests/assisted-enrollment.spec.ts --workers=1 --reporter=line
   landing:
     runs-on: ubuntu-latest
     steps:
@@ -63,3 +72,24 @@ jobs:
         run: |
           npm ci
           npm run build
+
+  student-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mobile-app/package-lock.json
+      - name: Student app typecheck and static web export
+        working-directory: mobile-app
+        env:
+          EXPO_PUBLIC_API_URL: https://ke8dywmhil.execute-api.ap-south-1.amazonaws.com
+          EXPO_PUBLIC_COGNITO_USER_POOL_ID: ap-south-1_kc1sfOoEG
+          EXPO_PUBLIC_COGNITO_APP_CLIENT_ID: 40faprqjpcc6q0pfkdkcrd8p5v
+          EXPO_PUBLIC_COGNITO_REGION: ap-south-1
+        run: |
+          npm ci
+          npm run typecheck
+          npm run export:web

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "PiLearn",
+    "name": "AI4Impact",
     "slug": "pilearn-mobile",
     "version": "1.0.1",
     "orientation": "portrait",
@@ -21,7 +21,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0ea5e9"
+        "backgroundColor": "#081328"
       },
       "package": "com.piresearchlabs.mobile",
       "permissions": [
@@ -29,13 +29,15 @@
       ]
     },
     "web": {
+      "name": "AI4Impact",
+      "shortName": "AI4Impact",
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow PiLearn to access your camera to scan QR codes"
+          "cameraPermission": "Allow AI4Impact to access your camera to scan QR codes"
         }
       ],
       "expo-video",

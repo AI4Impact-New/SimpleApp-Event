@@ -26,9 +26,10 @@ interface AttendanceRecord {
 interface LeaderboardHomeScreenProps {
   onOpenLeaderboard: (eventId: string) => void;
   onOpenEvents: () => void;
+  onBack?: () => void;
 }
 
-export function LeaderboardHomeScreen({ onOpenLeaderboard, onOpenEvents }: LeaderboardHomeScreenProps) {
+export function LeaderboardHomeScreen({ onOpenLeaderboard, onOpenEvents, onBack }: LeaderboardHomeScreenProps) {
   const attendanceQuery = useQuery({
     queryKey: ['attendance'],
     queryFn: () => api.getAttendance() as Promise<AttendanceRecord[]>,
@@ -61,6 +62,11 @@ export function LeaderboardHomeScreen({ onOpenLeaderboard, onOpenEvents }: Leade
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        {onBack ? (
+          <TouchableOpacity onPress={onBack} style={styles.backBtn} activeOpacity={0.7} hitSlop={8}>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+        ) : null}
         <Text style={styles.title}>Leaderboard</Text>
         <Text style={styles.subtitle}>See rankings for events you have joined</Text>
       </View>
@@ -127,6 +133,10 @@ const styles = StyleSheet.create({
   header: {
     padding: spacing.xl,
     paddingBottom: spacing.md,
+  },
+  backBtn: {
+    alignSelf: 'flex-start',
+    marginBottom: spacing.sm,
   },
   title: {
     fontSize: 28,

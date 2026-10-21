@@ -8,6 +8,8 @@ import type {
   ExamAttempt,
   IssuedCertificate,
   LearnerNotification,
+  Completion,
+  CourseProgress,
   LearningHome,
   LectureProgress,
   MyCertificate,
@@ -251,6 +253,17 @@ class ApiService {
     return response.data;
   }
 
+  /** Server-authoritative lecture rows + completion; refetch after a lecture completes. */
+  async getCourseProgress(courseId: string): Promise<CourseProgress> {
+    const response = await this.client.get(`/learning/courses/${courseId}/progress`);
+    return response.data;
+  }
+
+  async getCourseCompletion(courseId: string): Promise<Completion> {
+    const response = await this.client.get(`/learning/courses/${courseId}/completion`);
+    return response.data;
+  }
+
   // Exams
   async getCourseExams(courseId: string): Promise<Exam[]> {
     const response = await this.client.get(`/learning/courses/${courseId}/exams`);
@@ -311,6 +324,11 @@ class ApiService {
   async registerDevice(input: PushDeviceInput): Promise<PushDevice> {
     const response = await this.client.post('/me/devices', input);
     return response.data;
+  }
+
+  async getMyDevices(): Promise<PushDevice[]> {
+    const response = await this.client.get('/me/devices');
+    return Array.isArray(response.data) ? response.data : [];
   }
 
   async removeDevice(deviceId: string) {

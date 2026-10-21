@@ -67,7 +67,7 @@ export function CoursesScreen({ onCoursePress }: CoursesScreenProps) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.greeting}>Courses</Text>
-        <Text style={styles.subtitle}>Browse and register for Pi Research Labs programs</Text>
+        <Text style={styles.subtitle}>Browse and register for AI4Impact programs</Text>
       </View>
 
       {isLoading ? (

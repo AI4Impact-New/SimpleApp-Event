@@ -10,8 +10,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '@/theme/colors';
 
-const POLICY_TEXT = `
-PiLearn (Pi Research Labs) – Privacy Policy
+/** Sent to POST /users/me/privacy-consent; bump together with "Last updated" below. */
+export const PRIVACY_POLICY_VERSION = '2026-03';
+
+export const POLICY_TEXT = `
+AI4Impact (Pi Research Labs) – Privacy Policy
 Last updated: March 2026
 
 1. Information we collect
@@ -40,7 +43,7 @@ Last updated: March 2026
 6. Contact
 For privacy questions, contact Pi Research Labs via the contact details in the app or on our website.
 
-By using PiLearn, you agree to this Privacy Policy.
+By using AI4Impact, you agree to this Privacy Policy.
 `;
 
 interface PrivacyPolicyScreenProps {

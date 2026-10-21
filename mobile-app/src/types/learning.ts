@@ -1,4 +1,4 @@
-// Learning types (matches PiLearn learning API, docs/PiLearn-Learning-OpenAPI.json)
+// Learning types (matches the learning API, docs/AI4Impact-Learning-OpenAPI.json)
 import type { ClassType, Course } from './course';
 
 export interface MyLearningCourse {
@@ -73,10 +73,16 @@ export interface LearningHome {
   completion: Completion;
 }
 
+export interface CourseProgress {
+  classes: LearningClass[];
+  completion: Completion;
+}
+
 export interface Playback {
   url: string;
   session_id: string;
   expires_in: number;
+  access_expires_at?: string | null;
   duration_seconds: number;
   resume_seconds: number;
 }

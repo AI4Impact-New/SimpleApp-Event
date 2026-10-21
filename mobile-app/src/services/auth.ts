@@ -1,6 +1,18 @@
 // Authentication service using AWS Amplify (Cognito)
-import { signIn, signOut, signUp, confirmSignUp, resendSignUpCode, getCurrentUser, fetchAuthSession, fetchUserAttributes } from 'aws-amplify/auth';
-import * as SecureStore from './secureStorage';
+import {
+  signIn,
+  confirmSignIn,
+  signOut,
+  signUp,
+  confirmSignUp,
+  resendSignUpCode,
+  resetPassword,
+  confirmResetPassword,
+  getCurrentUser,
+  fetchAuthSession,
+  fetchUserAttributes,
+} from 'aws-amplify/auth';
+import * as SecureStore from '@/utils/secureStorage';
 
 export type SignUpOptions = { givenName?: string; familyName?: string };
 
@@ -26,6 +38,15 @@ export type StoredUserData = {
   company?: string;
 };
 
+export type LoginResult = {
+  success: boolean;
+  user?: StoredUserData;
+  error?: string;
+  needsConfirmation?: boolean;
+  needsNewPassword?: boolean;
+  needsPasswordReset?: boolean;
+};
+
 class AuthService {
   private onUnauthorized: UnauthorizedCallback | null = null;
 
@@ -41,31 +62,45 @@ class AuthService {
     this.onUnauthorized = callback;
   }
 
-  async login(email: string, password: string) {
+  async login(email: string, password: string): Promise<LoginResult> {
     try {
-      await signIn({
+      const signInResult = await signIn({
         username: email,
         password,
       });
-
-      const session = await fetchAuthSession();
-      const idToken = session.tokens?.idToken?.toString();
-
-      if (!idToken) {
+      const step = signInResult.nextStep?.signInStep;
+      // Amplify v6 reports an unverified email as a next step rather than an error
+      if (step === 'CONFIRM_SIGN_UP') {
         return {
           success: false,
-          error: 'Could not obtain ID token from Cognito session',
+          needsConfirmation: true,
+          error: 'Please verify your email before signing in. Enter the code we emailed you.',
+        };
+      }
+      // Admin-created accounts sign in with a temporary password and must choose their own.
+      if (step === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
+        return {
+          success: false,
+          needsNewPassword: true,
+          error: 'Your account needs a new password. Choose one to finish signing in.',
+        };
+      }
+      if (step === 'RESET_PASSWORD') {
+        return {
+          success: false,
+          needsPasswordReset: true,
+          error: 'Your password must be reset. We will email you a reset code.',
+        };
+      }
+      if (step && step !== 'DONE') {
+        console.warn('[Auth] unsupported sign-in step:', step);
+        return {
+          success: false,
+          error: `This account needs an extra sign-in step the app does not support yet (${step}). Contact support.`,
         };
       }
 
-      await SecureStore.setItemAsync(ID_TOKEN_KEY, idToken);
-      await SecureStore.setItemAsync(TOKEN_KEY, idToken);
-
-      const user = await getCurrentUser();
-      const userData = await this.buildUserData(user?.userId ?? '', user?.signInDetails?.loginId ?? email);
-      await SecureStore.setItemAsync(USER_KEY, JSON.stringify(userData));
-
-      return { success: true, user: userData };
+      return await this.finishSignIn(email);
     } catch (error: unknown) {
       // Log full error for debugging (Cognito/Amplify often wrap the real cause)
       console.error('[Auth] login error:', error);
@@ -88,6 +123,7 @@ class AuthService {
         ? String((err.underlyingError as { message?: unknown }).message ?? '') : '';
 
       let message = 'Login failed. Please try again.';
+      let needsConfirmation = false;
       if (/already a signed in user|already signed in/i.test(msg) || /already a signed in user|already signed in/i.test(underlyingMsg)) {
         try {
           const session = await fetchAuthSession();
@@ -109,7 +145,8 @@ class AuthService {
       } else if (name === 'NotAuthorizedException' || code === 'NotAuthorizedException' || /not authorized|incorrect.*password/i.test(msg)) {
         message = 'Incorrect password. Please try again.';
       } else if (name === 'UserNotConfirmedException' || code === 'UserNotConfirmedException' || /user.*not confirmed|confirm.*sign.?up/i.test(msg)) {
-        message = 'Please verify your email before signing in. Check your inbox for the verification link.';
+        message = 'Please verify your email before signing in. Enter the code we emailed you.';
+        needsConfirmation = true;
       } else if (name === 'NetworkError' || code === 'NetworkError' || /network|fetch|failed to load/i.test(msg)) {
         message = 'Network error. Check your connection and try again.';
       } else if (/unknown error|occurred/i.test(msg)) {
@@ -120,6 +157,7 @@ class AuthService {
 
       return {
         success: false,
+        needsConfirmation,
         error: message,
       };
     }
@@ -204,6 +242,89 @@ class AuthService {
       let message = 'Could not resend code. Please try again.';
       if (name === 'LimitExceededException' || /limit|too many/i.test(msg)) {
         message = 'Too many attempts. Please wait a few minutes before requesting another code.';
+      } else if (msg) message = msg;
+      return { success: false, error: message };
+    }
+  }
+
+  /** After Cognito reports DONE: store the ID token and user. */
+  private async finishSignIn(email: string): Promise<LoginResult> {
+    const session = await fetchAuthSession();
+    const idToken = session.tokens?.idToken?.toString();
+
+    if (!idToken) {
+      return {
+        success: false,
+        error: 'Could not obtain ID token from Cognito session',
+      };
+    }
+
+    await SecureStore.setItemAsync(ID_TOKEN_KEY, idToken);
+    await SecureStore.setItemAsync(TOKEN_KEY, idToken);
+
+    const user = await getCurrentUser();
+    const userData = await this.buildUserData(user?.userId ?? '', user?.signInDetails?.loginId ?? email);
+    await SecureStore.setItemAsync(USER_KEY, JSON.stringify(userData));
+
+    return { success: true, user: userData };
+  }
+
+  /** Answer the NEW_PASSWORD_REQUIRED challenge from the sign-in that was just attempted. */
+  async completeNewPassword(email: string, newPassword: string): Promise<LoginResult> {
+    try {
+      const result = await confirmSignIn({ challengeResponse: newPassword });
+      const step = result.nextStep?.signInStep;
+      if (step && step !== 'DONE') {
+        return { success: false, error: `Additional sign-in step required (${step}). Contact support.` };
+      }
+      return await this.finishSignIn(email);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : '';
+      const name = (error as Error & { name?: string }).name ?? '';
+      let message = 'Could not set the new password. Please try again.';
+      if (name === 'InvalidPasswordException' || /password/i.test(msg)) {
+        message = 'Password must be at least 8 characters with uppercase, lowercase, a number, and a symbol.';
+      } else if (/session|expired|no.*sign.?in/i.test(msg)) {
+        message = 'This sign-in attempt expired. Sign in again with your temporary password.';
+      } else if (msg) message = msg;
+      return { success: false, error: message };
+    }
+  }
+
+  /** Email a password-reset code. Cognito does not reveal whether the account exists beyond its own errors. */
+  async requestPasswordReset(email: string) {
+    try {
+      const result = await resetPassword({ username: email.trim() });
+      const destination = (result.nextStep as { codeDeliveryDetails?: { destination?: string } })?.codeDeliveryDetails?.destination;
+      return { success: true, destination };
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : '';
+      const name = (error as Error & { name?: string }).name ?? '';
+      let message = 'Could not send a reset code. Please try again.';
+      if (name === 'UserNotFoundException') message = 'No account found with this email.';
+      else if (name === 'LimitExceededException' || /limit|too many/i.test(msg)) {
+        message = 'Too many attempts. Please wait a few minutes before trying again.';
+      } else if (name === 'InvalidParameterException') {
+        message = 'This account has no verified email. Please contact support.';
+      } else if (msg) message = msg;
+      return { success: false, error: message };
+    }
+  }
+
+  async confirmPasswordReset(email: string, code: string, newPassword: string) {
+    try {
+      await confirmResetPassword({ username: email.trim(), confirmationCode: code.trim(), newPassword });
+      return { success: true };
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : '';
+      const name = (error as Error & { name?: string }).name ?? '';
+      let message = 'Could not reset the password. Please try again.';
+      if (name === 'CodeMismatchException') message = 'Incorrect code. Check the code from your email.';
+      else if (name === 'ExpiredCodeException') message = 'This code has expired. Request a new one.';
+      else if (name === 'InvalidPasswordException' || /password/i.test(msg)) {
+        message = 'Password must be at least 8 characters with uppercase, lowercase, a number, and a symbol.';
+      } else if (name === 'LimitExceededException') {
+        message = 'Too many attempts. Please wait a few minutes before trying again.';
       } else if (msg) message = msg;
       return { success: false, error: message };
     }

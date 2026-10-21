@@ -1,11 +1,8 @@
 import React from 'react';
 import { View } from 'react-native';
-import Svg, { Path, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Rect, Path, Circle } from 'react-native-svg';
 
-const VIEWBOX = '0 0 1000 1000';
-const PATH_D =
-  'M193.837 701.832L160.365 719.553C159.351 725.407 160.124 729.098 166.928 737.274C175.632 746.86 178.877 752.451 191.212 761.557L224.028 774.028C240.907 773.557 250.224 772.585 266.689 770.09C277.057 765.913 282.779 763.337 292.285 756.963C299.217 752.087 302.865 749.123 308.693 743.18C315.815 734.471 319.096 729.404 324.445 720.209L343.478 688.706C357.701 656.175 363.146 637.615 374.325 604.697L397.296 521.344L417.642 432.741L433.394 362.515C449.364 318.919 466.827 307.432 504.933 297.539H636.197L746.459 296.226C749.175 296.345 749.796 296.962 749.74 298.852L702.485 471.464L676.889 575.162L657.199 655.89L647.354 703.801L642.104 737.274C637.743 748.652 641.755 754.375 652.605 764.183H764.179C774.365 758.971 778.754 754.736 783.213 743.837L786.494 601.415L789.12 556.785L793.714 491.153L799.621 440.617L809.465 378.266L817.998 333.637L830.468 274.568L832.437 264.067L835.062 248.971L837.687 242.408L839 235.188V229.938L835.062 226H568.596L490.494 227.313L463.585 230.594L431.425 237.157L404.516 246.346L379.576 256.847L356.604 269.973L335.602 285.069L312.631 304.102L291.629 328.386L272.595 358.577L262.751 379.579L258.813 395.987L257.5 407.801L266.689 409.113L284.409 395.987L296.223 389.424L313.944 386.798C328.104 386.785 334.207 392.194 340.853 414.364L338.884 437.335L334.946 462.275L326.414 495.091L315.256 528.564L302.786 554.817L287.035 588.945L270.627 617.823L254.875 641.451L239.779 659.828L225.997 674.923L212.87 687.393L193.837 701.832Z';
-
+// AI4Impact mark — same artwork as the website favicon (landing-page/public/logo-mark-navy.svg).
 interface PiLogoProps {
   size?: number;
 }
@@ -13,21 +10,18 @@ interface PiLogoProps {
 export function PiLogo({ size = 64 }: PiLogoProps) {
   return (
     <View style={{ width: size, height: size }}>
-      <Svg width={size} height={size} viewBox={VIEWBOX} fill="none">
-        <Defs>
-          <LinearGradient
-            id="piLogoGradient"
-            x1="839.54"
-            y1="227.443"
-            x2="160"
-            y2="856.756"
-            gradientUnits="userSpaceOnUse"
-          >
-            <Stop offset="0" stopColor="#082832" />
-            <Stop offset="1" stopColor="#187A98" />
-          </LinearGradient>
-        </Defs>
-        <Path d={PATH_D} fill="url(#piLogoGradient)" />
+      <Svg width={size} height={size} viewBox="0 0 48 48">
+        <Rect width={48} height={48} rx={12} fill="#081328" />
+        <Path
+          d="M13 38 L27 9 L27 38"
+          fill="none"
+          stroke="#ffffff"
+          strokeWidth={5.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path d="M17.8 29 L32 29" fill="none" stroke="#ffffff" strokeWidth={5.5} strokeLinecap="round" />
+        <Circle cx={38.5} cy={29} r={3.6} fill="#fea92f" />
       </Svg>
     </View>
   );

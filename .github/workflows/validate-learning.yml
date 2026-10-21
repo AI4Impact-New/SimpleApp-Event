@@ -47,7 +47,7 @@ jobs:
         run: |
           npm ci
           npm run build
-      - name: Admin first-save browser regression
+      - name: Admin browser regressions
         working-directory: admin-dashboard
         run: |
           npx playwright install --with-deps chromium
@@ -55,7 +55,7 @@ jobs:
           ADMIN_QA_PID=$!
           trap 'kill "$ADMIN_QA_PID"' EXIT
           curl --retry 30 --retry-connrefused --retry-delay 1 --fail http://localhost:3100/login > /dev/null
-          npx playwright test tests/assisted-enrollment.spec.ts tests/video-analytics.spec.ts --workers=1 --reporter=line
+          npx playwright test tests/assisted-enrollment.spec.ts tests/video-analytics.spec.ts tests/embedded-login.spec.ts --workers=1 --reporter=line
   landing:
     runs-on: ubuntu-latest
     steps:

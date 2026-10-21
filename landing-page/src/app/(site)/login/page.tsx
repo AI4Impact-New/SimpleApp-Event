@@ -1,6 +1,7 @@
 import { CalendarCheck, FolderGit2, MonitorPlay, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LoginForm } from "@/components/login/LoginForm";
 import { Eyebrow } from "@/components/core/Eyebrow";
 import { Section } from "@/components/layout/Section";
 
@@ -62,10 +63,10 @@ export default function LoginPage() {
             Student sign in
           </h2>
           <p className="mt-(--space-2) text-(length:--fs-body) leading-(--lh-body) text-(--text-body)">
-            Use the email or student ID from your enrolment confirmation.
+            Use the email address from your account invitation or sign-up.
           </p>
           <div className="mt-(--space-8)">
-            <a href="https://main.d16744ddqs159z.amplifyapp.com/student" className="inline-flex rounded-xl bg-slate-950 text-white px-6 py-3">Open student portal preview</a><p className="mt-3 text-sm">Demo checkout, purchase history and invoice PDFs are available. The full learning portal remains under integration.</p>
+            <LoginForm />
           </div>
           <p className="text-(length:--fs-sm) leading-(--lh-body) text-(--text-body)">
             Not enrolled yet?{" "}

@@ -155,8 +155,8 @@ class ApiService {
   }
 
   // Users
-  async getAdminUsers() {
-    const response = await this.client.get('/admin-users');
+  async getAdminUsers(params?: { next_token?: string; limit?: number }) {
+    const response = await this.client.get('/admin-users', { params });
     const raw = response.data;
     return {
       users: Array.isArray(raw?.users) ? raw.users : [],

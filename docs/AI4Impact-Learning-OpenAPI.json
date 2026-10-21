@@ -1057,6 +1057,14 @@
           },
           "valid_certificates": {
             "type": "integer"
+          },
+          "students_started": {
+            "type": "integer",
+            "description": "Distinct enrolled learners with positive credited video watch time"
+          },
+          "watched_seconds": {
+            "type": "number",
+            "description": "Unique watched seconds across enrolled learners, excluding repeated segments"
           }
         }
       }
@@ -5143,6 +5151,145 @@
             "description": "Published video in this course; include for up to 500 registration progress rows."
           }
         ]
+      }
+    },
+    "/admin/staff/actions": {
+      "post": {
+        "summary": "Remove a staff role or delete a staff sign-in account",
+        "description": "Admins only. Exact confirmation email required. Self deletion, self Admins removal and last enabled confirmed administrator removal are blocked. Historical application records are retained. Existing signed tokens may retain access until expiry.",
+        "tags": [
+          "Admin"
+        ],
+        "operationId": "post_admin_staff_action",
+        "security": [
+          {
+            "CognitoIdToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "username",
+                  "action",
+                  "confirmation_email"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "maxLength": 128
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "remove_role",
+                      "delete_account"
+                    ]
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "Admins",
+                      "Marketing"
+                    ],
+                    "description": "Required for remove_role"
+                  },
+                  "confirmation_email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Staff action completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized or unenrolled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

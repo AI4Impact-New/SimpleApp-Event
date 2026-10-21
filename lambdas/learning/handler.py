@@ -48,7 +48,7 @@ def _actor(event):
     user = get_or_create_user_from_claims(claims)
     if not user: raise ApiError(401,"User identity could not be resolved")
     groups = {str(g).lower() for g in _normalize_groups(claims.get("cognito:groups"))}
-    return {"id":str(user.id),"name":user.name,"admin":"admins" in groups,"marketing":"marketing" in groups}
+    return {"id":str(user.id),"sub":str(claims.get('sub') or ''),"name":user.name,"admin":"admins" in groups,"marketing":"marketing" in groups}
 
 
 def handler(event, context):
@@ -92,6 +92,7 @@ def handler(event, context):
         elif path=="/admin/operations/readiness" and method=="GET":result=operations.readiness(actor)
         elif path=="/admin/marketing/users" and method=='GET':result=staff.members(actor,event.get('queryStringParameters') or {})
         elif path=="/admin/marketing/users" and method=='PUT':result=staff.membership(actor,body)
+        elif path=="/admin/staff/actions" and method=='POST':result=staff.account_action(actor,body)
         elif path=="/admin/marketing/interests" and method=="GET": result=enquiries.student_interests(actor)
         elif path=="/billing/catalog" and method=="GET": result=billing.catalog(actor)
         elif path=="/admin/billing/courses" and method=="GET": result=billing.catalog(actor)

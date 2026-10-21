@@ -44,3 +44,16 @@ Payment [color: orange] {
 Real checkout planned > Verified payment webhook
 Verified payment webhook > Grant course access: Valid payment only
 Grant course access > Start learning
+
+// Existing alternative path, unchanged.
+SelfSignup [color: blue] {
+  Open app directly [shape: oval, icon: smartphone]
+  Create own account [icon: user-plus]
+  Verify own email [icon: mail]
+  Complete own profile and consent [icon: user-check]
+  Browse courses [shape: oval, icon: book]
+}
+Open app directly > Create own account
+Create own account > Verify own email
+Verify own email > Complete own profile and consent
+Complete own profile and consent > Browse courses

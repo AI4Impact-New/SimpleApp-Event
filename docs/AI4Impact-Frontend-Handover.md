@@ -273,3 +273,7 @@ New public `POST /employer-enquiries` accepts `{request_id,name,email,phone,orga
 Admins can inspect `GET /admin/operations/readiness` for database/content/push readiness. Native push remains disabled without the real EAS project; operational alert delivery also needs an approved, confirmed recipient. See `runbooks/AI4Impact-Operations-and-Release.md` for the actual restore/load evidence and release gates.
 
 **Mobile team:** use `AI4Impact-Mobile-Screen-Implementation-Guide.md` as the page-by-page build specification. It covers 21 sections, navigation, new-account environment values, each screen/API, video windows, exams, certificates, inbox/push, demo checkout/history/invoices and a device acceptance matrix. Mobile source has not been changed by this backend release.
+
+## 21 October 2026: assisted enrollment alternative
+
+See `AI4Impact-Assisted-Enrollment-Handover.md` for new staff endpoints, profiles, personal prices, delivery status and remaining email/payment dependencies. Student self-signup remains unchanged. Invited learners use the existing temporary-password challenge. `GET /users/me` adds `privacy_consent_required` for newly assisted accounts: review the prefilled profile and accept privacy terms before entering the app. Personal quotes appear in the existing owned demo-order/history/invoice endpoints. No demo checkout grants enrollment. The updated Eraser source is `AI4Impact-Assisted-Enrollment-Eraser.txt`.

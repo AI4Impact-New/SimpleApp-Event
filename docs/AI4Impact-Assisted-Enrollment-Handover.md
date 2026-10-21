@@ -37,7 +37,7 @@ The pool-wide default invitation keeps the AI4Impact logo and Welcome to the inn
 
 A second template in `lambdas/learning/assets/quote-email.html` contains the personal quote, clearly labelled demo checkout link and pro forma PDF attachment. It uses the same brand language, with different subject and content.
 
-The SES domain identity/DKIM configuration is Terraform-managed. GoDaddy hosts its DNS. Automatic quote emails stay disabled until domain verification and production sending approval complete. SES production request case 179257518900594 currently reports DENIED. Do not enable `transactional_email_enabled` or promise delivery to arbitrary student emails until AWS approves sending. Default Cognito invitations continue to work independently.
+The SES domain identity/DKIM configuration is Terraform-managed. GoDaddy hosts its DNS. Automatic quote emails stay disabled until domain verification and production sending approval complete. SES API currently reports DENIED for case 179257518900594, but AWS correspondence requests additional information before a final decision. A support reply is prepared separately. Do not enable `transactional_email_enabled` or promise delivery to arbitrary student emails until AWS approves sending. Default Cognito invitations continue to work independently.
 
 Delivery requests use staff-generated UUIDs. Replaying an accepted delivery request never sends again. A pending or failed request returns conflict rather than automatically resending an unknown email; staff must inspect activity and explicitly send again with a new request. Sending across AWS and PostgreSQL is not an exactly-once transaction. A pending record after a network interruption requires review. New invitation resend can replace an unused temporary password and never resets an activated account.
 
@@ -94,7 +94,7 @@ The example quote is INR 50,000 marked, 10% discount, INR 45,000 total. Use real
 
 ## Remaining work / decisions
 
-- AWS SES production approval and DKIM success before enabling automatic quote/invoice emails. Add bounce/complaint event handling and suppression operations before increasing email volume.
+- AWS SES production approval and DKIM success before enabling automatic quote/invoice emails. Account/configuration-set bounce and complaint suppression plus SNS operational feedback are configured in Terraform; verify actual feedback delivery before increasing email volume.
 - Real payment provider, signed webhook verification, real paid-order model, refunds, tax/issuer details and paid entitlement policy.
 - Native device testing, app links, Expo project UUID and push verification.
 - Approved academic content, completion rules and final certificate wording.

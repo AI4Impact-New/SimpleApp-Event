@@ -236,7 +236,7 @@ def send_quote(actor,eid,oid,body):
         message.set_content(plain);message.add_alternative(html,subtype='html')
         message.add_attachment(quote_invoice(actor,eid,oid),maintype='application',subtype='pdf',filename='AI4Impact-pro-forma.pdf')
         try:
-            result=ses.send_email(FromEmailAddress=sender,Destination={'ToAddresses':[row['buyer_email']]},Content={'Raw':{'Data':message.as_bytes()}})
+            result=ses.send_email(FromEmailAddress=sender,ConfigurationSetName=os.environ['TRANSACTIONAL_CONFIGURATION_SET'],Destination={'ToAddresses':[row['buyer_email']]},Content={'Raw':{'Data':message.as_bytes()}})
         except ClientError as exc:
             _finish_action(action_id,'failed',{'error_code':exc.response['Error']['Code']})
             raise ApiError(502,'Email submission failed. Check its status before explicitly sending again.')

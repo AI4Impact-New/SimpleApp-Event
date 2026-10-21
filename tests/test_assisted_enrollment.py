@@ -120,3 +120,28 @@ def test_invitation_resend_uses_email_in_email_username_pool(monkeypatch):
     monkeypatch.setattr(assisted,'_begin_action',lambda *a:ID);monkeypatch.setattr(assisted,'_finish_action',lambda *a:None)
     assert assisted.invite(STAFF,ID,{'request_id':OTHER})['state']=='accepted'
     assert cg.admin_create_user.call_args.kwargs['Username']=='qa@example.invalid'
+
+
+def test_enabled_quote_email_uses_fixed_recipient_config_set_and_pdf(monkeypatch):
+    row={'status':'pending','buyer_name':'QA Learner','buyer_email':'qa@example.invalid','course_title':'QA Course','marked_price_paise':10000,'discount_bps':1000,'total_paise':9000,'checkout_url':'https://admin.ai4impact.in/checkout?order='+OTHER}
+    monkeypatch.setattr(assisted,'quote_order',lambda *a:row)
+    monkeypatch.setattr(assisted,'quote_invoice',lambda *a:b'%PDF-test')
+    monkeypatch.setattr(assisted,'_begin_action',lambda *a:ID)
+    finish=Mock();monkeypatch.setattr(assisted,'_finish_action',finish)
+    client=Mock();client.send_email.return_value={'MessageId':'provider-id'};monkeypatch.setattr(assisted,'ses',client)
+    monkeypatch.setenv('TRANSACTIONAL_EMAIL_ENABLED','true');monkeypatch.setenv('TRANSACTIONAL_FROM_EMAIL','noreply@ai4impact.in');monkeypatch.setenv('TRANSACTIONAL_CONFIGURATION_SET','pilearn-transactional')
+    assert assisted.send_quote(STAFF,ID,OTHER,{'request_id':ID})['state']=='accepted'
+    sent=client.send_email.call_args.kwargs
+    assert sent['Destination']=={'ToAddresses':['qa@example.invalid']}
+    assert sent['ConfigurationSetName']=='pilearn-transactional'
+    assert b'application/pdf' in sent['Content']['Raw']['Data']
+    assert finish.call_args.args[1]=='accepted'
+
+
+def test_accepted_email_retry_does_not_send_again(monkeypatch):
+    monkeypatch.setattr(assisted,'quote_order',lambda *a:{'status':'pending'})
+    monkeypatch.setattr(assisted,'_begin_action',lambda *a:None)
+    monkeypatch.setenv('TRANSACTIONAL_EMAIL_ENABLED','true')
+    client=Mock();monkeypatch.setattr(assisted,'ses',client)
+    assert assisted.send_quote(STAFF,ID,OTHER,{'request_id':ID})['state']=='accepted'
+    client.send_email.assert_not_called()

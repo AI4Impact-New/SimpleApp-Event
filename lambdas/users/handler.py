@@ -96,6 +96,11 @@ def get_users_me(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         return create_error_response(400, "Missing user identity")
 
     payload = db_user.to_dict()
+    from shared.db import execute_query
+    consent = execute_query("""SELECT EXISTS(SELECT 1 FROM assisted_enrollments a
+        WHERE a.user_id=u.id AND a.account_created_here=true) AND u.privacy_policy_accepted_at IS NULL
+        AS required FROM users u WHERE u.id=%s""", (str(db_user.id),), fetch="one")
+    payload["privacy_consent_required"] = bool(consent and consent["required"])
     groups = _normalize_group_values(user_claims.get("cognito:groups") or user_claims.get("groups"))
     payload["access_role"] = "admin" if "Admins" in groups else "student"
     return create_response(200, payload)

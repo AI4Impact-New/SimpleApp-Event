@@ -30,3 +30,7 @@ Use the default TTL. If the same host already exists, compare the target before 
 4. Verify SES DKIM SUCCESS/VerifiedForSendingStatus. Request SES production access and configure sender noreply@ai4impact.in only after verification. Do not claim invoice email delivery while sender verification or production approval is pending.
 
 Source: infra/terraform/custom-domains.tf and variables.tf. The Terraform state contains the AWS associations. GoDaddy DNS cannot be changed with this account’s AWS CLI.
+
+## Verification update, 21 October 2026
+
+All five GoDaddy CNAME records were confirmed against ns05.domaincontrol.com after the CEO published them. Amplify admin.ai4impact.in reached AVAILABLE. Playwright loaded /login over HTTPS with HTTP 200 and confirmed Cognito redirect_uri=https://admin.ai4impact.in/callback. No existing-user password or session was altered. SES DKIM remained pending at the last check, and the SES API reports DENIED for production-access case 179257518900594, while AWS correspondence requests further information before a final decision. Automatic transactional quote delivery remains disabled pending AWS approval.

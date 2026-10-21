@@ -1,0 +1,59 @@
+direction right
+
+Website [color: blue] {
+  Visit website [shape: oval, icon: globe]
+  Submit enquiry [icon: file-text]
+}
+Marketing [color: blue] {
+  Call student [icon: phone]
+  Confirm details and authorization [icon: user-check]
+  Save profile [icon: user]
+  Create or link account [icon: user-plus]
+  Send welcome invitation [icon: mail]
+  Prepare personal quote [icon: tag]
+  Download pro forma PDF [icon: file-text]
+  Send quote and demo link [icon: send]
+}
+Student [color: green] {
+  Choose own password [icon: lock]
+  Open app [icon: smartphone]
+  View demo checkout [icon: shopping-cart]
+  Await course enrollment [shape: oval, icon: clock]
+}
+Visit website > Submit enquiry
+Submit enquiry > Call student
+Call student > Confirm details and authorization
+Confirm details and authorization > Save profile
+Save profile > Create or link account
+Create or link account > Send welcome invitation: New account only
+Send welcome invitation > Choose own password
+Choose own password > Open app
+Create or link account > Prepare personal quote
+Prepare personal quote > Download pro forma PDF
+Download pro forma PDF > Send quote and demo link
+Send quote and demo link > View demo checkout
+View demo checkout > Await course enrollment: Demo grants no access
+
+// Separate planned payment pipeline below. Real payment integration remains pending.
+Payment [color: orange] {
+  Real checkout planned [icon: credit-card]
+  Verified payment webhook [shape: diamond, icon: shield]
+  Grant course access [icon: unlock]
+  Start learning [shape: oval, icon: play-circle]
+}
+Real checkout planned > Verified payment webhook
+Verified payment webhook > Grant course access: Valid payment only
+Grant course access > Start learning
+
+// Existing alternative path, unchanged.
+SelfSignup [color: blue] {
+  Open app directly [shape: oval, icon: smartphone]
+  Create own account [icon: user-plus]
+  Verify own email [icon: mail]
+  Complete own profile and consent [icon: user-check]
+  Browse courses [shape: oval, icon: book]
+}
+Open app directly > Create own account
+Create own account > Verify own email
+Verify own email > Complete own profile and consent
+Complete own profile and consent > Browse courses

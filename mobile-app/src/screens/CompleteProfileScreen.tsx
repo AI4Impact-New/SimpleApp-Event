@@ -21,6 +21,7 @@ import { POLICY_TEXT, PRIVACY_POLICY_VERSION } from '@/screens/PrivacyPolicyScre
 export type UserType = 'student' | 'professional';
 
 interface CompleteProfileScreenProps {
+  initialProfile?: import('@/services/api').MyProfile;
   email: string;
   /** Omitted when the user is already signed in (post-login profile check). */
   password?: string;
@@ -29,15 +30,15 @@ interface CompleteProfileScreenProps {
   onSignOut?: () => void;
 }
 
-export function CompleteProfileScreen({ email, password, name, onComplete, onSignOut }: CompleteProfileScreenProps) {
-  const [userType, setUserType] = useState<UserType | null>(null);
-  const [university, setUniversity] = useState('');
-  const [course, setCourse] = useState('');
-  const [yearOfStudy, setYearOfStudy] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [designation, setDesignation] = useState('');
-  const [company, setCompany] = useState('');
+export function CompleteProfileScreen({ email, password, name, onComplete, onSignOut, initialProfile }: CompleteProfileScreenProps) {
+  const [userType, setUserType] = useState<UserType | null>(initialProfile?.user_type ?? null);
+  const [university, setUniversity] = useState(initialProfile?.university ?? '');
+  const [course, setCourse] = useState(initialProfile?.course ?? '');
+  const [yearOfStudy, setYearOfStudy] = useState(initialProfile?.year_of_study ?? '');
+  const [city, setCity] = useState(initialProfile?.city ?? '');
+  const [state, setState] = useState(initialProfile?.state ?? '');
+  const [designation, setDesignation] = useState(initialProfile?.designation ?? '');
+  const [company, setCompany] = useState(initialProfile?.company ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [consented, setConsented] = useState(false);

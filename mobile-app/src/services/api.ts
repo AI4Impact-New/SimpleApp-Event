@@ -22,6 +22,7 @@ import type {
 import type { CoursePrice, DemoCheckoutAction, DemoOrder } from '@/types/billing';
 
 export type MyProfile = {
+  privacy_consent_required?: boolean;
   id: string;
   cognito_id?: string;
   email: string;

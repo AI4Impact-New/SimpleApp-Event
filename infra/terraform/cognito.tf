@@ -45,17 +45,15 @@ resource "aws_cognito_user_pool" "main" {
       intro         = "Welcome to the inner circle, where curious minds build the future. Use the code below to continue the account action you requested."
       credentials   = "<strong>Your verification code</strong><br><span style='font-size:28px;font-family:monospace;letter-spacing:4px;'>{####}</span>"
       instructions  = "Return to the AI4Impact screen where you requested this code and enter it there. Keep this code private."
-      signin_links  = "<p style='margin:0;font-size:15px;'><a href='https://main.${aws_amplify_app.landing.default_domain}' style='color:#008c7d;font-weight:bold;'>Explore AI4Impact</a></p>"
+      signin_links  = "<p style='margin:0;font-size:15px;'><a href='https://www.ai4impact.in' style='color:#008c7d;font-weight:bold;'>Explore AI4Impact</a></p>"
       security_note = "If you didn’t request this code, you can ignore this email. Never share your verification code with anyone."
-      website_url   = "https://main.${aws_amplify_app.landing.default_domain}"
-      logo_url      = "https://main.${aws_amplify_app.landing.default_domain}/email-logo.png"
+      website_url   = "https://www.ai4impact.in"
+      logo_url      = "https://www.ai4impact.in/email-logo.png"
     })
   }
 
-  # App-managed AdminCreateUser currently creates employees only (users/service.py).
-  # Student signup uses the verification template above. Student password invitations
-  # require a recipient-aware custom trigger and a verified SES sender before rollout.
-  # Do not use the employee invitation template for console-created student accounts.
+  # The default sender has one invitation template. A single welcome entry routes
+  # authenticated staff to their workspace and learners to the public site.
   admin_create_user_config {
     allow_admin_create_user_only = false
     invite_message_template {
@@ -66,11 +64,11 @@ resource "aws_cognito_user_pool" "main" {
         preview       = "Your AI4Impact account is ready. Let’s build what comes next."
         intro         = "You’re part of AI4Impact, where curious minds learn, create and build the future. Whether you’re here to learn or help others grow, we’re excited to have you with us."
         credentials   = "<strong>Sign-in username</strong><br>{username}<br><br><strong>Temporary password</strong><br><span style='font-size:20px;font-family:monospace;'>{####}</span>"
-        instructions  = "Your workspace is ready. Use the link below to sign in with these details, then follow the prompt to choose your own password."
-        signin_links  = "<p style='margin:0;font-size:15px;'><a href='https://main.${aws_amplify_app.admin.default_domain}/login' style='color:#008c7d;font-weight:bold;'>Sign in to AI4Impact</a></p>"
+        instructions  = "Your account is ready. Use the link below to sign in and choose your own password. You can also sign in directly in the AI4Impact learning app."
+        signin_links  = "<p style='margin:0;font-size:15px;'><a href='https://admin.ai4impact.in/welcome' style='color:#008c7d;font-weight:bold;'>Sign in to AI4Impact</a></p>"
         security_note = "Keep your temporary password private. If you weren’t expecting this invitation or need a fresh invitation, contact the AI4Impact team through your usual channel."
-        website_url   = "https://main.${aws_amplify_app.admin.default_domain}/login"
-        logo_url      = "https://main.${aws_amplify_app.landing.default_domain}/email-logo.png"
+        website_url   = "https://admin.ai4impact.in/welcome"
+        logo_url      = "https://www.ai4impact.in/email-logo.png"
       })
     }
   }

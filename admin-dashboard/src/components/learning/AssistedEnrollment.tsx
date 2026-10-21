@@ -10,6 +10,9 @@ type Quote = {id:string;course_title:string;buyer_email:string;buyer_name:string
 type Workspace = {lead:{name:string;email:string;phone:string};enrollment:null|{user_id:string|null;profile:Record<string,string>;account_created_here:boolean};quotes:Quote[];actions:{action:string;state:string;created_at:string}[];quote_email_enabled:boolean};
 type Course = {id:string;title:string;marked_price_paise:number;discount_percentage:number};
 const initial:Record<string,string>={name:"",email:"",phone:"",user_type:"student",university:"",course:"",year_of_study:"",city:"",state:"",designation:"",company:""};
+// Enquiry responses also contain consent, follow-up and database metadata.
+// Only the student-profile contract belongs in form state or save requests.
+const studentProfile=(source:Record<string,unknown>):Record<string,string>=>Object.fromEntries(Object.entries(initial).map(([key,fallback])=>[key,typeof source[key]==="string"?source[key]:fallback]));
 const input="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 disabled:bg-gray-50";
 const button="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50";
 const secondary="rounded-lg border bg-white px-3 py-2 text-sm font-medium text-primary-700 disabled:opacity-50";
@@ -24,10 +27,10 @@ export function AssistedEnrollment({leadId,onClose}:{leadId:string;onClose:()=>v
  const [courseId,setCourseId]=useState(""),[price,setPrice]=useState(""),[discount,setDiscount]=useState("0");
  const ids=useRef<Record<string,string>>({}),loaded=useRef(false),close=useRef<HTMLButtonElement>(null);
  useEffect(()=>{close.current?.focus();const previous=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{document.body.style.overflow=previous;};},[]);
- useEffect(()=>{if(data&&!loaded.current){loaded.current=true;setProfile({...initial,...(data.enrollment?.profile||data.lead)});setAuthorized(!!data.enrollment);}},[data]);
+ useEffect(()=>{if(data&&!loaded.current){loaded.current=true;setProfile(studentProfile(data.enrollment?.profile||data.lead));setAuthorized(!!data.enrollment);}},[data]);
  const requestId=(key:string)=>ids.current[key]??(ids.current[key]=crypto.randomUUID());
  async function run(key:string,action:()=>Promise<unknown>,success:string){if(busy)return;setBusy(key);setProblem("");setMessage("");try{await action();delete ids.current[key];setMessage(success);}catch(e){setProblem(errorMessage(e));}finally{await client.invalidateQueries({queryKey:["assisted",leadId]});await client.invalidateQueries({queryKey:["website-enquiries"]});setBusy("");}}
- function save(e:FormEvent){e.preventDefault();void run("profile",()=>api.learningRequest("PUT",base,{...profile,account_authorized:authorized}).then(()=>setDirty(false)),"Student details saved. Course access remains unchanged.");}
+ function save(e:FormEvent){e.preventDefault();void run("profile",()=>api.learningRequest("PUT",base,{...studentProfile(profile),account_authorized:authorized}).then(()=>setDirty(false)),"Student details saved. Course access remains unchanged.");}
  const linked=!!data?.enrollment?.user_id;
  const fields=["name","email","phone","city","state",...(profile.user_type==="student"?["university","course","year_of_study"]:["designation","company"])];
  async function download(q:Quote){await run("pdf",async()=>{const token=localStorage.getItem("auth_id_token")||localStorage.getItem("auth_token");const root=(process.env.NEXT_PUBLIC_API_URL||"").replace(/\/$/,"");const r=await fetch(root+base+`/quotes/${q.id}/invoice`,{headers:{Authorization:`Bearer ${token}`}});if(!r.ok)throw new Error("Could not download the PDF. Refresh your session and retry.");const url=URL.createObjectURL(await r.blob());const a=document.createElement("a");a.href=url;a.download=`AI4Impact-pro-forma-${q.id}.pdf`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);},"Pro forma PDF downloaded.");}

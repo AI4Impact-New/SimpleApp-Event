@@ -162,9 +162,11 @@ resource "aws_lambda_function" "learning" {
       VIDEO_KEY_ID                = aws_cloudfront_public_key.videos.id
       VIDEO_SIGNER_SECRET_ARN     = aws_secretsmanager_secret.video_signer.arn
       CERTIFICATE_VERIFY_BASE_URL = aws_apigatewayv2_api.main.api_endpoint
-      CERTIFICATE_VERIFY_PAGE_URL = "https://main.${aws_amplify_app.landing.default_domain}/verify"
+      CERTIFICATE_VERIFY_PAGE_URL = "https://www.ai4impact.in/verify"
+      TRANSACTIONAL_EMAIL_ENABLED = tostring(var.transactional_email_enabled)
+      TRANSACTIONAL_FROM_EMAIL    = "noreply@ai4impact.in"
       EXPO_PROJECT_ID             = var.expo_project_id
-      CHECKOUT_PAGE_URL           = "https://main.${aws_amplify_app.admin.default_domain}/checkout"
+      CHECKOUT_PAGE_URL           = "https://admin.ai4impact.in/checkout"
     })
   }
   depends_on = [aws_iam_role_policy_attachment.learning_db_secret, aws_iam_role_policy.learning_runtime, aws_iam_role_policy_attachment.learning_vpc, aws_cloudwatch_log_group.learning, null_resource.build_lambdas, aws_secretsmanager_secret_version.video_signer]
@@ -238,5 +240,14 @@ resource "aws_apigatewayv2_route" "employer_enquiries" {
 resource "aws_iam_role_policy" "learning_marketing_membership" {
   name   = "marketing-membership"
   role   = aws_iam_role.learning.id
-  policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Allow", Action = ["cognito-idp:ListUsers", "cognito-idp:ListUsersInGroup", "cognito-idp:AdminAddUserToGroup", "cognito-idp:AdminRemoveUserFromGroup"], Resource = aws_cognito_user_pool.main.arn }] })
+  policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Allow", Action = ["cognito-idp:ListUsers", "cognito-idp:AdminGetUser", "cognito-idp:AdminListGroupsForUser", "cognito-idp:AdminCreateUser", "cognito-idp:ListUsersInGroup", "cognito-idp:AdminAddUserToGroup", "cognito-idp:AdminRemoveUserFromGroup"], Resource = aws_cognito_user_pool.main.arn }] })
+}
+
+resource "aws_iam_role_policy" "assisted_email" {
+  name = "assisted-transactional-email"
+  role = aws_iam_role.learning.id
+  policy = jsonencode({ Version = "2012-10-17", Statement = [{
+    Effect    = "Allow", Action = ["ses:SendEmail", "ses:SendRawEmail"], Resource = aws_sesv2_email_identity.transactional.arn,
+    Condition = { StringEquals = { "ses:FromAddress" = "noreply@ai4impact.in" } }
+  }] })
 }

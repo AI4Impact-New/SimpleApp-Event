@@ -178,3 +178,9 @@ variable "admin_custom_origins" {
     error_message = "Use HTTPS origins only, without a path or trailing slash."
   }
 }
+
+variable "transactional_email_enabled" {
+  description = "Enable quote emails only after SES DKIM verification and production approval"
+  type        = bool
+  default     = false
+}

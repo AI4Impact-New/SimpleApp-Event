@@ -52,8 +52,13 @@ export function ExamScreen({ exam, onBack }: ExamScreenProps) {
             setAnswers(stored.answers ?? {});
             if (restored.status !== 'pending') await (await store()).write(null);
           }
-        } catch {
-          await (await store()).write(null);
+        } catch (err: any) {
+          const status = err?.response?.status;
+          if (status === 403 || status === 404 || status === 410) {
+            await (await store()).write(null);
+          } else if (!cancelled) {
+            Alert.alert('Exam recovery unavailable', 'Your saved answers are safe. Check your connection and reopen the exam to resume.');
+          }
         }
       }
       if (!cancelled) setRestoring(false);

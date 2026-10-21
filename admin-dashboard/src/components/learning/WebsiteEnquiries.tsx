@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Mail, Phone, Loader2 } from "lucide-react";
 import api from "@/services/api";
+import { AssistedEnrollment } from "./AssistedEnrollment";
 import { errorMessage } from "@/services/learning";
 
 type Lead = {
@@ -31,6 +32,7 @@ type Result = {
 const statuses = ["new", "contacted", "registered", "dropped"];
 function LeadRow({ lead }: { lead: Lead }) {
   const client = useQueryClient();
+  const [onboarding, setOnboarding] = useState(false);
   const [status, setStatus] = useState(lead.status);
   const [notes, setNotes] = useState(lead.notes);
   const [busy, setBusy] = useState(false);
@@ -144,6 +146,9 @@ function LeadRow({ lead }: { lead: Lead }) {
           </p>
         )}
       </td>
+      <td className="min-w-48 px-4 py-4">
+        {lead.kind === "guidance" ? <><p className="text-xs text-gray-500">Profile, account and personal quote</p><button onClick={() => setOnboarding(true)} className="mt-3 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 text-sm font-semibold text-primary-700 hover:bg-primary-100">Open student workspace</button>{onboarding && <AssistedEnrollment leadId={lead.id} onClose={() => setOnboarding(false)} />}</> : <p className="text-xs text-gray-400">Employer hiring enquiry</p>}
+      </td>
       <td className="whitespace-nowrap px-4 py-4 text-xs text-gray-500">
         {new Date(lead.created_at).toLocaleString()}
       </td>
@@ -167,8 +172,8 @@ export function WebsiteEnquiries() {
     <div className="space-y-4">
       <p className="text-sm text-gray-500">
         Career-guidance and employer hiring requests. Marketing can contact
-        these leads and record follow-up. A status change does not create a
-        student account or grant course access.
+        these leads, record follow-up, and open the student workspace to prepare
+        an authorized account and personal quote. Status labels alone do not grant course access.
       </p>
       <div className="flex flex-wrap gap-3">
         <label className="text-sm">
@@ -242,6 +247,7 @@ export function WebsiteEnquiries() {
                     "Interest",
                     "Consent",
                     "Follow-up",
+                    "Student onboarding",
                     "Submitted",
                   ].map((t) => (
                     <th key={t} className="px-4 py-3">

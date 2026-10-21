@@ -53,10 +53,12 @@ export function ExamScreen({ exam, onBack }: ExamScreenProps) {
             if (restored.status !== 'pending') await (await store()).write(null);
           }
         } catch (err: any) {
-          // Forget the attempt only when the server says it is gone or not ours; keep answers through
-          // connection errors so "Start / resume" can pick them back up.
           const status = err?.response?.status;
-          if (status === 403 || status === 404) await (await store()).write(null);
+          if (status === 403 || status === 404 || status === 410) {
+            await (await store()).write(null);
+          } else if (!cancelled) {
+            Alert.alert('Exam recovery unavailable', 'Your saved answers are safe. Check your connection and reopen the exam to resume.');
+          }
         }
       }
       if (!cancelled) setRestoring(false);

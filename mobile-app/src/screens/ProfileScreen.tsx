@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { authService, StoredUserData } from '@/services/auth';
+import { VerifyEmailNotice } from '@/components/VerifyEmailNotice';
 import { api } from '@/services/api';
 import { isPushOptedOut, setPushOptOut } from '@/services/push';
 
@@ -182,6 +183,7 @@ export function ProfileScreen({
           </View>
         </View>
 
+        <VerifyEmailNotice />
         <TouchableOpacity
           style={styles.editButton}
           onPress={onEditProfile}

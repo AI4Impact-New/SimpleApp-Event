@@ -1,21 +1,7 @@
 // Download a PDF into the cache and open the native share sheet
-// (on web: download it through the browser instead)
 import { Alert, Platform } from 'react-native';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-
-async function downloadPdfOnWeb(options: { url: string; fileName: string; headers?: Record<string, string> }) {
-  const res = await fetch(options.url, { headers: options.headers });
-  if (!res.ok) throw new Error(`Download failed (${res.status})`);
-  const blobUrl = URL.createObjectURL(await res.blob());
-  const link = document.createElement('a');
-  link.href = blobUrl;
-  link.download = options.fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
-}
 
 export async function downloadAndSharePdf(options: {
   url: string;
@@ -24,7 +10,17 @@ export async function downloadAndSharePdf(options: {
   headers?: Record<string, string>;
 }) {
   if (Platform.OS === 'web') {
-    await downloadPdfOnWeb(options);
+    const response = await fetch(options.url, { headers: options.headers });
+    if (!response.ok) throw new Error('PDF download failed');
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = options.fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     return;
   }
   const target = new File(Paths.cache, options.fileName);

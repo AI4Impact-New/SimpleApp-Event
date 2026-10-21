@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 import { Loader2 } from 'lucide-react';
-import '@/app/amplify-config';
+import { configureAuth } from '@/app/amplify-config';
 import 'aws-amplify/auth/enable-oauth-listener';
 import {loginDestination} from '@/utils/login-destination';
 import { getCurrentUserFromToken } from '@/utils/jwt';
+
+configureAuth(true);
 
 function getCodeFromUrl(): string | null {
   if (typeof window === 'undefined') return null;
@@ -27,7 +29,7 @@ export default function CallbackPage() {
     const code = getCodeFromUrl();
     if (!code) {
       const showNoCode = () =>
-        setError('No authorization code received. Use the login page and click "Sign in with Cognito"—do not open this page directly. If you were redirected here after signing in, ensure the app URL is http://localhost:3000 and Cognito callback is exactly http://localhost:3000/callback.');
+        setError('This sign-in link is incomplete or expired. Return to sign in and use your email and password.');
       const t = setTimeout(showNoCode, 300);
       return () => clearTimeout(t);
     }

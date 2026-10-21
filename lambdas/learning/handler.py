@@ -11,7 +11,7 @@ from uuid import UUID
 from shared.auth import get_current_user, _normalize_groups
 from shared.user_repository import get_or_create_user_from_claims
 from shared.db import execute_query
-from learning import service, exams, certificates, devices, enquiries, billing, access_windows, staff, operations
+from learning import service, exams, certificates, devices, enquiries, billing, access_windows, staff, operations, assisted
 from learning.validation import ApiError, identifier
 
 logger = logging.getLogger(__name__)
@@ -73,12 +73,23 @@ def handler(event, context):
         if path == "/employer-enquiries" and method == "POST":
             return _response(202,enquiries.submit(_body(event),True))
         actor = _actor(event)
-        marketing_route=(path=="/admin/enquiries" or (len(parts)==3 and parts[:2]==['admin','enquiries']) or path=="/admin/marketing/interests")
+        marketing_route=(path=="/admin/enquiries" or (len(parts)==3 and parts[:2]==['admin','enquiries']) or path=="/admin/marketing/interests" or (len(parts)>=4 and parts[:2]==["admin","enquiries"] and parts[3]=="assisted"))
         if parts[0]=="admin":
             enquiries.staff(actor) if marketing_route else service.admin(actor)
         body = _body(event) if method in ("POST","PUT","PATCH") else {}
         result, status = None, 200
-        if path=="/admin/operations/readiness" and method=="GET":result=operations.readiness(actor)
+        if len(parts)>=4 and parts[:2]==['admin','enquiries'] and parts[3]=='assisted':
+            eid=identifier(parts[2]);suffix=parts[4] if len(parts)>4 else ''
+            if len(parts)==4 and method=='GET':result=assisted.detail(actor,eid)
+            elif len(parts)==4 and method=='PUT':result=assisted.save_profile(actor,eid,body)
+            elif len(parts)==5 and suffix=='account' and method=='POST':result=assisted.create_account(actor,eid)
+            elif len(parts)==5 and suffix=='invitation' and method=='POST':result=assisted.invite(actor,eid,body)
+            elif len(parts)==5 and suffix=='quotes' and method=='POST':result=assisted.quote(actor,eid,body);status=201
+            elif len(parts)==7 and suffix=='quotes' and parts[6]=='email' and method=='POST':result=assisted.send_quote(actor,eid,parts[5],body)
+            elif len(parts)==7 and suffix=='quotes' and parts[6]=='invoice' and method=='GET':
+                contents=assisted.quote_invoice(actor,eid,parts[5])
+                return {'statusCode':200,'isBase64Encoded':True,'headers':{'Content-Type':'application/pdf','Cache-Control':'no-store','Content-Disposition':'attachment; filename="AI4Impact-pro-forma.pdf"'},'body':base64.b64encode(contents).decode()}
+        elif path=="/admin/operations/readiness" and method=="GET":result=operations.readiness(actor)
         elif path=="/admin/marketing/users" and method=='GET':result=staff.members(actor,event.get('queryStringParameters') or {})
         elif path=="/admin/marketing/users" and method=='PUT':result=staff.membership(actor,body)
         elif path=="/admin/marketing/interests" and method=="GET": result=enquiries.student_interests(actor)
@@ -122,6 +133,7 @@ def handler(event, context):
                 if method=="PUT": result=service.save_class(actor,cid,body,identifier(parts[4]))
                 elif method=="DELETE": result=service.delete_class(actor,cid,identifier(parts[4]))
             elif len(parts)==4 and suffix=="learners" and method=="GET": result=service.learners(actor,cid)
+            elif len(parts)==4 and suffix=="video-analytics" and method=="GET": result=service.video_analytics(actor,cid,event.get("queryStringParameters") or {})
             elif len(parts)==4 and suffix=="completion-rules":
                 if method=="GET": service.course(cid); result=service.rules(cid)
                 elif method=="PUT": result=service.save_rules(actor,cid,body)

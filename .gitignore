@@ -99,3 +99,6 @@ coverage/
 docs/design-system/uploads/
 docs/design-system/scratch/
 docs/design-system/.thumbnail
+# Playwright browser-test artifacts
+**/test-results/
+**/playwright-report/

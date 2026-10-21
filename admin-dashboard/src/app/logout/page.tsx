@@ -6,15 +6,12 @@ import '@/app/amplify-config';
 import { authService } from '@/services/auth';
 
 /**
- * Logout page: only loaded when Cognito redirects here after sign-out.
- * (Actual redirect to Cognito is done by authService.logout().)
- * Clear any leftover auth storage and send user to login.
+ * Supports direct/legacy logout links and clears the actual Amplify session.
  */
 export default function LogoutPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    authService.clearAuthStorage();
-    window.location.replace('/login');
+    void authService.logout();
   }, []);
 
   return (

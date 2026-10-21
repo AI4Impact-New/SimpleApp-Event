@@ -172,9 +172,15 @@ variable "expo_push_access_token" {
 variable "admin_custom_origins" {
   description = "Approved HTTPS origins for admin/student Cognito login after domain attachment"
   type        = list(string)
-  default     = []
+  default     = ["https://admin.ai4impact.in"]
   validation {
     condition     = alltrue([for origin in var.admin_custom_origins : can(regex("^https://[a-zA-Z0-9.-]+$", origin))])
     error_message = "Use HTTPS origins only, without a path or trailing slash."
   }
+}
+
+variable "transactional_email_enabled" {
+  description = "Enable quote emails only after SES DKIM verification and production approval"
+  type        = bool
+  default     = false
 }

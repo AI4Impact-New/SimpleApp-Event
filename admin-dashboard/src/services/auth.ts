@@ -1,5 +1,6 @@
 // Authentication service using AWS Amplify
 import { signIn, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
+import { configureAuth } from '@/app/amplify-config';
 
 class AuthService {
   async login(email: string, password: string) {
@@ -55,20 +56,15 @@ class AuthService {
   }
 
   async logout() {
+    // Old hosted-UI sessions must also sign out without an external navigation.
+    configureAuth();
     try {
       await signOut();
     } catch (_) {}
     if (typeof window !== 'undefined') {
       this.clearAuthStorage();
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-      const domain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN || 'payintelli-442042527593';
-      const region = process.env.NEXT_PUBLIC_COGNITO_REGION || 'ap-south-1';
-      const clientId = process.env.NEXT_PUBLIC_COGNITO_APP_CLIENT_ID || '';
-      // Must match Cognito app client "Sign out URL(s)" (logout_urls) exactly
-      const signOutUrl = `${appUrl}/logout`;
-      const logoutUri = encodeURIComponent(signOutUrl);
-      const redirectUri = encodeURIComponent(signOutUrl);
-      window.location.href = `https://${domain}.auth.${region}.amazoncognito.com/logout?client_id=${clientId}&logout_uri=${logoutUri}&redirect_uri=${redirectUri}&response_type=code`;
+      sessionStorage.removeItem('post_login_path');
+      window.location.replace('/login');
     }
     return { success: true };
   }

@@ -249,3 +249,14 @@ Backend tests are evidence for server behavior, not proof that the mobile UI/dev
 7. Device acceptance and EAS/store release by the mobile team.
 
 Needed from stakeholders/content team: actual recordings/questions; pass/attendance/retry policy; course access/pilot-enrollment policy; final certificate wording; named marketing accounts; final admin/student domain. Needed from mobile/store owners: real Expo project UUID, platform build/signing/store access and physical test devices. None of these are invented by the backend.
+
+## 22. Assisted enrollment from marketing
+
+Marketing can now collect the same profile in Course Enquiries and invite the student. Keep self-signup available. Existing users are linked without resetting passwords. Newly invited accounts require first-login password change and their own privacy acceptance. `GET /users/me` includes `privacy_consent_required`; the existing profile screen now prefills saved fields for review. The account can have zero course enrollments while a quote is pending. Individual demo prices and PDFs use existing order contracts; never replace them with the public catalog price or grant local access after demo completion. See `AI4Impact-Assisted-Enrollment-Handover.md` for staff/backend API details and `AI4Impact-Assisted-Enrollment-Eraser.txt` for journey source. Native device QA remains required.
+
+
+## Student web release — 21 October 2026
+
+The shared Expo app is now hosted at https://main.d26ztc5gxt79re.amplifyapp.com. Landing Student Login opens this portal. Native and web use the same API, Cognito student accounts and profile/consent contracts. Browser invoice downloads and demo-order cancellation have web-specific handling. See `AI4Impact-Student-Web-Portal.md` for Terraform hosting, export/deployment commands and device-testing limits. Four retained QA student accounts cover both student and professional profiles; the QA workbook records the results.
+
+Profile also provides Cognito email verification for invited learners. Use `fetchUserAttributes`, `sendUserAttributeVerificationCode` and `confirmUserAttribute` from Amplify Auth. Do not mark email ownership verified from staff-supplied profile details. Valid-code completion and password-reset delivery require real-inbox acceptance testing.

@@ -9,6 +9,10 @@ resource "aws_sns_topic_policy" "operations" {
     Sid       = "CloudWatchProjectAlarms", Effect = "Allow", Principal = { Service = "cloudwatch.amazonaws.com" },
     Action    = "sns:Publish", Resource = aws_sns_topic.operations.arn,
     Condition = { StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id }, ArnLike = { "aws:SourceArn" = "arn:aws:cloudwatch:${var.aws_region}:${data.aws_caller_identity.current.account_id}:alarm:${var.project_name}-*" } }
+    }, {
+    Sid       = "SESTransactionalFeedback", Effect = "Allow", Principal = { Service = "ses.amazonaws.com" },
+    Action    = "sns:Publish", Resource = aws_sns_topic.operations.arn,
+    Condition = { StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id }, ArnEquals = { "aws:SourceArn" = aws_sesv2_configuration_set.transactional.arn } }
   }] })
 }
 locals {

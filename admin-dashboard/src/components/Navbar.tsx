@@ -16,7 +16,7 @@ export function Navbar({ user }: NavbarProps) {
 
   const handleLogout = async () => {
     await authService.logout();
-    // authService.logout() redirects to Cognito Hosted UI logout, then to /login
+    // Session cleanup and navigation stay on this application's origin.
   };
 
   return (

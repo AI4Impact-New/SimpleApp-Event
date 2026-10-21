@@ -160,3 +160,7 @@ The older event experience is still in source; it is not replaced by Learning St
 | `LeaderboardHomeScreen`, `LeaderboardScreen` | Existing event analytics client uses `GET /events/{id}/analytics` | Verify actual learner permissions/data on device; screen presence is not proof of current production acceptance |
 
 Use `mobile-app/src/services/api.ts` and screen hooks for exact response wrappers; event-era APIs may wrap arrays whereas new learning APIs return direct arrays/objects. Do not remove these pages as part of the learning integration without product approval.
+
+## Staff sign-in on the admin domain
+
+The admin console now uses an embedded Amplify/Cognito email/password form at `https://admin.ai4impact.in/login`. Normal sign-in, temporary-password setup, email confirmation, password reset and sign-out stay on that origin. Cognito remains the authentication service; its HTTPS API requests do not change the address bar. Existing Admins/Marketing authorization and student accounts are unchanged. No new DNS, SES approval or AWS resource is needed for this UI change because the existing client already supports SRP sign-in. Legacy OAuth callback handling remains available for previously issued links, but normal sign-in does not initiate hosted login. The student web/mobile login integration is unchanged.

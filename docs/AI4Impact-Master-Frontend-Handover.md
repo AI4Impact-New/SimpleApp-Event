@@ -146,3 +146,17 @@ Live gateway/webhooks, refunds and tax/final invoice policy remain deferred. Nev
 | Portal publishing automation | Artifact publishing is documented/manual; no automatic GitHub portal release configured |
 
 Detailed references: `AI4Impact-Mobile-Screen-Implementation-Guide.md` (page specs), `AI4Impact-Assisted-Enrollment-Handover.md` (staff onboarding), `AI4Impact-Student-Web-Portal.md` (Terraform/export/publish), `AI4Impact-Frontend-Handover.md` (historical API examples). Older statements saying mobile source is unchanged, no checkout exists, the admin preview is the main student portal, or valid real-inbox recovery remains untested are superseded by this baseline.
+
+## Existing event features retained
+
+The older event experience is still in source; it is not replaced by Learning Studio. These paths were not part of this video's native acceptance release and need regression testing when the mobile team ships them.
+
+| Existing screens | Existing client API calls | Team acceptance |
+|---|---|---|
+| `HomeScreen`, `EventsScreen`, `EventScreen` | `GET /events`, `GET /events/{id}` | Published/visibility filters, navigation and unavailable event |
+| `QRScannerScreen`, attendance | `POST /events/{id}/join`, `GET /attendance` | Real camera permissions, valid/invalid event QR, duplicate join; distinct from certificate QR verification |
+| `PollScreen` | `GET /polls?event_id=...`, `GET /polls/{id}`, `POST /polls/{id}/vote` with `{option_id}`, `GET /polls/{id}/results` | Open/closed poll, repeated vote, permitted results |
+| `MaterialsScreen` | `GET /materials?event_id=...`, `POST /materials/{id}/download` | Authorized material access, signed download expiry and native download |
+| `LeaderboardHomeScreen`, `LeaderboardScreen` | Existing event analytics client uses `GET /events/{id}/analytics` | Verify actual learner permissions/data on device; screen presence is not proof of current production acceptance |
+
+Use `mobile-app/src/services/api.ts` and screen hooks for exact response wrappers; event-era APIs may wrap arrays whereas new learning APIs return direct arrays/objects. Do not remove these pages as part of the learning integration without product approval.

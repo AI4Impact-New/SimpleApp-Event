@@ -32,6 +32,7 @@ export function Input({
         className={`text-(length:--fs-sm) font-medium leading-(--lh-snug) ${dark ? "text-(--text-on-dark)" : "text-(--text-strong)"}`}
       >
         {label}
+        {required && <span aria-hidden="true" className="ml-0.5 text-(--teal-500)">*</span>}
       </span>
       <input
         name={name}

@@ -182,3 +182,46 @@ def test_public_api_verify_remains_json(monkeypatch, accept):
     result = handler.handler({"path": f"/certificates/{UID}/verify", "httpMethod": "GET", "headers": {"accept": accept}}, None)
     assert result["statusCode"] == 200
     assert json.loads(result["body"])["valid"] is True
+
+
+def test_video_analytics_denies_student_before_query(monkeypatch):
+    query = Mock(side_effect=AssertionError('Must not read learner details'))
+    monkeypatch.setattr(service, 'execute_query', query)
+    with pytest.raises(ApiError) as error:
+        service.video_analytics(ACTOR, OTHER)
+    assert error.value.status == 403
+    query.assert_not_called()
+
+
+def test_video_analytics_summary_and_selected_video_are_course_scoped(monkeypatch):
+    monkeypatch.setattr(service, 'course', lambda cid: None)
+    videos = [{'class_id':OTHER, 'title':'Recording', 'duration_seconds':600,
+               'students_started':2, 'students_completed':1, 'watched_seconds':690}]
+    students = [{'user_id':UID, 'watched_seconds':90, 'resume_seconds':40,
+                 'progress_percentage':15, 'completed':False, 'total_students':2}]
+    query = Mock(side_effect=[videos, students])
+    monkeypatch.setattr(service, 'execute_query', query)
+    result = service.video_analytics({**ACTOR, 'admin':True}, UID, {'class_id':OTHER})
+    assert result == {'videos':videos, 'students':students, 'student_limit':500, 'total_students':2}
+    assert query.call_args_list[0].args[1] == (UID,)
+    assert query.call_args_list[1].args[1] == (OTHER,UID)
+    # Aggregates use progress, not playback sessions (renewals must not inflate starts).
+    assert 'playback_sessions' not in query.call_args_list[0].args[0]
+    assert 'p.watched_seconds>0' in query.call_args_list[0].args[0]
+
+
+def test_video_analytics_rejects_recording_from_another_course(monkeypatch):
+    monkeypatch.setattr(service, 'course', lambda cid: None)
+    query = Mock(return_value=[])
+    monkeypatch.setattr(service, 'execute_query', query)
+    with pytest.raises(ApiError) as error:
+        service.video_analytics({**ACTOR, 'admin':True}, UID, {'class_id':OTHER})
+    assert error.value.status == 404
+    assert query.call_count == 1
+
+
+def test_video_analytics_empty_course_has_zero_students(monkeypatch):
+    monkeypatch.setattr(service, 'course', lambda cid: None)
+    monkeypatch.setattr(service, 'execute_query', lambda *args, **kwargs: [])
+    assert service.video_analytics({**ACTOR, 'admin':True}, UID) == {
+        'videos':[], 'students':[], 'student_limit':500, 'total_students':0}

@@ -4951,6 +4951,199 @@
           }
         ]
       }
+    },
+    "/admin/courses/{course_id}/video-analytics": {
+      "get": {
+        "summary": "Admin-only unique video watch metrics and optional learner breakdown",
+        "tags": [
+          "Admin"
+        ],
+        "operationId": "get_admin_course_video_analytics",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "videos",
+                    "students",
+                    "student_limit",
+                    "total_students"
+                  ],
+                  "properties": {
+                    "videos": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "class_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "duration_seconds": {
+                            "type": "integer"
+                          },
+                          "students_started": {
+                            "type": "integer"
+                          },
+                          "students_completed": {
+                            "type": "integer"
+                          },
+                          "watched_seconds": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "students": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "user_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "watched_seconds": {
+                            "type": "number"
+                          },
+                          "resume_seconds": {
+                            "type": "number"
+                          },
+                          "progress_percentage": {
+                            "type": "number"
+                          },
+                          "completed": {
+                            "type": "boolean"
+                          },
+                          "last_progress_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          },
+                          "total_students": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "student_limit": {
+                      "type": "integer",
+                      "enum": [
+                        500
+                      ]
+                    },
+                    "total_students": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized or unenrolled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal service error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CognitoIdToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Published video in this course; include for up to 500 registration progress rows."
+          }
+        ]
+      }
     }
   }
 }

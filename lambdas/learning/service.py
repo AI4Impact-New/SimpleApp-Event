@@ -245,6 +245,40 @@ def learners(actor, course_id):
         FROM course_registrations r JOIN users u ON u.id=r.user_id WHERE r.course_id=%s ORDER BY r.created_at DESC LIMIT 500""", (course_id,),fetch="all") or []
 
 
+
+def video_analytics(actor, course_id, params=None):
+    """Staff-only credited, unique watch time; never expose signed media URLs."""
+    admin(actor)
+    course(course_id)
+    videos = execute_query("""SELECT c.id AS class_id,c.title,a.duration_seconds,
+        count(p.user_id) FILTER (WHERE p.watched_seconds>0) AS students_started,
+        count(p.user_id) FILTER (WHERE p.completed) AS students_completed,
+        coalesce(sum(p.watched_seconds),0) AS watched_seconds
+        FROM course_classes c JOIN video_assets a ON a.class_id=c.id AND a.status='ready'
+        LEFT JOIN lecture_progress p ON p.asset_id=a.id
+        AND EXISTS (SELECT 1 FROM course_registrations r WHERE r.course_id=c.course_id AND r.user_id=p.user_id)
+        WHERE c.course_id=%s GROUP BY c.id,c.title,c.sort_order,a.duration_seconds
+        ORDER BY c.sort_order,c.id""", (course_id,), fetch="all") or []
+    selected = (params or {}).get("class_id")
+    students = []
+    if selected:
+        selected = identifier(selected)
+        if not any(str(v["class_id"]) == selected for v in videos):
+            raise ApiError(404, "Published recording not found in this course")
+        students = execute_query("""SELECT r.user_id,u.name,u.email,r.status,
+            coalesce(p.watched_seconds,0) AS watched_seconds,
+            coalesce(p.position_seconds,0) AS resume_seconds,
+            round(coalesce(p.watched_seconds,0)*100/a.duration_seconds,2) AS progress_percentage,
+            coalesce(p.completed,false) AS completed,p.updated_at AS last_progress_at,
+            count(*) OVER() AS total_students
+            FROM course_registrations r JOIN users u ON u.id=r.user_id
+            JOIN video_assets a ON a.course_id=r.course_id AND a.class_id=%s AND a.status='ready'
+            LEFT JOIN lecture_progress p ON p.asset_id=a.id AND p.user_id=r.user_id
+            WHERE r.course_id=%s ORDER BY u.email,r.user_id LIMIT 500""", (selected,course_id), fetch="all") or []
+    return {"videos":videos,"students":students,"student_limit":500,
+            "total_students":int(students[0]["total_students"]) if students else 0}
+
+
 def import_attendance(actor, class_id, body):
     admin(actor)
     lecture = class_row(class_id)

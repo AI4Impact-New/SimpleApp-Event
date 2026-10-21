@@ -133,6 +133,7 @@ def handler(event, context):
                 if method=="PUT": result=service.save_class(actor,cid,body,identifier(parts[4]))
                 elif method=="DELETE": result=service.delete_class(actor,cid,identifier(parts[4]))
             elif len(parts)==4 and suffix=="learners" and method=="GET": result=service.learners(actor,cid)
+            elif len(parts)==4 and suffix=="video-analytics" and method=="GET": result=service.video_analytics(actor,cid,event.get("queryStringParameters") or {})
             elif len(parts)==4 and suffix=="completion-rules":
                 if method=="GET": service.course(cid); result=service.rules(cid)
                 elif method=="PUT": result=service.save_rules(actor,cid,body)

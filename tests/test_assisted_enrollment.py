@@ -111,3 +111,12 @@ def test_delivery_request_is_not_repeated_after_unknown_or_failed_submission(mon
     cursor(monkeypatch,[{'kind':'guidance'},None,{'state':'pending','details':{}}])
     with pytest.raises(ApiError) as e:assisted._begin_action(STAFF,ID,'invitation',OTHER,{})
     assert e.value.status==409
+
+
+def test_invitation_resend_uses_email_in_email_username_pool(monkeypatch):
+    monkeypatch.setattr(assisted,'execute_query',lambda *a,**k:{'user_id':OTHER,'account_created_here':True,'cognito_username':'opaque-sub','profile':{'email':'qa@example.invalid'}})
+    cg=Mock();cg.admin_get_user.return_value={'UserStatus':'FORCE_CHANGE_PASSWORD'}
+    monkeypatch.setattr(assisted,'cognito',cg);monkeypatch.setenv('COGNITO_USER_POOL_ID','pool')
+    monkeypatch.setattr(assisted,'_begin_action',lambda *a:ID);monkeypatch.setattr(assisted,'_finish_action',lambda *a:None)
+    assert assisted.invite(STAFF,ID,{'request_id':OTHER})['state']=='accepted'
+    assert cg.admin_create_user.call_args.kwargs['Username']=='qa@example.invalid'

@@ -53,7 +53,7 @@ The new path requires no new self-signup screen. The app must support:
 - Owner-protected checkout links: authenticate before loading an order. Native deep links need app-team configuration. Do not put JWTs in links.
 - A future enrollment refresh after verified payment, once a real provider exists. No local success flag grants access.
 
-Review of e407663: the latest mobile code clears React Query cache on sign-out and includes temporary-password change UI. This release makes one small recovery fix: transient exam-resume errors preserve saved answers. Native device acceptance and app-store release remain the mobile team’s responsibility.
+Review of e407663: the latest mobile code clears React Query cache on sign-out and includes temporary-password change UI. This release preserves saved answers on transient exam-resume errors. It also adds an assisted-account privacy-consent flag to GET /users/me: invited learners review their prefilled profile and accept the policy themselves before entering the app. Existing self-signup remains unchanged. Native device acceptance and app-store release remain the mobile team’s responsibility.
 
 ## API service codes / configuration
 

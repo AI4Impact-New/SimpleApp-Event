@@ -164,7 +164,7 @@ def invite(actor,eid,body):
     action_id=_begin_action(actor,eid,'invitation',body['request_id'],{})
     if action_id:
         try:
-            cognito.admin_create_user(UserPoolId=os.environ['COGNITO_USER_POOL_ID'],Username=row['cognito_username'],MessageAction='RESEND',DesiredDeliveryMediums=['EMAIL'])
+            cognito.admin_create_user(UserPoolId=os.environ['COGNITO_USER_POOL_ID'],Username=row['profile']['email'],MessageAction='RESEND',DesiredDeliveryMediums=['EMAIL'])
         except ClientError as exc:
             _finish_action(action_id,'failed',{'error_code':exc.response['Error']['Code']})
             raise ApiError(502,'Cognito could not send the invitation. Check delivery status before sending again.')

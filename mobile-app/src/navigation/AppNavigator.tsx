@@ -159,7 +159,7 @@ function PushBridge() {
   return null;
 }
 
-type ProfileGateState = { kind: 'loading' } | { kind: 'incomplete'; email: string; name?: string } | { kind: 'ready' } | { kind: 'error' };
+type ProfileGateState = { kind: 'loading' } | { kind: 'incomplete'; email: string; name?: string; profile?: import('@/services/api').MyProfile } | { kind: 'ready' } | { kind: 'error' };
 
 /**
  * A valid Cognito session is not enough: load the backend profile (GET /users/me) and send users
@@ -173,7 +173,7 @@ function SignedIn({ onLogout }: { onLogout: () => void }) {
     try {
       const { api } = await import('@/services/api');
       const profile = await api.getMyProfile();
-      if (!profile.user_type) setGate({ kind: 'incomplete', email: profile.email, name: profile.name });
+      if (!profile.user_type || profile.privacy_consent_required) setGate({ kind: 'incomplete', email: profile.email, name: profile.name, profile });
       else setGate({ kind: 'ready' });
     } catch (err: any) {
       // A 401 here signs the user out via the API interceptor; anything else is retryable.
@@ -211,6 +211,7 @@ function SignedIn({ onLogout }: { onLogout: () => void }) {
       <CompleteProfileScreen
         email={gate.email}
         name={gate.name}
+        initialProfile={gate.profile}
         onComplete={() => setGate({ kind: 'ready' })}
         onSignOut={onLogout}
       />

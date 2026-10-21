@@ -33,7 +33,7 @@ Existing explicitly approved free/pilot registration remains unchanged. A paid-l
 
 ## Email templates and default sender
 
-The pool-wide default invitation keeps the AI4Impact logo and Welcome to the inner circle design. A single neutral welcome link authenticates the recipient, then routes staff to their console and learners to the landing page. This avoids listing both audiences in one email. It is a default-sender compromise: distinct invitation HTML/direct destination per role requires SES/custom-message configuration.
+The pool-wide default invitation keeps the AI4Impact logo and Welcome to the inner circle design. A single neutral welcome link authenticates the recipient, then routes staff to their console and learners to the student web portal. This avoids listing both audiences in one email. It is a default-sender compromise: distinct invitation HTML/direct destination per role requires SES/custom-message configuration.
 
 A second template in `lambdas/learning/assets/quote-email.html` contains the personal quote, clearly labelled demo checkout link and pro forma PDF attachment. It uses the same brand language, with different subject and content.
 
@@ -62,6 +62,7 @@ Region: `ap-south-1`
 Cognito pool: `ap-south-1_kc1sfOoEG`
 Public app client: `40faprqjpcc6q0pfkdkcrd8p5v`
 Admin: `https://admin.ai4impact.in`
+Student web: `https://main.d26ztc5gxt79re.amplifyapp.com`
 Landing: `https://www.ai4impact.in`
 AWS account: `767491588787`
 

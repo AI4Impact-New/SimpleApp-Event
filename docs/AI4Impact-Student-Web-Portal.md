@@ -30,8 +30,14 @@ Landing-page Student Login opens the portal. Students can use an existing passwo
 
 The admin welcome page sends authenticated learners to this portal and staff to the dashboard. Personal quotes appear in the student's purchase history. PDF downloads use authenticated browser fetches on web and the native share sheet on devices.
 
+## Account email verification
+
+Invited accounts can be confirmed while their email attribute is still unverified. Profile now offers Send verification code and Verify email using Cognito directly. Students must enter the code from their own inbox to enable email-based password recovery. Staff authorization is not email ownership verification, and the app does not mark an email verified administratively.
+
 ## Tested scope and limits
 
 The QA report records four real landing enquiries, two student and two professional profiles, Cognito account/group checks, browser login/password challenges, profile/consent persistence, quotes/PDFs and authorization checks. Synthetic QA accounts remain available until Siddartha requests deletion.
 
 Browser QA does not replace Android/iOS device acceptance. Native camera, native video background behavior and push delivery need device testing and the Expo project UUID. SES automatic quote mail remains disabled pending identity verification, production approval and feedback testing. Real payments remain deferred.
+
+Valid verification-code entry and password-reset completion require a real inbox. QA simulator addresses do not expose OTP messages. Code submission and invalid-code handling were tested against Cognito; do not report those as proof of inbox delivery or completed recovery.

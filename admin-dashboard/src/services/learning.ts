@@ -11,6 +11,7 @@ export interface Exam {
   id: string; course_id: string; title: string; description?: string; published: boolean;
   time_limit_seconds: number; max_attempts: number; pass_percentage: number; question_count?: number; questions?: ExamQuestion[];
 }
+export interface VideoAnalytics { videos: { class_id: string; title: string; duration_seconds: number; students_started: number; students_completed: number; watched_seconds: number }[]; students: { user_id: string; name?: string; email: string; status: string; watched_seconds: number; resume_seconds: number; progress_percentage: number; completed: boolean; last_progress_at?: string }[]; total_students: number; student_limit: number }
 export interface Learner { user_id: string; name?: string; email: string; status: string; lectures_completed: number; exams_passed: number; certified: boolean }
 export interface Certificate { id: string; course_id: string; course_title: string; recipient_name?: string; provider: string; issued_at: string; revoked_at?: string }
 export interface CompletionRules { require_recorded: boolean; require_attendance: boolean; require_exam: boolean; attendance_percentage: number }
@@ -24,6 +25,7 @@ export const learning = {
   saveClass: (course: string, data: Partial<LearningClass>, id?: string) => request<LearningClass>(id ? 'PUT' : 'POST', `/admin/courses/${course}/classes${id ? '/' + id : ''}`, data),
   deleteClass: (course: string, id: string) => request('DELETE', `/admin/courses/${course}/classes/${id}`),
   playback: (id: string) => request<{ url: string }>('GET', `/learning/classes/${id}/playback`),
+  videoAnalytics: (course: string, classId = '') => request<VideoAnalytics>('GET', `/admin/courses/${course}/video-analytics${classId ? '?class_id=' + encodeURIComponent(classId) : ''}`),
   learners: (course: string) => request<Learner[]>('GET', `/admin/courses/${course}/learners`),
   exams: (course: string) => request<Exam[]>('GET', `/admin/courses/${course}/exams`),
   exam: (id: string) => request<Exam>('GET', `/admin/exams/${id}`),

@@ -1,5 +1,7 @@
 # AI4Impact frontend integration handover
 
+> **Current entry point:** [Master frontend handover](AI4Impact-Master-Frontend-Handover.md), updated 21 October 2026. Use it for deployed screens, video metrics/resume and remaining integration work; this file retains historical API examples.
+
 Release: 14 October 2026. AWS account **767491588787**, Mumbai **ap-south-1**. This release covers learning, enrollment, assessments, attendance, certificates and notifications. **Payments are excluded.** The student app source has not been modified; this document is the implementation contract for its frontend team.
 
 ## 1. Environment and authentication

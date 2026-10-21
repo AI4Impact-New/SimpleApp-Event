@@ -15,7 +15,7 @@ export interface VideoAnalytics { videos: { class_id: string; title: string; dur
 export interface Learner { user_id: string; name?: string; email: string; status: string; lectures_completed: number; exams_passed: number; certified: boolean }
 export interface Certificate { id: string; course_id: string; course_title: string; recipient_name?: string; provider: string; issued_at: string; revoked_at?: string }
 export interface CompletionRules { require_recorded: boolean; require_attendance: boolean; require_exam: boolean; attendance_percentage: number }
-export interface LearningOverview { courses: number; enrolled_learners: number; published_recordings: number; completed_lectures: number; published_exams: number; passed_attempts: number; valid_certificates: number }
+export interface LearningOverview { courses: number; enrolled_learners: number; published_recordings: number; completed_lectures: number; published_exams: number; passed_attempts: number; valid_certificates: number; students_started: number; watched_seconds: number }
 
 const request = <T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', path: string, data?: unknown) => api.learningRequest<T>(method, path, data);
 export const learning = {

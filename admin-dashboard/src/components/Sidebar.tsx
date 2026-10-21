@@ -50,45 +50,23 @@ export function Sidebar() {
     [],
   );
 
-  return (
-    <aside className="w-16 sm:w-56 shrink-0 border-r border-gray-200 bg-white">
-      <nav className="p-3">
-        <ul className="space-y-0.5">
-          {menuItems
-            .filter(
-              (item) => admin || item.href === "/dashboard/course-enquiries",
-            )
-            .map((item) => {
-              const isActive =
-                pathname === item.href ||
-                (item.href !== "/dashboard" &&
-                  pathname.startsWith(`${item.href}/`));
-              const Icon = item.icon;
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    aria-label={item.label}
-                    title={item.label}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-primary-50 text-primary-700"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    }`}
-                  >
-                    <Icon
-                      size={20}
-                      className={
-                        isActive ? "text-primary-600" : "text-gray-500"
-                      }
-                    />
-                    <span className="hidden sm:inline">{item.label}</span>
-                  </Link>
-                </li>
-              );
-            })}
-        </ul>
-      </nav>
-    </aside>
-  );
+  const groups = [
+    { title: 'Workspace', paths: ['/dashboard', '/dashboard/learning', '/dashboard/courses', '/dashboard/course-enquiries', '/dashboard/fees'] },
+    { title: 'Engagement', paths: ['/dashboard/events', '/dashboard/polls', '/dashboard/materials', '/dashboard/analytics'] },
+    { title: 'Administration', paths: ['/dashboard/admin-users', '/dashboard/users', '/dashboard/operations'] },
+  ];
+  return <aside className="w-16 shrink-0 border-r border-gray-200 bg-white sm:w-60">
+    <div className="sticky top-[65px] max-h-[calc(100vh-65px)] overflow-y-auto px-2 py-5 sm:px-4">
+      <div className="mb-6 hidden px-3 sm:block"><p className="text-xs font-semibold tracking-widest text-primary-600 uppercase">AI4Impact workspace</p><p className="mt-2 text-xs text-gray-400">Learning, people and progress</p></div>
+      <nav aria-label="Main navigation" className="space-y-6">{groups.map(group => {
+        const items=group.paths.map(path=>menuItems.find(item=>item.href===path)!).filter(item=>admin||item.href==='/dashboard/course-enquiries');
+        if(!items.length)return null;
+        return <div key={group.title}><p className="mb-2 hidden px-3 text-[10px] font-semibold uppercase tracking-widest text-gray-400 sm:block">{group.title}</p><ul className="space-y-1">{items.map(item=>{
+          const active=pathname===item.href||(item.href!=='/dashboard'&&pathname.startsWith(item.href+'/'));
+          const Icon=item.icon;
+          return <li key={item.href}><Link href={item.href} aria-label={item.label} title={item.label} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${active?'bg-primary-50 text-primary-700 ring-1 ring-inset ring-primary-100':'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}><Icon size={18} className={active?'text-primary-600':'text-gray-400'}/><span className="hidden sm:inline">{item.label}</span>{active&&<span className="ml-auto hidden h-1.5 w-1.5 rounded-full bg-primary-500 sm:block"/>}</Link></li>;
+        })}</ul></div>;
+      })}</nav>
+    </div>
+  </aside>;
 }

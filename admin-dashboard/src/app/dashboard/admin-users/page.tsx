@@ -1,153 +1,52 @@
 'use client';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Loader2, Plus, RefreshCw, Search, ShieldCheck, Trash2, UserMinus, Users, X } from 'lucide-react';
+import api from '@/services/api';
+import { errorMessage } from '@/services/learning';
+import { getCurrentUserFromToken } from '@/utils/jwt';
+import type { CognitoUser } from '@/types/user';
 
-import {MarketingAccess} from '@/components/MarketingAccess';
-import { useMemo, useState } from 'react';
-import { Loader2, Plus } from 'lucide-react';
-import { useAdminUsers, useCreateAdminUser } from '@/hooks/useUsers';
-import { CognitoUser } from '@/types/user';
+type Selection={user:CognitoUser;action:'remove_role'|'delete_account';role?:'Admins'|'Marketing'};
+const input='mt-2 block w-full rounded-xl border border-gray-300 px-3 py-2.5 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 disabled:bg-gray-50';
+const primary='inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50';
+const name=(u:CognitoUser)=>[u.given_name,u.family_name].filter(Boolean).join(' ')||u.name||u.email?.split('@')[0]||'Staff account';
 
-export default function AdminUsersPage() {
-  const { data, isLoading } = useAdminUsers();
-  const createAdminUser = useCreateAdminUser();
-  const [email, setEmail] = useState('');
-  const [tempPassword, setTempPassword] = useState('');
-  const [givenName, setGivenName] = useState('');
-  const [familyName, setFamilyName] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const adminUsers = useMemo(() => data?.users || [], [data?.users]);
+export default function AdminUsersPage(){
+  const [admins,setAdmins]=useState<CognitoUser[]>([]),[marketing,setMarketing]=useState<CognitoUser[]>([]);
+  const [adminToken,setAdminToken]=useState<string|undefined>(),[marketingToken,setMarketingToken]=useState<string|undefined>();
+  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[loaded,setLoaded]=useState(false);
+  const [error,setError]=useState(''),[notice,setNotice]=useState(''),[search,setSearch]=useState(''),[role,setRole]=useState('All');
+  const [creating,setCreating]=useState(false),[selected,setSelected]=useState<Selection|null>(null);
+  const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[first,setFirst]=useState(''),[last,setLast]=useState(''),[marketingEmail,setMarketingEmail]=useState('');
+  const [mySub,setMySub]=useState('');
+  async function marketingPage(token?:string){return api.learningRequest<{users:CognitoUser[];next_token?:string}>('GET','/admin/marketing/users'+(token?'?next_token='+encodeURIComponent(token):''));}
+  async function load(){setLoading(true);setError('');try{const[a,m]=await Promise.all([api.getAdminUsers(),marketingPage()]);setAdmins(a.users);setMarketing(m.users);setAdminToken(a.next_token);setMarketingToken(m.next_token);setLoaded(true);}catch(e){setError(errorMessage(e));}finally{setLoading(false);}}
+  useEffect(()=>{setMySub(getCurrentUserFromToken(localStorage.getItem('auth_id_token')||'')?.sub||'');void load();},[]);
+  const users=useMemo(()=>{const map=new Map<string,CognitoUser>();for(const[u,group]of[...admins.map(u=>[u,'Admins'] as const),...marketing.map(u=>[u,'Marketing'] as const)]){const old=map.get(u.username);map.set(u.username,{...old,...u,groups:Array.from(new Set([...(old?.groups||[]),...(u.groups||[]),group]))});}return [...map.values()].sort((a,b)=>(a.email||a.username).localeCompare(b.email||b.username));},[admins,marketing]);
+  const filtered=users.filter(u=>(role==='All'||u.groups?.includes(role))&&`${name(u)} ${u.email||''}`.toLowerCase().includes(search.toLowerCase()));
+  async function more(which:'Admins'|'Marketing'){setBusy(true);setError('');try{if(which==='Admins'){const r=await api.getAdminUsers({next_token:adminToken});setAdmins(old=>[...old,...r.users]);setAdminToken(r.next_token);}else{const r=await marketingPage(marketingToken);setMarketing(old=>[...old,...r.users]);setMarketingToken(r.next_token);}}catch(e){setError(errorMessage(e));}finally{setBusy(false);}}
+  async function create(e:React.FormEvent){e.preventDefault();setBusy(true);setError('');setNotice('');try{const r=await api.createAdminUser({email:email.trim(),temp_password:password,given_name:first.trim()||undefined,family_name:last.trim()||undefined});setNotice(r.message||'Administrator invitation created.');setEmail('');setPassword('');setFirst('');setLast('');setCreating(false);await load();}catch(e){setError(errorMessage(e));}finally{setBusy(false);}}
+  async function grant(e:React.FormEvent){e.preventDefault();setBusy(true);setError('');setNotice('');try{const r=await api.learningRequest<{message:string}>('PUT','/admin/marketing/users',{email:marketingEmail.trim(),enabled:true});setNotice(r.message);setMarketingEmail('');await load();}catch(e){setError(errorMessage(e));}finally{setBusy(false);}}
+  async function change(confirmationEmail:string){if(!selected)return;setBusy(true);setError('');setNotice('');try{const r=await api.learningRequest<{message:string}>('POST','/admin/staff/actions',{username:selected.user.username,action:selected.action,...(selected.role?{role:selected.role}:{}),confirmation_email:confirmationEmail});setNotice(r.message);setSelected(null);await load();}catch(e){setError(errorMessage(e));}finally{setBusy(false);}}
+  return <div className="space-y-6">
+    <header className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-widest text-primary-600">People & access</p><h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-950">A trusted team. The right access.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-gray-500">Manage administrators and marketing colleagues in one place. Staff roles are separate from student profiles.</p></div><div className="flex gap-2"><button aria-label="Refresh staff" disabled={busy||loading} onClick={()=>void load()} className="rounded-xl border bg-white p-3 text-gray-600 disabled:opacity-50"><RefreshCw size={17} className={loading?'animate-spin':''}/></button><button disabled={busy} onClick={()=>setCreating(!creating)} className={primary}><Plus size={17}/>Invite administrator</button></div></header>
+    {error&&!selected&&<p role="alert" className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-800">{error} <button onClick={()=>void load()} className="underline">Reload staff</button></p>}{notice&&<p role="status" className="rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-800">{notice}</p>}
+    <section aria-label="Loaded staff counts" className="grid gap-4 sm:grid-cols-3">{[{label:'Loaded staff accounts',value:users.length,icon:Users},{label:'Admin memberships',value:users.filter(u=>u.groups?.includes('Admins')).length,icon:ShieldCheck},{label:'Marketing memberships',value:users.filter(u=>u.groups?.includes('Marketing')).length,icon:Users}].map(({label,value,icon:Icon})=><article key={label} className="flex items-center gap-4 rounded-2xl border bg-white p-5 shadow-sm"><span className="rounded-xl bg-primary-50 p-3 text-primary-600"><Icon size={21}/></span><div><p className="text-sm text-gray-500">{label}</p><p className="mt-1 text-2xl font-bold tabular-nums text-gray-950">{loaded?value:'—'}</p></div></article>)}</section>
+    {creating&&<section className="rounded-2xl border border-primary-100 bg-white p-6 shadow-sm"><div className="flex justify-between gap-3"><div><h2 className="font-semibold">Invite an administrator</h2><p className="mt-1 text-sm text-gray-500">An account invitation is emailed with a temporary password. They choose their own at first sign-in.</p></div><button aria-label="Close invitation form" onClick={()=>setCreating(false)} disabled={busy}><X size={18}/></button></div><form onSubmit={create} className="mt-5 space-y-4"><div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-medium">Email address<input required type="email" className={input} value={email} onChange={e=>setEmail(e.target.value)} disabled={busy}/></label><label className="text-sm font-medium">Temporary password<input required type="password" minLength={8} autoComplete="new-password" className={input} value={password} onChange={e=>setPassword(e.target.value)} disabled={busy}/></label><label className="text-sm font-medium">First name (optional)<input className={input} value={first} onChange={e=>setFirst(e.target.value)} disabled={busy}/></label><label className="text-sm font-medium">Last name (optional)<input className={input} value={last} onChange={e=>setLast(e.target.value)} disabled={busy}/></label></div><button disabled={busy} className={primary}>{busy&&<Loader2 size={16} className="animate-spin"/>}Create Admin User</button></form></section>}
+    <section className="rounded-2xl border bg-white p-6 shadow-sm"><div className="flex items-start gap-3"><span className="rounded-xl bg-sky-50 p-2.5 text-primary-600"><Users size={20}/></span><div><h2 className="font-semibold text-gray-950">Give marketing a focused workspace</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-gray-500">Grant an existing account access to enquiries, contact details and student onboarding. Marketing cannot edit courses, grant staff roles or manage learning content. Other roles are unchanged.</p></div></div><form onSubmit={grant} className="mt-5 flex flex-wrap items-end gap-3"><label className="min-w-0 flex-1 text-sm font-medium">Existing account email<input required type="email" aria-label="Marketing account email" className={input} placeholder="colleague@company.com" value={marketingEmail} onChange={e=>setMarketingEmail(e.target.value)} disabled={busy}/></label><button disabled={busy||!marketingEmail.trim()} className={primary}>Grant Marketing access</button></form></section>
+    <section className="overflow-hidden rounded-2xl border bg-white shadow-sm"><div className="flex flex-wrap items-center justify-between gap-4 border-b p-5 sm:p-6"><div><h2 className="font-semibold text-gray-950">Staff directory</h2><p className="mt-1 text-sm text-gray-500">{filtered.length} shown from {users.length} loaded accounts. Remove a role or delete a sign-in account.</p></div><div className="flex min-w-0 flex-wrap gap-3"><label className="relative min-w-0"><Search className="absolute left-3 top-3 text-gray-400" size={16}/><input aria-label="Search staff" placeholder="Search name or email" value={search} onChange={e=>setSearch(e.target.value)} className="w-full rounded-xl border py-2.5 pl-9 pr-3 text-sm outline-none focus:border-primary-500"/></label><select aria-label="Filter staff role" value={role} onChange={e=>setRole(e.target.value)} className="rounded-xl border px-3 py-2 text-sm"><option value="All">All staff roles</option><option value="Admins">Administrators</option><option value="Marketing">Marketing</option></select></div></div>
+      <div className="overflow-x-auto"><table className="min-w-full text-sm"><thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500"><tr>{['Person','Staff roles','Sign-in status','Created','Manage access'].map(h=><th key={h} className="whitespace-nowrap px-5 py-4 font-medium">{h}</th>)}</tr></thead><tbody className="divide-y">{filtered.map(u=>{const self=!!mySub&&u.sub===mySub;return <tr key={u.username} className="hover:bg-sky-50/30"><td className="px-5 py-5"><div className="flex items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-50 font-semibold text-primary-700">{name(u).slice(0,1).toUpperCase()}</span><div><p className="font-semibold text-gray-900">{name(u)}{self&&<span className="ml-2 text-xs font-normal text-primary-600">You</span>}</p><p className="mt-1 text-xs text-gray-500">{u.email||u.username}</p></div></div></td><td className="px-5 py-4"><div className="flex flex-wrap gap-2">{u.groups?.filter(g=>['Admins','Marketing'].includes(g)).map(g=><span key={g} className={`rounded-full px-2.5 py-1 text-xs font-medium ${g==='Admins'?'bg-primary-50 text-primary-700':'bg-violet-50 text-violet-700'}`}>{g==='Admins'?'Administrator':'Marketing'}</span>)}</div></td><td className="px-5 py-4"><span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${u.enabled===false?'bg-red-50 text-red-700':u.status==='CONFIRMED'?'bg-emerald-50 text-emerald-700':'bg-amber-50 text-amber-800'}`}>{u.enabled===false?'Disabled':u.status==='CONFIRMED'?'Active':u.status==='FORCE_CHANGE_PASSWORD'?'First sign-in pending':u.status||'Unknown'}</span></td><td className="whitespace-nowrap px-5 py-4 text-xs text-gray-500">{u.created_at?new Date(u.created_at).toLocaleDateString():'—'}</td><td className="px-5 py-4"><div className="flex flex-wrap gap-2">{u.groups?.includes('Marketing')&&<button aria-label={`Remove Marketing from ${u.email}`} disabled={busy||!u.email} onClick={()=>{setError('');setSelected({user:u,action:'remove_role',role:'Marketing'});}} className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-40"><UserMinus size={14}/>Remove Marketing</button>}{u.groups?.includes('Admins')&&<button aria-label={`Remove Admins from ${u.email}`} title={self?'Your administrator access is protected':undefined} disabled={busy||self||!u.email} onClick={()=>{setError('');setSelected({user:u,action:'remove_role',role:'Admins'});}} className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-40"><UserMinus size={14}/>Remove admin</button>}<button aria-label={`Delete account ${u.email}`} title={self?'You cannot delete your signed-in account':undefined} disabled={busy||self||!u.email} onClick={()=>{setError('');setSelected({user:u,action:'delete_account'});}} className="inline-flex items-center gap-1.5 rounded-lg border border-red-100 px-2.5 py-2 text-xs text-red-600 hover:bg-red-50 disabled:opacity-40"><Trash2 size={14}/>Delete account</button></div></td></tr>})}</tbody></table></div>
+      {loading&&<p role="status" className="p-8 text-center text-sm text-gray-500">Loading staff accounts…</p>}{!loading&&!filtered.length&&<div className="p-10 text-center"><Users size={28} className="mx-auto text-gray-300"/><p className="mt-3 font-medium text-gray-700">No matching staff accounts</p><p className="mt-1 text-sm text-gray-500">Try another name or change the role filter.</p></div>}
+      {(adminToken||marketingToken)&&<div className="flex flex-wrap gap-3 border-t p-5">{adminToken&&<button disabled={busy} className="text-sm font-medium text-primary-700" onClick={()=>void more('Admins')}>Load more administrators</button>}{marketingToken&&<button disabled={busy} className="text-sm font-medium text-primary-700" onClick={()=>void more('Marketing')}>Load more marketing accounts</button>}</div>}
+      <p className="border-t bg-gray-50/60 px-6 py-4 text-xs leading-5 text-gray-500">Your own administrator access and the last active administrator are protected. Role changes affect new sessions; existing tokens can retain access until expiry.</p>
+    </section>
+    {selected&&<StaffDialog selection={selected} busy={busy} error={error} close={()=>{if(!busy){setSelected(null);setError('');}}} confirm={value=>void change(value)}/>}
+  </div>;
+}
 
-  const onCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    try {
-      const result = await createAdminUser.mutateAsync({
-        email: email.trim(),
-        temp_password: tempPassword,
-        given_name: givenName.trim() || undefined,
-        family_name: familyName.trim() || undefined,
-      });
-
-      setSuccess(result?.message || 'Admin user created successfully.');
-      setEmail('');
-      setTempPassword('');
-      setGivenName('');
-      setFamilyName('');
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to create admin user');
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Admin Users</h1>
-        <p className="mt-1 text-sm text-gray-500">Create and manage dashboard admin accounts from Cognito</p>
-      </header>
-
-      <MarketingAccess/>
-      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Create Admin User</h2>
-        <form onSubmit={onCreate} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Temporary Password"
-              value={tempPassword}
-              onChange={(e) => setTempPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
-              required
-            />
-            <input
-              type="text"
-              placeholder="First Name (optional)"
-              value={givenName}
-              onChange={(e) => setGivenName(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
-            />
-            <input
-              type="text"
-              placeholder="Last Name (optional)"
-              value={familyName}
-              onChange={(e) => setFamilyName(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={createAdminUser.isPending || !email.trim() || !tempPassword.trim()}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 font-medium text-white hover:bg-primary-700 disabled:opacity-50"
-          >
-            {createAdminUser.isPending ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
-            Create Admin User
-          </button>
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          {success && <p className="text-sm text-emerald-700">{success}</p>}
-        </form>
-      </section>
-
-      <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900">Current Admin Users</h2>
-        </div>
-        <div className="p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="animate-spin text-primary-500" size={28} />
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100 text-left text-gray-500">
-                    <th className="py-2 pr-4 font-medium">Email</th>
-                    <th className="py-2 pr-4 font-medium">Name</th>
-                    <th className="py-2 pr-4 font-medium">Profile Type</th>
-                    <th className="py-2 pr-4 font-medium">Detail</th>
-                    <th className="py-2 pr-4 font-medium">Status</th>
-                    <th className="py-2 pr-4 font-medium">Groups</th>
-                    <th className="py-2 pr-0 font-medium">Created</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {adminUsers.map((user: CognitoUser) => (
-                    <tr key={user.username} className="border-b border-gray-50 last:border-0">
-                      <td className="py-3 pr-4 text-gray-900">{user.email || user.username}</td>
-                      <td className="py-3 pr-4 text-gray-700">
-                        {[user.given_name, user.family_name].filter(Boolean).join(' ') || user.name || '—'}
-                      </td>
-                      <td className="py-3 pr-4 text-gray-700">
-                        {user.user_type === 'professional' ? 'Working Professional' : user.user_type === 'student' ? 'Student' : 'Admin'}
-                      </td>
-                      <td className="py-3 pr-4 text-gray-700">{user.designation || user.company || user.university || '—'}</td>
-                      <td className="py-3 pr-4 text-gray-700">{user.status || '—'}</td>
-                      <td className="py-3 pr-4 text-gray-700">{(user.groups || []).join(', ') || '—'}</td>
-                      <td className="py-3 pr-0 text-gray-700">
-                        {user.created_at ? new Date(user.created_at).toLocaleString() : '—'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {adminUsers.length === 0 && (
-                <p className="py-8 text-center text-gray-500">No admin users found</p>
-              )}
-            </div>
-          )}
-        </div>
-      </section>
-    </div>
-  );
+function StaffDialog({selection,busy,error,close,confirm}:{selection:Selection;busy:boolean;error:string;close:()=>void;confirm:(email:string)=>void}){
+  const ref=useRef<HTMLDialogElement>(null),[email,setEmail]=useState('');
+  useEffect(()=>{ref.current?.showModal();},[]);
+  const deleting=selection.action==='delete_account',target=selection.user.email||'';
+  return <dialog ref={ref} onCancel={e=>{if(busy)e.preventDefault();else close();}} aria-labelledby="staff-action-title" className="m-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl border border-gray-200 bg-white p-6 shadow-xl backdrop:bg-slate-900/35 sm:p-8"><div className="flex items-start justify-between"><span className={`rounded-xl p-3 ${deleting?'bg-red-50 text-red-600':'bg-primary-50 text-primary-600'}`}>{deleting?<Trash2 size={23}/>:<UserMinus size={23}/>}</span><button disabled={busy} aria-label="Close dialog" onClick={close} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100"><X size={20}/></button></div><h2 id="staff-action-title" className="mt-5 text-xl font-bold text-gray-950">{deleting?'Delete this account?':`Remove ${selection.role==='Admins'?'administrator':'Marketing'} access?`}</h2><p className="mt-3 break-words font-medium text-gray-800">{target}</p><p className="mt-3 text-sm leading-6 text-gray-500">{deleting?'This permanently deletes the sign-in account. Historical enrollments, invoices and learning records are retained.':'Only this role is removed. The account and any other assigned roles remain.'} Existing tokens may retain access until they expire.</p>{deleting&&<label className="mt-5 block text-sm font-medium text-gray-700">Type the account email to confirm<input autoComplete="off" className={input} value={email} onChange={e=>setEmail(e.target.value)} disabled={busy}/></label>}{error&&<p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}</p>}<div className="mt-6 flex justify-end gap-3"><button autoFocus disabled={busy} onClick={close} className="rounded-xl border px-4 py-2.5 text-sm font-medium text-gray-600">Cancel</button><button disabled={busy||(deleting&&email.trim().toLowerCase()!==target.toLowerCase())} onClick={()=>confirm(deleting?email:target)} className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-40 ${deleting?'bg-red-600 hover:bg-red-700':'bg-primary-600 hover:bg-primary-700'}`}>{busy&&<Loader2 size={16} className="animate-spin"/>}{deleting?'Delete account':'Remove role'}</button></div></dialog>;
 }

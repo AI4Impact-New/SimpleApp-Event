@@ -19,8 +19,9 @@ resource "aws_amplify_branch" "landing_main" {
   stage             = "PRODUCTION"
   enable_auto_build = true
   environment_variables = {
-    AMPLIFY_BACKEND_APP_ID = aws_amplify_app.landing.id
-    USER_BRANCH            = "main"
+    AMPLIFY_BACKEND_APP_ID         = aws_amplify_app.landing.id
+    USER_BRANCH                    = "main"
+    NEXT_PUBLIC_STUDENT_PORTAL_URL = "https://main.${aws_amplify_app.student_portal.default_domain}"
   }
 }
 output "landing_page_url" {

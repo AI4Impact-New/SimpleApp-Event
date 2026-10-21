@@ -24,6 +24,7 @@ resource "aws_amplify_branch" "admin_main" {
     NEXT_PUBLIC_COGNITO_REGION        = var.aws_region
     NEXT_PUBLIC_COGNITO_DOMAIN        = aws_cognito_user_pool_domain.main.domain
     NEXT_PUBLIC_APP_URL               = "https://admin.ai4impact.in"
+    NEXT_PUBLIC_STUDENT_PORTAL_URL    = "https://main.${aws_amplify_app.student_portal.default_domain}"
   }
 }
 output "admin_console_url" {

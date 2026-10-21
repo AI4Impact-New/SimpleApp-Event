@@ -140,10 +140,10 @@ class AuthService {
         message = 'You are already signed in. Please close and reopen the app, or sign out first.';
       } else if (/expo go|doesn't seem to be linked|not using Expo Go/i.test(underlyingMsg) || /expo go|doesn't seem to be linked|not using Expo Go/i.test(msg)) {
         message = 'Sign-in does not work in Expo Go. Use a development build instead: run "npx expo run:ios" (or "npx expo run:android") from the mobile-app folder, then open the app from the simulator or device.';
-      } else if (name === 'UserNotFoundException' || code === 'UserNotFoundException' || /user.*not.*found|incorrect.*username/i.test(msg)) {
+      } else if (name === 'UserNotFoundException' || code === 'UserNotFoundException' || /user.*not.*found/i.test(msg)) {
         message = 'No account found with this email. Please sign up or check the email address.';
       } else if (name === 'NotAuthorizedException' || code === 'NotAuthorizedException' || /not authorized|incorrect.*password/i.test(msg)) {
-        message = 'Incorrect password. Please try again.';
+        message = 'Email or password is incorrect. Please try again.';
       } else if (name === 'UserNotConfirmedException' || code === 'UserNotConfirmedException' || /user.*not confirmed|confirm.*sign.?up/i.test(msg)) {
         message = 'Please verify your email before signing in. Enter the code we emailed you.';
         needsConfirmation = true;

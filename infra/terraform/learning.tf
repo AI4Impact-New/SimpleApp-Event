@@ -241,7 +241,7 @@ resource "aws_apigatewayv2_route" "employer_enquiries" {
 resource "aws_iam_role_policy" "learning_marketing_membership" {
   name   = "marketing-membership"
   role   = aws_iam_role.learning.id
-  policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Allow", Action = ["cognito-idp:ListUsers", "cognito-idp:AdminGetUser", "cognito-idp:AdminListGroupsForUser", "cognito-idp:AdminCreateUser", "cognito-idp:ListUsersInGroup", "cognito-idp:AdminAddUserToGroup", "cognito-idp:AdminRemoveUserFromGroup"], Resource = aws_cognito_user_pool.main.arn }] })
+  policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Allow", Action = ["cognito-idp:AdminAddUserToGroup", "cognito-idp:AdminCreateUser", "cognito-idp:AdminDeleteUser", "cognito-idp:AdminDisableUser", "cognito-idp:AdminGetUser", "cognito-idp:AdminListGroupsForUser", "cognito-idp:AdminRemoveUserFromGroup", "cognito-idp:AdminUserGlobalSignOut", "cognito-idp:ListUsers", "cognito-idp:ListUsersInGroup"], Resource = aws_cognito_user_pool.main.arn }] })
 }
 
 resource "aws_iam_role_policy" "assisted_email" {

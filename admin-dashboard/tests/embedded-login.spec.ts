@@ -60,3 +60,24 @@ test('direct logout clears local auth and stays on the current origin',async({pa
   expect(await page.evaluate(()=>localStorage.getItem('current_user'))).toBeNull();
   expect(documents.every(url=>new URL(url).origin===new URL(base).origin)).toBeTruthy();
 });
+
+for (const scenario of [
+  { name: 'new signed-out tab', groups: [], exp: 0, destination: '/login', seed: false },
+  { name: 'expired staff session', groups: ['Admins'], exp: -60, destination: '/login', seed: true },
+  { name: 'active administrator', groups: ['Admins'], exp: 3600, destination: '/dashboard', seed: true },
+  { name: 'active marketing colleague', groups: ['Marketing'], exp: 3600, destination: '/dashboard/course-enquiries', seed: true },
+]) {
+  test(`root opens directly for ${scenario.name}`, async ({ page }) => {
+    if (scenario.seed) {
+      const payload = Buffer.from(JSON.stringify({ token_use: 'id', sub: 'root-routing-qa', 'cognito:groups': scenario.groups, exp: Math.floor(Date.now() / 1000) + scenario.exp })).toString('base64url');
+      await page.addInitScript(token => localStorage.setItem('auth_id_token', token), `test.${payload}.test`);
+    }
+    const paths: string[] = [];
+    page.on('framenavigated', frame => { if (frame === page.mainFrame()) paths.push(new URL(frame.url()).pathname); });
+    await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**', route => route.fulfill({ json: [] }));
+    await page.goto(base + '/');
+    await expect(page).toHaveURL(base + scenario.destination);
+    if (scenario.destination === '/login') await expect(page.getByLabel('Email address', { exact: true })).toBeVisible();
+    expect(paths.filter(path => path !== '/').every(path => path === scenario.destination)).toBeTruthy();
+  });
+}

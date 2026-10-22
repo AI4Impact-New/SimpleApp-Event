@@ -17,7 +17,7 @@ export function NavBar({ links, guidanceHref, loginHref }: NavBarProps) {
   return (
     <header className="sticky top-0 z-10 h-(--h-nav) border-b border-(--border-default) bg-(--slate-50)">
       <div className="mx-auto flex h-full max-w-(--container) items-center gap-(--space-6) px-(--container-pad)">
-        <Link href="/" className="shrink-0">
+        <Link href="/" className="shrink-0 hover:no-underline">
           <Logo />
         </Link>
         <NavLinks links={links} />

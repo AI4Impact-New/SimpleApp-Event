@@ -1,133 +1,32 @@
 'use client';
-
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useEvents, useEventAnalytics } from '@/hooks/useEvents';
-import { Users, Calendar, TrendingUp, Vote, Loader2 } from 'lucide-react';
+import { ArrowUpRight, Award, BookOpen, Film, GraduationCap, PlayCircle, RefreshCw, ShieldCheck, Users, MessageCircle, Clock3 } from 'lucide-react';
+import api from '@/services/api';
+import { learning, LearningOverview, errorMessage } from '@/services/learning';
+import type { Course } from '@/types/course';
 
 export default function DashboardPage() {
-  const { data: events, isLoading } = useEvents();
-  
-  // Get analytics for first few events
-  const eventIds = events?.slice(0, 3).map((e: any) => e.id) || [];
-  
-  return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">Overview of your events and engagement</p>
-      </header>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Events"
-          value={isLoading ? '—' : events?.length ?? 0}
-          icon={Calendar}
-          color="bg-blue-50"
-          iconColor="text-blue-600"
-        />
-        <StatCard
-          title="Active Attendees"
-          value="142"
-          icon={Users}
-          color="bg-green-50"
-          iconColor="text-green-600"
-        />
-        <StatCard
-          title="Avg Engagement"
-          value="68%"
-          icon={TrendingUp}
-          color="bg-purple-50"
-          iconColor="text-purple-600"
-        />
-        <StatCard
-          title="Total Polls"
-          value="24"
-          icon={Vote}
-          color="bg-orange-50"
-          iconColor="text-orange-600"
-        />
-      </div>
-
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Events</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Latest events you’ve created</p>
-        </div>
-        <div className="p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="animate-spin text-primary-500" size={28} />
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {events?.slice(0, 5).map((event: any) => (
-                <EventRow key={event.id} event={event} />
-              ))}
-              {(!events || events.length === 0) && (
-                <div className="text-center py-12 text-gray-500">
-                  <p>No events yet</p>
-                  <p className="text-sm mt-1">
-                    <Link href="/dashboard/events" className="text-primary-600 hover:underline font-medium">Create an event</Link> to get started
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+  const [stats,setStats]=useState<LearningOverview|null>(null),[courses,setCourses]=useState<Course[]>([]);
+  const [loading,setLoading]=useState(true),[error,setError]=useState('');
+  async function load(){setLoading(true);setError('');try{const [overview,catalog]=await Promise.all([learning.overview(),api.getCourses()]);setStats(overview);setCourses(catalog);}catch(e){setError(errorMessage(e));}finally{setLoading(false);}}
+  useEffect(()=>{void load();},[]);
+  const cards=[
+    {label:'Courses',value:stats?.courses,icon:BookOpen,detail:'Across your learning catalog'},
+    {label:'Course enrolments',value:stats?.enrolled_learners,icon:GraduationCap,detail:'Registered and completed'},
+    {label:'Ready recordings',value:stats?.published_recordings,icon:Film,detail:'Published videos available'},
+    {label:'Credited watch time',value:stats?`${(Number(stats.watched_seconds||0)/60).toFixed(1)} min`:undefined,icon:Clock3,detail:'Unique watched segments'},
+  ];
+  return <div className="space-y-7">
+    <header className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-white to-sky-50 p-6 sm:p-8">
+      <div className="relative flex flex-wrap items-start justify-between gap-5"><div><p className="text-xs font-semibold uppercase tracking-widest text-primary-600">Your learning workspace</p><h1 className="mt-3 text-3xl font-bold tracking-tight text-gray-950">Make every learning journey count.</h1><p className="mt-3 max-w-xl text-sm leading-6 text-gray-500">A clear view of your courses, learners and progress. Pick up where your team left off.</p></div><button onClick={()=>void load()} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"><RefreshCw size={16} className={loading?'animate-spin':''}/>Refresh overview</button></div>
+      <div className="mt-6 flex flex-wrap gap-3"><Link href="/dashboard/learning" className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700">Open Learning Studio<ArrowUpRight size={17}/></Link><Link href="/dashboard/course-enquiries" className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-medium text-gray-700">Follow up enquiries<MessageCircle size={17}/></Link></div>
+    </header>
+    {error&&<p role="alert" className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-800">{error} <button className="underline" onClick={()=>void load()}>Retry</button></p>}
+    <section aria-label="Platform totals" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{cards.map(({label,value,icon:Icon,detail})=><article key={label} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><span className="text-sm font-medium text-gray-500">{label}</span><span className="rounded-xl bg-primary-50 p-2 text-primary-600"><Icon size={19}/></span></div><p className="mt-4 text-3xl font-bold tracking-tight text-gray-950 tabular-nums">{loading?'—':value??'—'}</p><p className="mt-2 text-xs text-gray-500">{detail}</p></article>)}</section>
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <section className="overflow-hidden rounded-2xl border bg-white shadow-sm"><div className="flex flex-wrap items-center justify-between gap-3 border-b p-5 sm:p-6"><div><h2 className="font-semibold text-gray-950">Courses at a glance</h2><p className="mt-1 text-sm text-gray-500">Content, assessments and viewing metrics in one place.</p></div><Link className="text-sm font-medium text-primary-700 hover:underline" href="/dashboard/courses">Manage catalog</Link></div><div className="divide-y">{courses.slice(0,8).map(course=><article key={course.id} className="flex flex-wrap items-center gap-4 p-5 sm:px-6"><div className="rounded-xl bg-sky-50 p-3 text-primary-600"><BookOpen size={20}/></div><div className="min-w-0 flex-1"><h3 className="font-semibold text-gray-900">{course.title}</h3><span className="mt-1 inline-block text-xs capitalize text-gray-500">{course.status}</span></div><div className="flex flex-wrap items-center gap-3 text-sm"><Link className="font-medium text-gray-600 hover:text-primary-700" href={`/dashboard/learning/${course.id}`}>Workspace</Link><Link className="inline-flex items-center gap-1.5 rounded-lg bg-primary-50 px-3 py-2 font-medium text-primary-700 hover:bg-primary-100" href={`/dashboard/learning/${course.id}?tab=metrics`}><PlayCircle size={16}/>Video metrics</Link></div></article>)}{!loading&&!error&&!courses.length&&<div className="p-10 text-center"><BookOpen className="mx-auto text-primary-500" size={28}/><h3 className="mt-3 font-semibold">Your first course starts here</h3><p className="mt-2 text-sm text-gray-500">Add a course, then bring it to life in Learning Studio.</p><Link className="mt-4 inline-block text-sm font-medium text-primary-700" href="/dashboard/courses/new">Create a course</Link></div>}</div></section>
+      <aside className="space-y-5"><section className="rounded-2xl border bg-white p-5 shadow-sm"><h2 className="font-semibold text-gray-950">Learning progress</h2><div className="mt-5 space-y-5">{[{label:'Learners who started a video',value:stats?.students_started,icon:Users},{label:'Completed recordings',value:stats?.completed_lectures,icon:Film},{label:'Issued certificates',value:stats?.valid_certificates,icon:Award}].map(({label,value,icon:Icon})=><div key={label} className="flex items-center gap-3"><Icon size={18} className="text-primary-500"/><span className="flex-1 text-sm text-gray-500">{label}</span><strong className="tabular-nums text-gray-950">{loading?'—':value??'—'}</strong></div>)}</div><p className="mt-5 border-t pt-4 text-xs leading-5 text-gray-500">Watch credit counts unique segments per learner. Replays do not inflate completion.</p></section><Link href="/dashboard/admin-users" className="group flex gap-4 rounded-2xl border bg-white p-5 shadow-sm transition hover:border-primary-200"><span className="self-start rounded-xl bg-primary-50 p-2.5 text-primary-600"><ShieldCheck size={20}/></span><div><h2 className="font-semibold text-gray-950">Your people, the right access</h2><p className="mt-2 text-sm leading-6 text-gray-500">Manage administrator and marketing accounts.</p><span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary-700">Manage staff<ArrowUpRight size={16}/></span></div></Link></aside>
     </div>
-  );
-}
-
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-  color,
-  iconColor,
-}: {
-  title: string;
-  value: string | number;
-  icon: React.ElementType;
-  color: string;
-  iconColor: string;
-}) {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow transition-shadow">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1 tabular-nums">{value}</p>
-        </div>
-        <div className={`p-2.5 rounded-lg ${color}`}>
-          <Icon className={iconColor} size={22} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EventRow({ event }: { event: any }) {
-  const statusColors: Record<string, string> = {
-    draft: 'bg-gray-100 text-gray-700',
-    published: 'bg-blue-100 text-blue-700',
-    ongoing: 'bg-green-100 text-green-700',
-    completed: 'bg-purple-100 text-purple-700',
-    cancelled: 'bg-red-100 text-red-700',
-  };
-  const status = event.status || 'draft';
-
-  return (
-    <div className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
-      <div className="min-w-0 flex-1">
-        <h3 className="font-medium text-gray-900 truncate">{event.name}</h3>
-        <p className="text-sm text-gray-500 mt-0.5">
-          {event.location || 'No location'} · {event.start_time ? new Date(event.start_time).toLocaleDateString() : 'TBD'}
-        </p>
-      </div>
-      <span className={`ml-4 shrink-0 px-2.5 py-1 text-xs font-medium rounded-full capitalize ${statusColors[status]}`}>
-        {status}
-      </span>
-    </div>
-  );
+  </div>;
 }

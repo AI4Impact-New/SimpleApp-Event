@@ -164,3 +164,7 @@ Use `mobile-app/src/services/api.ts` and screen hooks for exact response wrapper
 ## Staff sign-in on the admin domain
 
 The admin console now uses an embedded Amplify/Cognito email/password form at `https://admin.ai4impact.in/login`. Normal sign-in, temporary-password setup, email confirmation, password reset and sign-out stay on that origin. Cognito remains the authentication service; its HTTPS API requests do not change the address bar. Existing Admins/Marketing authorization and student accounts are unchanged. No new DNS, SES approval or AWS resource is needed for this UI change because the existing client already supports SRP sign-in. Legacy OAuth callback handling remains available for previously issued links, but normal sign-in does not initiate hosted login. The student web/mobile login integration is unchanged.
+
+## Staff console refinement and access controls
+
+See `AI4Impact-Staff-Management.md`. The dashboard uses actual learning totals and links straight to each course's Video metrics tab. The Admin Users directory combines administrator/marketing memberships with guarded role removal and typed-email sign-in account deletion. Historical application records are preserved; issued JWTs can retain access until expiry. These are staff-only APIs/UI owned by Siddartha; the student team does not need a duplicate implementation. Playback/resume and student API contracts are unchanged.

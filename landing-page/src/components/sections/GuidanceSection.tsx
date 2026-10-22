@@ -10,7 +10,11 @@ import { TRACKS } from "@/content/site";
 import { Section } from "@/components/layout/Section";
 import { Card } from "@/components/core/Card";
 
-const INTERESTS = ["Not sure yet — help me choose", ...TRACKS.map((t) => t.title)];
+const CONTACT_EMAIL = "support@ai4impact.com";
+// TODO: temporary number — replace with the permanent support line.
+const CONTACT_PHONE = "+91 00000 00000";
+
+const INTERESTS =["Not sure yet — help me choose", ...TRACKS.map((t) => t.title)];
 
 const DEFAULT_TITLE = (
   <>
@@ -63,6 +67,21 @@ export function GuidanceSection({ title = DEFAULT_TITLE }: { title?: ReactNode }
             Book a free 20-minute call. We look at your background and tell you honestly which track fits, or if
             none of them do yet.
           </p>
+          <div className="mt-(--space-8) flex flex-col gap-(--space-2) text-(length:--fs-sm) leading-(--lh-body) text-(--text-on-dark-body)">
+            <span className="font-medium text-(--text-on-dark)">Prefer to reach out directly?</span>
+            <span>
+              Email{" "}
+              <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-(--text-on-dark) underline underline-offset-2">
+                {CONTACT_EMAIL}
+              </a>
+            </span>
+            <span>
+              Call or WhatsApp{" "}
+              <a href={`tel:${CONTACT_PHONE.replace(/\s/g, "")}`} className="font-medium text-(--text-on-dark) underline underline-offset-2">
+                {CONTACT_PHONE}
+              </a>
+            </span>
+          </div>
         </div>
 
         <Card theme="dark" aria-live="polite" className="p-(--space-8)">
@@ -78,6 +97,7 @@ export function GuidanceSection({ title = DEFAULT_TITLE }: { title?: ReactNode }
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-(--space-5)">
+              <p className="text-xs text-(--text-on-dark-muted)">Fields marked * are required.</p>
               <Input label="Full name" name="name" autoComplete="name" required minLength={2} maxLength={120} />
               <div className="grid gap-(--space-4) sm:grid-cols-2">
                 <Input label="Email" name="email" type="email" autoComplete="email" required maxLength={254} />

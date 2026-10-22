@@ -317,7 +317,9 @@ def overview(actor):
         (SELECT count(*) FROM lecture_progress WHERE completed=true) AS completed_lectures,
         (SELECT count(*) FROM exams WHERE published=true) AS published_exams,
         (SELECT count(*) FROM exam_attempts WHERE status='passed') AS passed_attempts,
-        (SELECT count(*) FROM certificates_issued WHERE revoked_at IS NULL) AS valid_certificates""",fetch="one")
+        (SELECT count(*) FROM certificates_issued WHERE revoked_at IS NULL) AS valid_certificates,
+        (SELECT count(DISTINCT p.user_id) FROM lecture_progress p JOIN video_assets a ON a.id=p.asset_id JOIN course_registrations r ON r.course_id=a.course_id AND r.user_id=p.user_id WHERE p.watched_seconds>0) AS students_started,
+        (SELECT coalesce(sum(p.watched_seconds),0) FROM lecture_progress p JOIN video_assets a ON a.id=p.asset_id JOIN course_registrations r ON r.course_id=a.course_id AND r.user_id=p.user_id) AS watched_seconds""",fetch="one")
 
 
 def notify_course(actor, course_id, body):

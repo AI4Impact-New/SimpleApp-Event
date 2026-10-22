@@ -53,6 +53,16 @@ async function registerToken(token: string, projectId: string): Promise<PushRegi
   const devices = await deviceStore();
   const stored = await devices.read();
   if (stored?.token === token) return { ok: true };
+  if (stored) {
+    // Token rotated: drop the old registration so stale devices don't count toward the ten-device limit.
+    try {
+      await api.removeDevice(stored.deviceId);
+    } catch (err: any) {
+      if (err?.response?.status !== 404) {
+        return { ok: false, reason: 'error', message: 'Could not update this device. Please try again.' };
+      }
+    }
+  }
   try {
     const device = await api.registerDevice({
       platform: Platform.OS === 'ios' ? 'ios' : 'android',

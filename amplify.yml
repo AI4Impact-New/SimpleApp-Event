@@ -35,3 +35,20 @@ applications:
         paths:
           - node_modules/**/*
           - .next/cache/**/*
+  - appRoot: mobile-app
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - nvm use 22
+            - npm ci
+        build:
+          commands:
+            - npm run typecheck && npm run export:web
+      artifacts:
+        baseDirectory: dist
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*

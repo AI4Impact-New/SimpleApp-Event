@@ -103,6 +103,26 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
   // so an older position can never arrive after a newer one.
   const inFlightRef = useRef(false);
   const queuedRef = useRef<number | null>(null);
+  // Set when a heartbeat fails without a response; heartbeats pause until progress can be re-read.
+  const offlineRef = useRef(false);
+  const reconnectingRef = useRef(false);
+
+  /** Re-read this lecture's server-credited progress (after a session conflict or reconnecting). Throws on failure. */
+  const refreshProgress = useCallback(async () => {
+    if (!courseId) return;
+    const result = await api.getCourseProgress(courseId);
+    const row = result.classes?.find((c) => c.id === classId);
+    if (!row || !mountedRef.current) return;
+    const duration = Number(row.duration_seconds) || 0;
+    const watched = Number(row.watched_seconds) || 0;
+    setProgress({
+      class_id: row.id,
+      completed: !!row.completed,
+      watched_seconds: watched,
+      duration_seconds: duration,
+      progress_percentage: duration > 0 ? (watched * 100) / duration : 0,
+    });
+  }, [courseId, classId]);
 
   /** Fetch a fresh signed URL + session and (re)load it at `seekTo` (defaults to server resume position). */
   const openSession = useCallback(
@@ -120,6 +140,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
         await player.replaceAsync({ uri: playback.url });
         player.playbackRate = speedRef.current;
         if (autoplay) player.play();
+        offlineRef.current = false;
         setLoadState({ kind: 'ready' });
         // expires_in may be shortened by the lecture's access window; renew ahead of it either way.
         const ttlMs = playback.expires_in * 1000;
@@ -142,7 +163,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     try {
-      while (queuedRef.current != null && sessionRef.current) {
+      while (queuedRef.current != null && sessionRef.current && !offlineRef.current) {
         const position = queuedRef.current;
         queuedRef.current = null;
         try {
@@ -153,10 +174,18 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
           const blocked = blockedState(err);
           if (blocked) enterBlocked(blocked);
           else if (status === 409) {
-            // Session expired or replaced: start a fresh one at the current position.
-            if (mountedRef.current) await openSession(positionRef.current, playingRef.current);
+            // Session expired or replaced: start a fresh one at the current position, then re-read progress.
+            if (mountedRef.current) {
+              await openSession(positionRef.current, playingRef.current);
+              refreshProgress().catch(() => {});
+            }
+          } else if (!err?.response) {
+            // Offline: stop sending until progress can be re-read.
+            offlineRef.current = true;
+            player.pause();
+            if (mountedRef.current) setLoadState({ kind: 'error', message: 'Connection lost. Playback is paused while we reconnect.' });
           }
-          // Offline/other errors: drop it. Never replay a backlog of heartbeats.
+          // Never replay a backlog of heartbeats.
           queuedRef.current = null;
           break;
         }
@@ -164,10 +193,10 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
     } finally {
       inFlightRef.current = false;
     }
-  }, [classId, openSession, enterBlocked]);
+  }, [classId, openSession, enterBlocked, refreshProgress, player]);
 
   const heartbeat = useCallback(() => {
-    if (!sessionRef.current) return;
+    if (!sessionRef.current || offlineRef.current) return;
     queuedRef.current = positionRef.current;
     flushHeartbeats();
   }, [flushHeartbeats]);
@@ -175,6 +204,8 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
   // Initial load + cleanup (final heartbeat on leaving the player)
   useEffect(() => {
     mountedRef.current = true;
+    offlineRef.current = false;
+    queuedRef.current = null;
     openSession();
     return () => {
       mountedRef.current = false;
@@ -227,13 +258,23 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
     if (playbackRate > MAX_SPEED) player.playbackRate = MAX_SPEED;
   });
 
-  // Periodic heartbeat while actively playing
+  // Periodic heartbeat while actively playing; while offline, probe by re-reading progress instead
   useEffect(() => {
     const id = setInterval(() => {
-      if (playingRef.current) heartbeat();
+      if (offlineRef.current && !reconnectingRef.current) {
+        reconnectingRef.current = true;
+        refreshProgress()
+          // Restart credit at the paused position; never credit disconnected time.
+          .then(() => { if (mountedRef.current) return openSession(positionRef.current, false); })
+          .catch((err) => {
+            const blocked = blockedState(err);
+            if (blocked) { offlineRef.current = false; enterBlocked(blocked); }
+          })
+          .finally(() => { reconnectingRef.current = false; });
+      } else if (playingRef.current) heartbeat();
     }, HEARTBEAT_MS);
     return () => clearInterval(id);
-  }, [heartbeat]);
+  }, [heartbeat, refreshProgress, openSession, enterBlocked]);
 
   // Heartbeat when backgrounding
   useEffect(() => {
@@ -290,7 +331,8 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
           style={styles.video}
           nativeControls
           contentFit="contain"
-          fullscreenOptions={{ enable: true }}
+          // App is portrait-locked; fullscreen rotates to landscape and exits when rotated back.
+          fullscreenOptions={{ enable: true, orientation: 'landscape', autoExitOnRotate: true }}
         />
         {loadState.kind !== 'ready' ? (
           <View style={styles.overlay}>

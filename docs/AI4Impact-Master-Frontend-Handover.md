@@ -168,3 +168,11 @@ The admin console now uses an embedded Amplify/Cognito email/password form at `h
 ## Staff console refinement and access controls
 
 See `AI4Impact-Staff-Management.md`. The dashboard uses actual learning totals and links straight to each course's Video metrics tab. The Admin Users directory combines administrator/marketing memberships with guarded role removal and typed-email sign-in account deletion. Historical application records are preserved; issued JWTs can retain access until expiry. These are staff-only APIs/UI owned by Siddartha; the student team does not need a duplicate implementation. Playback/resume and student API contracts are unchanged.
+
+### PR 21 — student resilience review
+
+- On a network failure while saving lecture progress, pause playback and show a connection message. Recovery probes are serialized; reconnecting opens a fresh playback session at the paused position and leaves playback paused for the learner to resume. Disconnected time is not replayed as heartbeat credit.
+- Browser alerts preserve all named actions, including View certificates / OK, and cancellation does not submit exams or cancel orders.
+- Rotated push tokens remove the old registration first. A non-404 cleanup failure keeps the stored registration and reports a retryable error. Live native push still needs the EAS project configuration and device acceptance testing.
+- Amplify student builds use the existing typecheck and export:web scripts. The duplicate service storage import forwards to the canonical storage utility.
+- `npm run test:resilience` in mobile-app covers offline recovery, browser actions and push rotation failures; it also runs in release CI. Landscape fullscreen still requires physical iOS/Android verification.

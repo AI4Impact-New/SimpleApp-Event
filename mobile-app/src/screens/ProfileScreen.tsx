@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Switch,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
@@ -244,6 +245,7 @@ export function ProfileScreen({
           </View>
         </View>
 
+        {Platform.OS !== 'web' && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Notifications</Text>
           <View style={[styles.card, { flexDirection: 'row', alignItems: 'center' }]}>
@@ -254,6 +256,7 @@ export function ProfileScreen({
             <Switch value={pushEnabled} onValueChange={togglePush} disabled={pushBusy} />
           </View>
         </View>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Help</Text>

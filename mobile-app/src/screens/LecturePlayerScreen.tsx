@@ -105,6 +105,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
   const queuedRef = useRef<number | null>(null);
   // Set when a heartbeat fails without a response; heartbeats pause until progress can be re-read.
   const offlineRef = useRef(false);
+  const reconnectingRef = useRef(false);
 
   /** Re-read this lecture's server-credited progress (after a session conflict or reconnecting). Throws on failure. */
   const refreshProgress = useCallback(async () => {
@@ -139,6 +140,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
         await player.replaceAsync({ uri: playback.url });
         player.playbackRate = speedRef.current;
         if (autoplay) player.play();
+        offlineRef.current = false;
         setLoadState({ kind: 'ready' });
         // expires_in may be shortened by the lecture's access window; renew ahead of it either way.
         const ttlMs = playback.expires_in * 1000;
@@ -180,6 +182,8 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
           } else if (!err?.response) {
             // Offline: stop sending until progress can be re-read.
             offlineRef.current = true;
+            player.pause();
+            if (mountedRef.current) setLoadState({ kind: 'error', message: 'Connection lost. Playback is paused while we reconnect.' });
           }
           // Never replay a backlog of heartbeats.
           queuedRef.current = null;
@@ -189,7 +193,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
     } finally {
       inFlightRef.current = false;
     }
-  }, [classId, openSession, enterBlocked, refreshProgress]);
+  }, [classId, openSession, enterBlocked, refreshProgress, player]);
 
   const heartbeat = useCallback(() => {
     if (!sessionRef.current || offlineRef.current) return;
@@ -200,6 +204,8 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
   // Initial load + cleanup (final heartbeat on leaving the player)
   useEffect(() => {
     mountedRef.current = true;
+    offlineRef.current = false;
+    queuedRef.current = null;
     openSession();
     return () => {
       mountedRef.current = false;
@@ -255,16 +261,20 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
   // Periodic heartbeat while actively playing; while offline, probe by re-reading progress instead
   useEffect(() => {
     const id = setInterval(() => {
-      if (offlineRef.current) {
+      if (offlineRef.current && !reconnectingRef.current) {
+        reconnectingRef.current = true;
         refreshProgress()
-          .then(() => {
-            offlineRef.current = false;
+          // Restart credit at the paused position; never credit disconnected time.
+          .then(() => { if (mountedRef.current) return openSession(positionRef.current, false); })
+          .catch((err) => {
+            const blocked = blockedState(err);
+            if (blocked) { offlineRef.current = false; enterBlocked(blocked); }
           })
-          .catch(() => {});
+          .finally(() => { reconnectingRef.current = false; });
       } else if (playingRef.current) heartbeat();
     }, HEARTBEAT_MS);
     return () => clearInterval(id);
-  }, [heartbeat, refreshProgress]);
+  }, [heartbeat, refreshProgress, openSession, enterBlocked]);
 
   // Heartbeat when backgrounding
   useEffect(() => {

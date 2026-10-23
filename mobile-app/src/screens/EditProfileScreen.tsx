@@ -11,7 +11,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, usePreventRemove } from '@react-navigation/native';
 import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -95,17 +95,14 @@ export function EditProfileScreen({ onBack, onSaved }: EditProfileScreenProps) {
   const current = JSON.stringify({ name, userType, university, course, yearOfStudy, city, state, designation, company });
   const dirty = !loading && !loadError && initialRef.current !== '' && current !== initialRef.current;
 
-  useEffect(() => {
-    // Covers the header back button, Android back and the iOS swipe gesture.
-    return navigation.addListener('beforeRemove', (e: any) => {
-      if (!dirty || savedRef.current) return;
-      e.preventDefault();
-      Alert.alert('Discard changes?', 'Your profile changes have not been saved.', [
-        { text: 'Keep editing', style: 'cancel' },
-        { text: 'Discard', style: 'destructive', onPress: () => navigation.dispatch(e.data.action) },
-      ]);
-    });
-  }, [navigation, dirty]);
+  // Native stack gestures and confirmed redispatch are handled by the hook.
+  usePreventRemove(dirty && !savedRef.current, ({ data }) => {
+    if (savedRef.current) { navigation.dispatch(data.action); return; }
+    Alert.alert('Discard changes?', 'Your profile changes have not been saved.', [
+      { text: 'Keep editing', style: 'cancel' },
+      { text: 'Discard', style: 'destructive', onPress: () => navigation.dispatch(data.action) },
+    ]);
+  });
 
   const handleSave = async () => {
     if (!userType) {

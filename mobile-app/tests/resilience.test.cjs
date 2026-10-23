@@ -40,3 +40,21 @@ test('live class times show an end time and the device timezone',()=>{
  assert.match(range,/–/);assert.match(range,/\(GMT[+-]/);
  assert.equal(dt.formatLocalTimeRange(null,null),'Schedule TBD');
 });
+
+test('deep links accept only exact owned paths and valid IDs',()=>{
+ const {parseDeepLink}=load('utils/deepLinks.ts',{}, {URL});
+ const id='00000000-0000-0000-0000-000000000001';
+ for(const url of [`ai4impact://checkout/${id}`,`https://admin.ai4impact.in/checkout?source=email&order=${id}`])assert.deepEqual(JSON.parse(JSON.stringify(parseDeepLink(url))),{kind:'checkout',id});
+ assert.equal(parseDeepLink(`ai4impact://course/${id}`).kind,'course');
+ for(const url of [`https://evil.example/checkout/${id}`,`https://admin.ai4impact.in/unknown/checkout/${id}`,`ai4impact://checkout/${id}extra`,`http://admin.ai4impact.in/checkout?order=${id}`,`https://admin.ai4impact.in@evil.example/course/${id}`,null,'not a URL'])assert.equal(parseDeepLink(url),null);
+});
+
+test('exam requests calculate server clock offset and tolerate a missing Date header',async()=>{
+ let headers={date:'Tue, 27 Oct 2026 12:00:00 GMT'};
+ const deviceNow=Date.parse('2026-10-27T13:00:00Z');
+ const client={interceptors:{request:{use(){}},response:{use(){}}},post:async()=>({data:{id:'attempt'},headers}),get:async()=>({data:{id:'attempt'},headers})};
+ class DeviceDate extends Date{static now(){return deviceNow}}
+ const {api}=load('services/api.ts',{'axios':{create:()=>client},'./auth':{authService:{}}},{process:{env:{}},Date:DeviceDate});
+ assert.equal((await api.startExamAttempt('exam')).clock_offset_ms,-3600000);
+ headers={};assert.equal((await api.getExamAttempt('attempt')).clock_offset_ms,0);
+});

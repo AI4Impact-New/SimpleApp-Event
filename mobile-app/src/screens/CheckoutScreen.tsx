@@ -52,9 +52,9 @@ export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
           if (latest && latest.status === 'pending') await runAction(action);
         };
         if (Platform.OS === 'web') {
-          if (window.confirm('Connection problem. The order was not updated yet. Retry?')) void retry();
+          if (window.confirm('Connection problem. We could not confirm the order status. Check it and retry?')) void retry();
         } else {
-          Alert.alert('Connection problem', 'The order was not updated yet.', [
+          Alert.alert('Connection problem', 'We could not confirm the order status. Retry checks the current order first.', [
             { text: 'Retry', onPress: () => void retry() },
             { text: 'Not now', style: 'cancel' },
           ]);

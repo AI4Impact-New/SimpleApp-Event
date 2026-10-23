@@ -47,6 +47,7 @@ import {
   watchPushToken,
 } from '@/services/push';
 import { clearPrivateStores } from '@/utils/userStorage';
+import { parseDeepLink, type LinkTarget } from '@/utils/deepLinks';
 import { colors, spacing } from '@/theme/colors';
 
 const Stack = createNativeStackNavigator();
@@ -128,19 +129,8 @@ const documentTitle = {
 // ai4impact://checkout/<orderId>, ai4impact://course/<courseId>, and the web quote link
 // https://admin.ai4impact.in/checkout?order=<orderId>. IDs are hints; the screens fetch with the user's session.
 
-const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
-type LinkTarget = { kind: 'checkout' | 'course'; id: string };
 let pendingLinkTarget: LinkTarget | null = null;
 let initialUrlHandled = false;
-
-function parseDeepLink(url: string | null): LinkTarget | null {
-  if (!url) return null;
-  const checkout = url.match(new RegExp(`checkout(?:/|\\?order=)(${UUID})`, 'i'));
-  if (checkout) return { kind: 'checkout', id: checkout[1] };
-  const course = url.match(new RegExp(`courses?/(${UUID})`, 'i'));
-  if (course) return { kind: 'course', id: course[1] };
-  return null;
-}
 
 /** Navigate now if the signed-in tabs are mounted, otherwise keep it until after sign-in. */
 function openDeepLink(target: LinkTarget | null) {

@@ -9,6 +9,8 @@ from typing import Dict, Any
 
 from shared.auth import require_auth, require_role, create_response, create_error_response
 
+from shared.user_repository import IdentityConflictError
+
 logger = logging.getLogger(__name__)
 
 
@@ -108,6 +110,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return get_course_calendar_ics(event, context)
 
         return create_error_response(404, "Endpoint not found")
+    except IdentityConflictError as exc:
+        return create_error_response(409, str(exc))
     except Exception as e:
         logger.error("Handler error: %s", e, exc_info=True)
         return create_error_response(500, "Internal server error")

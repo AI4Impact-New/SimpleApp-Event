@@ -180,7 +180,7 @@ variable "admin_custom_origins" {
 }
 
 variable "transactional_email_enabled" {
-  description = "Enable quote emails only after SES DKIM verification and production approval"
+  description = "Enable Resend quote emails only after sender verification, API key setup and delivery testing"
   type        = bool
   default     = false
 }

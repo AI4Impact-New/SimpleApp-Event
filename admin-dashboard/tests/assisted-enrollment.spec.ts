@@ -32,6 +32,7 @@ test('a website enquiry saves only student-profile fields, including after reope
   await page.goto(`${process.env.QA_ADMIN_URL || 'http://localhost:3100'}/dashboard/course-enquiries`);
   await page.getByRole('button', { name: 'Open student workspace' }).click();
   const dialog = page.getByRole('dialog');
+  await expect(dialog.getByText(/Automatic quote email awaits Resend sender and API key setup/)).toBeVisible();
   await expect(dialog.getByLabel('Full name', { exact: true })).toHaveValue(lead.name);
   for (const label of ['City', 'State', 'University', 'Degree / course of study', 'Year of study']) {
     await dialog.getByLabel(label, { exact: true }).fill('Example');

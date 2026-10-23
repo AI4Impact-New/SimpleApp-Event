@@ -8,7 +8,6 @@ import os
 import re
 import uuid
 from datetime import datetime, timezone
-from email.message import EmailMessage
 from html import escape
 from pathlib import Path
 
@@ -16,13 +15,12 @@ import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
 from shared.db import execute_query, get_db_cursor
-from learning import billing
+from learning import billing, email_delivery
 from learning.enquiries import staff
 from learning.validation import ApiError, identifier, text
 
 CONFIG = Config(connect_timeout=3, read_timeout=8, retries={'total_max_attempts': 1})
 cognito = boto3.client('cognito-idp', config=CONFIG)
-ses = boto3.client('sesv2', config=CONFIG)
 FIELDS = {'name','email','phone','user_type','university','course','year_of_study','city','state','designation','company'}
 
 
@@ -228,17 +226,15 @@ def send_quote(actor,eid,oid,body):
     if row['status']!='pending':raise ApiError(409,'Only pending quotes can be emailed')
     if row.get('expires_at') and row['expires_at']<=datetime.now(timezone.utc):raise ApiError(410,'Quote expired; prepare a new quote')
     if os.environ.get('TRANSACTIONAL_EMAIL_ENABLED')!='true':
-        raise ApiError(503,'Automatic quote email awaits SES verification and production access. Download the PDF and use the prepared email draft meanwhile.')
+        raise ApiError(503,'Automatic quote email awaits Resend sender verification and API key configuration. Download the PDF and use the prepared email draft meanwhile.')
     action_id=_begin_action(actor,eid,'quote_email',body['request_id'],{'order_id':oid})
     if action_id:
-        subject,plain,html=quote_email(row);sender=os.environ['TRANSACTIONAL_FROM_EMAIL']
-        message=EmailMessage();message['From']='AI4Impact <'+sender+'>';message['To']=row['buyer_email'];message['Subject']=subject
-        message.set_content(plain);message.add_alternative(html,subtype='html')
-        message.add_attachment(quote_invoice(actor,eid,oid),maintype='application',subtype='pdf',filename='AI4Impact-pro-forma.pdf')
+        subject,plain,html=quote_email(row)
         try:
-            result=ses.send_email(FromEmailAddress=sender,ConfigurationSetName=os.environ['TRANSACTIONAL_CONFIGURATION_SET'],Destination={'ToAddresses':[row['buyer_email']]},Content={'Raw':{'Data':message.as_bytes()}})
-        except ClientError as exc:
-            _finish_action(action_id,'failed',{'error_code':exc.response['Error']['Code']})
-            raise ApiError(502,'Email submission failed. Check its status before explicitly sending again.')
-        _finish_action(action_id,'accepted',{'provider':'SES','message_id':result['MessageId']})
-    return {'state':'accepted','message':'AWS accepted the quote email; acceptance does not guarantee inbox delivery.'}
+            message_id=email_delivery.send_quote_email(recipient=row['buyer_email'],subject=subject,
+                plain=plain,html=html,pdf=quote_invoice(actor,eid,oid),idempotency_key='quote/'+action_id)
+        except email_delivery.DeliveryError as exc:
+            _finish_action(action_id,'pending' if exc.uncertain else 'failed',{'provider':'Resend','error_code':exc.code,'delivery_uncertain':exc.uncertain})
+            raise ApiError(exc.status,str(exc)) from None
+        _finish_action(action_id,'accepted',{'provider':'Resend','message_id':message_id})
+    return {'state':'accepted','message':'Resend accepted the quote email; acceptance does not guarantee inbox delivery.'}

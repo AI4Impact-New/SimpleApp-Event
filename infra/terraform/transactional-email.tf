@@ -1,5 +1,17 @@
-# Transactional delivery remains feature-gated until SES verifies the identity
-# and grants production access. These controls apply when delivery is enabled.
+# Resend key material is inserted locally after provisioning. Never store a key
+# in Terraform variables or a secret_version resource (which would enter state).
+resource "aws_secretsmanager_secret" "resend_api_key" {
+  name                    = "${var.project_name}/resend-api-key"
+  description             = "Resend sending-only API key for AI4Impact transactional mail"
+  recovery_window_in_days = 30
+}
+
+output "resend_api_key_secret_arn" {
+  value = aws_secretsmanager_secret.resend_api_key.arn
+}
+
+# Legacy SES verification/feedback resources are retained for reference only.
+# Application delivery uses Resend; Cognito uses COGNITO_DEFAULT independently.
 resource "aws_sesv2_account_suppression_attributes" "transactional" {
   suppressed_reasons = ["BOUNCE", "COMPLAINT"]
 }

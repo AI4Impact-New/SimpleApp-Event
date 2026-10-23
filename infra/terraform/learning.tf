@@ -156,18 +156,18 @@ resource "aws_lambda_function" "learning" {
   }
   environment {
     variables = merge(local.lambda_env, {
-      VIDEO_BUCKET                    = aws_s3_bucket.videos.id
-      CERTIFICATE_BUCKET              = aws_s3_bucket.certificates.id
-      VIDEO_DOMAIN                    = aws_cloudfront_distribution.videos.domain_name
-      VIDEO_KEY_ID                    = aws_cloudfront_public_key.videos.id
-      VIDEO_SIGNER_SECRET_ARN         = aws_secretsmanager_secret.video_signer.arn
-      CERTIFICATE_VERIFY_BASE_URL     = aws_apigatewayv2_api.main.api_endpoint
-      CERTIFICATE_VERIFY_PAGE_URL     = "https://www.ai4impact.in/verify"
-      TRANSACTIONAL_EMAIL_ENABLED     = tostring(var.transactional_email_enabled)
-      TRANSACTIONAL_FROM_EMAIL        = "noreply@ai4impact.in"
-      TRANSACTIONAL_CONFIGURATION_SET = aws_sesv2_configuration_set.transactional.configuration_set_name
-      EXPO_PROJECT_ID                 = var.expo_project_id
-      CHECKOUT_PAGE_URL               = "https://admin.ai4impact.in/checkout"
+      VIDEO_BUCKET                = aws_s3_bucket.videos.id
+      CERTIFICATE_BUCKET          = aws_s3_bucket.certificates.id
+      VIDEO_DOMAIN                = aws_cloudfront_distribution.videos.domain_name
+      VIDEO_KEY_ID                = aws_cloudfront_public_key.videos.id
+      VIDEO_SIGNER_SECRET_ARN     = aws_secretsmanager_secret.video_signer.arn
+      CERTIFICATE_VERIFY_BASE_URL = aws_apigatewayv2_api.main.api_endpoint
+      CERTIFICATE_VERIFY_PAGE_URL = "https://www.ai4impact.in/verify"
+      TRANSACTIONAL_EMAIL_ENABLED = tostring(var.transactional_email_enabled)
+      TRANSACTIONAL_FROM_EMAIL    = "noreply@ai4impact.in"
+      RESEND_API_KEY_SECRET_ARN   = aws_secretsmanager_secret.resend_api_key.arn
+      EXPO_PROJECT_ID             = var.expo_project_id
+      CHECKOUT_PAGE_URL           = "https://admin.ai4impact.in/checkout"
     })
   }
   depends_on = [aws_iam_role_policy_attachment.learning_db_secret, aws_iam_role_policy.learning_runtime, aws_iam_role_policy_attachment.learning_vpc, aws_cloudwatch_log_group.learning, null_resource.build_lambdas, aws_secretsmanager_secret_version.video_signer]
@@ -248,7 +248,6 @@ resource "aws_iam_role_policy" "assisted_email" {
   name = "assisted-transactional-email"
   role = aws_iam_role.learning.id
   policy = jsonencode({ Version = "2012-10-17", Statement = [{
-    Effect    = "Allow", Action = ["ses:SendEmail", "ses:SendRawEmail"], Resource = aws_sesv2_email_identity.transactional.arn,
-    Condition = { StringEquals = { "ses:FromAddress" = "noreply@ai4impact.in" } }
+    Effect = "Allow", Action = ["secretsmanager:GetSecretValue"], Resource = aws_secretsmanager_secret.resend_api_key.arn
   }] })
 }

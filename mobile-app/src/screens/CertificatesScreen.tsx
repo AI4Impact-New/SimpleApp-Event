@@ -5,12 +5,12 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -24,7 +24,7 @@ import { downloadAndSharePdf } from '@/utils/sharePdf';
 
 interface CertificatesScreenProps {
   onBack: () => void;
-  onVerify: () => void;
+  onVerify: (certificateId?: string) => void;
 }
 
 export function CertificatesScreen({ onBack, onVerify }: CertificatesScreenProps) {
@@ -64,7 +64,11 @@ export function CertificatesScreen({ onBack, onVerify }: CertificatesScreenProps
           <Text style={styles.title} numberOfLines={2}>{item.course_title ?? 'Course certificate'}</Text>
           <Text style={styles.muted}>Issued {formatLocalDate(item.issued_at)}</Text>
           {item.provider ? <Text style={styles.muted}>{item.provider}</Text> : null}
+          <Text style={styles.certId} selectable>ID: {item.id}</Text>
           {revoked ? <Text style={styles.revoked}>Revoked</Text> : null}
+          <TouchableOpacity onPress={() => onVerify(item.id)} accessibilityRole="button">
+            <Text style={styles.link}>Verify</Text>
+          </TouchableOpacity>
         </View>
         {!revoked ? (
           <TouchableOpacity
@@ -72,6 +76,8 @@ export function CertificatesScreen({ onBack, onVerify }: CertificatesScreenProps
             onPress={() => downloadAndShare(item)}
             disabled={busy}
             activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityLabel={`Download and share ${item.course_title ?? 'certificate'} PDF`}
           >
             {busy ? (
               <ActivityIndicator size="small" color={colors.white} />
@@ -90,7 +96,13 @@ export function CertificatesScreen({ onBack, onVerify }: CertificatesScreenProps
         title="My certificates"
         onBack={onBack}
         right={
-          <TouchableOpacity onPress={onVerify} style={styles.headerBtn} activeOpacity={0.7}>
+          <TouchableOpacity
+            onPress={() => onVerify()}
+            style={styles.headerBtn}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Verify a certificate"
+          >
             <Ionicons name="shield-checkmark-outline" size={24} color={colors.primary} />
           </TouchableOpacity>
         }
@@ -134,6 +146,11 @@ export function CertificatesScreen({ onBack, onVerify }: CertificatesScreenProps
 }
 
 const styles = StyleSheet.create({
+  certId: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,

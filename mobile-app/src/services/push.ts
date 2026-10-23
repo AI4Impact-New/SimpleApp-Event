@@ -9,6 +9,7 @@ import { api } from './api';
 import { userStore } from '@/utils/userStorage';
 
 const OPT_OUT_KEY = 'push_opt_out';
+const EXPLAINED_KEY = 'push_permission_explained';
 const ANDROID_CHANNEL = 'default';
 
 type StoredDevice = { deviceId: string; token: string };
@@ -44,6 +45,23 @@ const deviceStore = () => userStore<StoredDevice>('push_device');
 export async function isPushOptedOut(): Promise<boolean> {
   try {
     return (await AsyncStorage.getItem(OPT_OUT_KEY)) === '1';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * True once, before the OS permission prompt would first appear: the caller explains why we ask.
+ * Never true after the user has answered (granted/denied) or already seen the explanation.
+ */
+export async function shouldExplainPushPermission(): Promise<boolean> {
+  if (!Device.isDevice || Platform.OS === 'web' || !easProjectId() || (await isPushOptedOut())) return false;
+  try {
+    if ((await AsyncStorage.getItem(EXPLAINED_KEY)) === '1') return false;
+    const { status, canAskAgain } = await Notifications.getPermissionsAsync();
+    if (status !== 'undetermined' || !canAskAgain) return false;
+    await AsyncStorage.setItem(EXPLAINED_KEY, '1');
+    return true;
   } catch {
     return false;
   }
@@ -156,4 +174,10 @@ export async function setPushOptOut(optOut: boolean): Promise<PushRegistrationRe
 export function courseIdFromResponse(response: Notifications.NotificationResponse | null | undefined): string | null {
   const data = response?.notification.request.content.data as { course_id?: unknown } | undefined;
   return typeof data?.course_id === 'string' && data.course_id ? data.course_id : null;
+}
+
+/** Inbox message ID from a tapped notification, used to mark it read (the server checks ownership). */
+export function notificationIdFromResponse(response: Notifications.NotificationResponse | null | undefined): string | null {
+  const data = response?.notification.request.content.data as { notification_id?: unknown } | undefined;
+  return typeof data?.notification_id === 'string' && data.notification_id ? data.notification_id : null;
 }

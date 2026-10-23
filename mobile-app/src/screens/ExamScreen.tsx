@@ -5,15 +5,16 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  AppState,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { api } from '@/services/api';
-import { useSubmitExamAttempt } from '@/hooks/useLearning';
+import { useCourseExams, useSubmitExamAttempt } from '@/hooks/useLearning';
 import { apiErrorMessage } from '@/services/apiErrors';
 import type { Exam, ExamAnswers, ExamAttempt } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
@@ -27,7 +28,10 @@ interface ExamScreenProps {
 
 type StoredAttempt = { attemptId: string; answers: ExamAnswers };
 
-export function ExamScreen({ exam, onBack }: ExamScreenProps) {
+export function ExamScreen({ exam: initialExam, onBack }: ExamScreenProps) {
+  // Fresh attempts_used after a submit (the route param is a snapshot from the course page)
+  const exams = useCourseExams(initialExam.course_id);
+  const exam = exams.data?.find((e) => e.id === initialExam.id) ?? initialExam;
   const [attempt, setAttempt] = useState<ExamAttempt | null>(null);
   const [answers, setAnswers] = useState<ExamAnswers>({});
   const [restoring, setRestoring] = useState(true);
@@ -94,8 +98,9 @@ export function ExamScreen({ exam, onBack }: ExamScreenProps) {
       return;
     }
     const expiresAt = new Date(attempt.expires_at).getTime();
+    const offset = attempt.clock_offset_ms ?? 0;
     const tick = () => {
-      const left = Math.max(0, Math.round((expiresAt - Date.now()) / 1000));
+      const left = Math.max(0, Math.round((expiresAt - (Date.now() + offset)) / 1000));
       setRemaining(left);
       if (left === 0 && !autoSubmittedRef.current) {
         autoSubmittedRef.current = true;
@@ -106,6 +111,24 @@ export function ExamScreen({ exam, onBack }: ExamScreenProps) {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [attempt, doSubmit]);
+
+  // Back from the background: the server may have expired or scored the attempt meanwhile.
+  useEffect(() => {
+    if (!attempt || attempt.status !== 'pending') return;
+    const attemptId = attempt.id;
+    const sub = AppState.addEventListener('change', async (state) => {
+      if (state !== 'active') return;
+      try {
+        const latest = await api.getExamAttempt(attemptId);
+        setAttempt((prev) => (prev?.id === attemptId && prev.status === 'pending' ? latest : prev));
+        if (latest.status !== 'pending') await (await store()).write(null);
+      } catch {
+        // keep the local timer; the next submit reconciles with the server
+      }
+    });
+    return () => sub.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attempt?.id, attempt?.status]);
 
   const start = async () => {
     setStarting(true);
@@ -146,6 +169,8 @@ export function ExamScreen({ exam, onBack }: ExamScreenProps) {
     );
   };
 
+  const attemptsLeft = Math.max(0, (exam.max_attempts ?? 1) - (Number(exam.attempts_used) || 0));
+
   if (restoring) {
     return (
       <SafeAreaView style={styles.container}>
@@ -176,8 +201,23 @@ export function ExamScreen({ exam, onBack }: ExamScreenProps) {
             {attempt.percentage != null ? ` (${Math.round(Number(attempt.percentage))}%)` : ''}
           </Text>
           <Text style={styles.muted}>Pass mark {attempt.pass_percentage}%</Text>
-          <TouchableOpacity style={styles.primaryBtn} onPress={onBack} activeOpacity={0.75}>
-            <Text style={styles.primaryBtnText}>Back to course</Text>
+          {!passed && attemptsLeft > 0 ? (
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={() => {
+                autoSubmittedRef.current = false;
+                setAnswers({});
+                setAttempt(null);
+              }}
+              activeOpacity={0.75}
+            >
+              <Text style={styles.primaryBtnText}>
+                Try again ({attemptsLeft} {attemptsLeft === 1 ? 'attempt' : 'attempts'} left)
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+          <TouchableOpacity style={[styles.primaryBtn, !passed && attemptsLeft > 0 && styles.secondaryBtn]} onPress={onBack} activeOpacity={0.75}>
+            <Text style={[styles.primaryBtnText, !passed && attemptsLeft > 0 && { color: colors.primary }]}>Back to course</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -253,6 +293,8 @@ export function ExamScreen({ exam, onBack }: ExamScreenProps) {
                   style={[styles.option, selected && styles.optionSelected]}
                   onPress={() => select(q.id, opt.id)}
                   activeOpacity={0.7}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: selected }}
                 >
                   <Ionicons
                     name={selected ? 'radio-button-on' : 'radio-button-off'}
@@ -411,6 +453,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: borderRadius.xl,
     marginTop: spacing.md,
+  },
+  secondaryBtn: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
   fullBtn: {
     alignSelf: 'stretch',

@@ -5,13 +5,13 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
   Linking,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { useMaterials } from '@/hooks/useMaterials';
 import { MaterialItem } from '@/components/MaterialItem';
 import { Material } from '@/types/material';

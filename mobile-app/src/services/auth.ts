@@ -62,7 +62,8 @@ class AuthService {
     this.onUnauthorized = callback;
   }
 
-  async login(email: string, password: string): Promise<LoginResult> {
+  async login(rawEmail: string, password: string): Promise<LoginResult> {
+    const email = rawEmail.trim();
     try {
       const signInResult = await signIn({
         username: email,
@@ -140,8 +141,13 @@ class AuthService {
         message = 'You are already signed in. Please close and reopen the app, or sign out first.';
       } else if (/expo go|doesn't seem to be linked|not using Expo Go/i.test(underlyingMsg) || /expo go|doesn't seem to be linked|not using Expo Go/i.test(msg)) {
         message = 'Sign-in does not work in Expo Go. Use a development build instead: run "npx expo run:ios" (or "npx expo run:android") from the mobile-app folder, then open the app from the simulator or device.';
+      } else if (/temporary password has expired/i.test(msg)) {
+        message = 'Your temporary password has expired. Ask the AI4Impact team to send you a new invitation.';
+      } else if (/attempts exceeded/i.test(msg)) {
+        message = 'Too many failed sign-in attempts. Please wait a few minutes or reset your password.';
       } else if (name === 'UserNotFoundException' || code === 'UserNotFoundException' || /user.*not.*found/i.test(msg)) {
-        message = 'No account found with this email. Please sign up or check the email address.';
+        // Same wording as a wrong password so the form does not reveal which emails have accounts
+        message = 'Email or password is incorrect. Please try again.';
       } else if (name === 'NotAuthorizedException' || code === 'NotAuthorizedException' || /not authorized|incorrect.*password/i.test(msg)) {
         message = 'Email or password is incorrect. Please try again.';
       } else if (name === 'UserNotConfirmedException' || code === 'UserNotConfirmedException' || /user.*not confirmed|confirm.*sign.?up/i.test(msg)) {
@@ -219,10 +225,10 @@ class AuthService {
       const code = (error as Error & { code?: string }).code ?? '';
 
       let message = 'Verification failed. Please check the code and try again.';
-      if (name === 'CodeMismatchException' || code === 'CodeMismatchException' || /invalid.*code|code.*invalid/i.test(msg)) {
-        message = 'Invalid or expired code. Please check the code from your email or request a new one.';
-      } else if (name === 'ExpiredCodeException' || code === 'ExpiredCodeException') {
+      if (name === 'ExpiredCodeException' || code === 'ExpiredCodeException') {
         message = 'This code has expired. Please request a new code.';
+      } else if (name === 'CodeMismatchException' || code === 'CodeMismatchException' || /invalid.*code|code.*invalid/i.test(msg)) {
+        message = 'Invalid code. Please check the code from your email or request a new one.';
       } else if (msg && !msg.includes('Verification failed')) {
         message = msg;
       }
@@ -301,7 +307,7 @@ class AuthService {
       const msg = error instanceof Error ? error.message : '';
       const name = (error as Error & { name?: string }).name ?? '';
       let message = 'Could not send a reset code. Please try again.';
-      if (name === 'UserNotFoundException') message = 'No account found with this email.';
+      if (name === 'UserNotFoundException') message = 'We could not send a reset code. Check the email address and try again.';
       else if (name === 'LimitExceededException' || /limit|too many/i.test(msg)) {
         message = 'Too many attempts. Please wait a few minutes before trying again.';
       } else if (name === 'InvalidParameterException') {
@@ -392,14 +398,33 @@ class AuthService {
     }
   }
 
-  async updateStoredUserData(patch: Partial<StoredUserData>) {
+  async updateStoredUserData(patch: Partial<StoredUserData>): Promise<StoredUserData> {
     const current = await this.getStoredUserData();
+    // `id` is the Cognito sub and keys per-user stores (push device, exam answers); profile data never changes it.
+    const { id: _ignored, ...rest } = patch;
     const next = {
       ...(current ?? {}),
-      ...patch,
-    };
+      ...rest,
+    } as StoredUserData;
     await SecureStore.setItemAsync(USER_KEY, JSON.stringify(next));
     return next;
+  }
+
+  /**
+   * Older builds overwrote the stored id with the database user id. Restore the Cognito sub so per-user
+   * stores (push device, saved exam answers) resolve to the right key again. Cheap no-op when it matches.
+   */
+  async repairStoredUserId(): Promise<void> {
+    try {
+      const stored = await this.getStoredUserData();
+      if (!stored) return;
+      const { userId } = await getCurrentUser();
+      if (userId && stored.id !== userId) {
+        await SecureStore.setItemAsync(USER_KEY, JSON.stringify({ ...stored, id: userId }));
+      }
+    } catch {
+      // signed out or offline: the next sign-in rebuilds the record
+    }
   }
 
   async getCurrentUser() {

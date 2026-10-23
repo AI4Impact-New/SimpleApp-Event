@@ -5,13 +5,13 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
   Linking,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 import { useEvent, useJoinEvent, useEventAnalytics } from '@/hooks/useEvents';
 import { usePolls } from '@/hooks/usePolls';

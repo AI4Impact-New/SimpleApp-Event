@@ -1,15 +1,16 @@
 // QR Scanner Screen using expo-camera
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  SafeAreaView,
+import {
+  View,
+  Text,
+  StyleSheet,
   TouchableOpacity,
   Alert,
-  Vibration 
+  Vibration,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { ensureCameraPermission } from '@/utils/cameraPermission';
 import { api } from '@/services/api';
 import { colors, spacing } from '@/theme/colors';
 
@@ -27,8 +28,7 @@ export function QRScannerScreen({ onScanSuccess, onBack }: QRScannerScreenProps)
     if (scanned || processing) return;
     
     const { data } = result;
-    console.log('Scanned:', data);
-    
+
     // Vibrate on scan
     Vibration.vibrate(100);
     
@@ -69,9 +69,7 @@ export function QRScannerScreen({ onScanSuccess, onBack }: QRScannerScreenProps)
       );
       
     } catch (error: any) {
-      console.error('Join error:', error);
-      
-      const msg = error.response?.data?.message ?? '';
+      const msg = error.response?.data?.message ?? error.response?.data?.error ?? '';
       if (msg.includes('already joined') || msg.includes('already checked into')) {
         Alert.alert(
           'Already Joined',
@@ -109,9 +107,11 @@ export function QRScannerScreen({ onScanSuccess, onBack }: QRScannerScreenProps)
           </Text>
           <TouchableOpacity 
             style={styles.permissionButton}
-            onPress={requestPermission}
+            onPress={() => ensureCameraPermission(permission, requestPermission)}
           >
-            <Text style={styles.permissionButtonText}>Grant Permission</Text>
+            <Text style={styles.permissionButtonText}>
+              {permission.canAskAgain ? 'Grant Permission' : 'Open Settings'}
+            </Text>
           </TouchableOpacity>
           
           <TouchableOpacity 

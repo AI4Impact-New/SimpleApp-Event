@@ -14,11 +14,11 @@ export function ScreenHeader({ title, onBack, right }: ScreenHeaderProps) {
   return (
     <View style={styles.header}>
       {onBack ? (
-        <TouchableOpacity onPress={onBack} style={styles.backBtn} activeOpacity={0.7}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
       ) : null}
-      <Text style={[styles.title, !onBack && styles.titleNoBack]} numberOfLines={1}>{title}</Text>
+      <Text style={[styles.title, !onBack && styles.titleNoBack]} numberOfLines={1} accessibilityRole="header">{title}</Text>
       {right}
     </View>
   );

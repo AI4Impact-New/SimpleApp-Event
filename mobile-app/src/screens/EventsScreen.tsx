@@ -1,15 +1,15 @@
 // Events Screen – QR check-in and the public event list
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  FlatList, 
-  StyleSheet, 
-  SafeAreaView,
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 import { useEvents } from '@/hooks/useEvents';
 import { EventCard } from '@/components/EventCard';

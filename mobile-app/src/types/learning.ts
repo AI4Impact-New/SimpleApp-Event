@@ -135,6 +135,8 @@ export interface ExamAttempt {
   questions: ExamQuestion[];
   percentage: number | null;
   expired: boolean;
+  /** Client-only: server time minus device time when this attempt was fetched (0 when unknown). */
+  clock_offset_ms?: number;
 }
 
 /** Question UUID -> selected option ID */

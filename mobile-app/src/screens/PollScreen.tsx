@@ -5,12 +5,12 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePoll, usePollResults, useCastVote } from '@/hooks/usePolls';
 import { PollOption } from '@/types/poll';

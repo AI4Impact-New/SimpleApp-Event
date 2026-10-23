@@ -6,11 +6,11 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 import { useMyLearning, useNotifications } from '@/hooks/useLearning';
 import { useEvents } from '@/hooks/useEvents';

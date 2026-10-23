@@ -6,12 +6,12 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   ScrollView,
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { PiLogo } from '@/components/PiLogo';
 import { authService } from '@/services/auth';
@@ -42,6 +42,7 @@ export function ForgotPasswordScreen({ initialEmail, onDone, onBack }: ForgotPas
     const result = await authService.requestPasswordReset(email);
     setLoading(false);
     if (result.success) {
+      setCode('');
       setInfo(`We sent a reset code to ${result.destination ?? email.trim()}.`);
       setStep('confirm');
     } else {

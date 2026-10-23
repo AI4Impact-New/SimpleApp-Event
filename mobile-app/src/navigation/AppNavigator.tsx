@@ -6,7 +6,7 @@ import * as Notifications from 'expo-notifications';
 import { useQueryClient } from '@tanstack/react-query';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { LoginScreen } from '@/screens/LoginScreen';
@@ -38,8 +38,16 @@ import { CheckoutScreen } from '@/screens/CheckoutScreen';
 import { PurchasesScreen } from '@/screens/PurchasesScreen';
 import { VerifyCertificateScreen } from '@/screens/VerifyCertificateScreen';
 import { useNotifications } from '@/hooks/useLearning';
-import { courseIdFromResponse, registerForPush, unregisterPush, watchPushToken } from '@/services/push';
+import {
+  courseIdFromResponse,
+  notificationIdFromResponse,
+  registerForPush,
+  shouldExplainPushPermission,
+  unregisterPush,
+  watchPushToken,
+} from '@/services/push';
 import { clearPrivateStores } from '@/utils/userStorage';
+import { parseDeepLink, type LinkTarget } from '@/utils/deepLinks';
 import { colors, spacing } from '@/theme/colors';
 
 const Stack = createNativeStackNavigator();
@@ -72,6 +80,76 @@ function flushPendingNotification() {
   const target = pendingNotificationTarget;
   pendingNotificationTarget = null;
   if (target) openFromNotification(target.courseId);
+}
+
+// ---- Browser tab titles (web) -----------------------------------------------------------------
+
+// Route names are internal identifiers; show learners a readable page name instead.
+const SCREEN_TITLES: Record<string, string> = {
+  AuthHome: 'Welcome',
+  Login: 'Sign in',
+  SignUp: 'Create account',
+  ConfirmSignUp: 'Verify email',
+  ForgotPassword: 'Reset password',
+  CompleteProfile: 'Complete your profile',
+  HomeMain: 'Home',
+  Events: 'Events',
+  Event: 'Event',
+  Poll: 'Poll',
+  QRScanner: 'Scan QR code',
+  LeaderboardHome: 'Leaderboards',
+  LeaderboardDetail: 'Leaderboard',
+  CoursesMain: 'Courses',
+  CourseDetail: 'Course details',
+  Checkout: 'Checkout',
+  MyLearningMain: 'My Learning',
+  CourseLearning: 'Course',
+  LecturePlayer: 'Lecture',
+  Exam: 'Assessment',
+  Certificates: 'My certificates',
+  VerifyCertificate: 'Verify certificate',
+  Purchases: 'Purchases',
+  InboxMain: 'Inbox',
+  NotificationDetail: 'Message',
+  ProfileMain: 'Profile',
+  EditProfile: 'Edit profile',
+  PrivacyPolicy: 'Privacy policy',
+};
+
+const documentTitle = {
+  formatter: (_options: unknown, route: { name: string; params?: any } | undefined) => {
+    // Lecture and exam titles travel in the route params; prefer them when present.
+    const specific = route?.name === 'LecturePlayer' ? route.params?.title : route?.name === 'Exam' ? route.params?.exam?.title : null;
+    const page = specific || (route ? SCREEN_TITLES[route.name] : undefined);
+    return page ? `${page} · AI4Impact` : 'AI4Impact';
+  },
+};
+
+// ---- Deep links -------------------------------------------------------------------------------
+// ai4impact://checkout/<orderId>, ai4impact://course/<courseId>, and the web quote link
+// https://admin.ai4impact.in/checkout?order=<orderId>. IDs are hints; the screens fetch with the user's session.
+
+let pendingLinkTarget: LinkTarget | null = null;
+let initialUrlHandled = false;
+
+/** Navigate now if the signed-in tabs are mounted, otherwise keep it until after sign-in. */
+function openDeepLink(target: LinkTarget | null) {
+  if (!target) return;
+  if (!navigationRef.isReady() || !navigationRef.getRootState()?.routeNames?.includes('Courses')) {
+    pendingLinkTarget = target;
+    return;
+  }
+  if (target.kind === 'checkout') {
+    navigationRef.navigate('Courses', { screen: 'Checkout', params: { orderId: target.id }, initial: false });
+  } else {
+    navigationRef.navigate('Courses', { screen: 'CourseDetail', params: { courseId: target.id }, initial: false });
+  }
+}
+
+function flushPendingLink() {
+  const target = pendingLinkTarget;
+  pendingLinkTarget = null;
+  openDeepLink(target);
 }
 
 // ---- Resume after re-authentication -----------------------------------------------------------
@@ -127,13 +205,30 @@ function PushBridge() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    registerForPush({ prompt: true }).catch(() => {});
+    // Explain once before the OS prompt; afterwards only register silently (the Profile switch re-asks).
+    shouldExplainPushPermission()
+      .then((explain) => {
+        if (!explain) return registerForPush({ prompt: false });
+        Alert.alert(
+          'Course notifications',
+          'Get notified about new lessons, live classes and announcements from your courses. Your inbox works either way.',
+          [
+            { text: 'Not now', style: 'cancel' },
+            { text: 'Allow', onPress: () => registerForPush({ prompt: true }).catch(() => {}) },
+          ]
+        );
+      })
+      .catch(() => {});
     const unwatch = watchPushToken();
 
     const handle = (response: Notifications.NotificationResponse | null) => {
       if (!response) return;
       // Fetch the inbox first; the server is the source of truth for what the notification says.
-      queryClient.invalidateQueries({ queryKey: ['me', 'notifications'] });
+      const notificationId = notificationIdFromResponse(response);
+      const markRead = notificationId
+        ? import('@/services/api').then(({ api }) => api.markNotificationRead(notificationId)).catch(() => {})
+        : Promise.resolve();
+      markRead.finally(() => queryClient.invalidateQueries({ queryKey: ['me', 'notifications'] }));
       openFromNotification(courseIdFromResponse(response));
     };
 
@@ -229,6 +324,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
     const id = setTimeout(() => {
       flushPendingNotification();
       restoreResumeTarget();
+      flushPendingLink();
     }, 0);
     return () => clearTimeout(id);
   }, []);
@@ -240,10 +336,9 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
         screenOptions={{
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textMuted,
+          // No fixed height: React Navigation adds the home-indicator / gesture-bar inset itself.
           tabBarStyle: {
-            height: 56,
-            paddingBottom: 8,
-            paddingTop: 8,
+            paddingTop: 4,
             backgroundColor: colors.backgroundCard,
             borderTopColor: colors.border,
           },
@@ -585,7 +680,8 @@ export function AppNavigator() {
           }
           await unregisterPush();
         });
-        return authService.isAuthenticated();
+        // Before any per-user store is read (push registration, exam resume)
+        return authService.repairStoredUserId().then(() => authService.isAuthenticated());
       })
       .then((authenticated) => {
         if (!cancelled) setIsAuthenticated(!!authenticated);
@@ -597,6 +693,16 @@ export function AppNavigator() {
       cancelled = true;
     };
   }, [refreshKey, queryClient]);
+
+  // Deep links: the cold-start URL once per app run, then any URL that arrives while running.
+  useEffect(() => {
+    if (!initialUrlHandled) {
+      initialUrlHandled = true;
+      Linking.getInitialURL().then((url) => openDeepLink(parseDeepLink(url))).catch(() => {});
+    }
+    const sub = Linking.addEventListener('url', ({ url }) => openDeepLink(parseDeepLink(url)));
+    return () => sub.remove();
+  }, []);
 
   const handleLogout = useCallback(() => {
     manualLogoutRef.current = true;
@@ -616,7 +722,7 @@ export function AppNavigator() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef} onReady={flushPendingNotification}>
+    <NavigationContainer ref={navigationRef} onReady={flushPendingNotification} documentTitle={documentTitle}>
       {isAuthenticated ? <SignedIn onLogout={handleLogout} /> : <AuthStack onLoginSuccess={handleLoginSuccessStable} />}
     </NavigationContainer>
   );
@@ -693,6 +799,7 @@ function AuthStack({ onLoginSuccess }: { onLoginSuccess: () => void }) {
                     navigation.navigate('Login', { email: params.email, notice: 'Email verified. Sign in to continue.' })
               }
               onResend={() => {}}
+              onBack={() => navigation.goBack()}
             />
           );
         }}

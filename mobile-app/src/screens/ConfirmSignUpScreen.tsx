@@ -6,11 +6,12 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { PiLogo } from '@/components/PiLogo';
 
@@ -20,9 +21,10 @@ interface ConfirmSignUpScreenProps {
   name?: string;
   onSuccess: () => void;
   onResend: () => void;
+  onBack?: () => void;
 }
 
-export function ConfirmSignUpScreen({ email, password, name, onSuccess, onResend }: ConfirmSignUpScreenProps) {
+export function ConfirmSignUpScreen({ email, password, name, onSuccess, onResend, onBack }: ConfirmSignUpScreenProps) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -38,6 +40,7 @@ export function ConfirmSignUpScreen({ email, password, name, onSuccess, onResend
 
     setLoading(true);
     setError('');
+    setSuccessMessage('');
 
     try {
       const { authService } = await import('@/services/auth');
@@ -64,6 +67,7 @@ export function ConfirmSignUpScreen({ email, password, name, onSuccess, onResend
       const { authService } = await import('@/services/auth');
       const result = await authService.resendSignUpCode(email);
       if (result.success) {
+        setCode('');
         setSuccessMessage('A new code was sent to your email.');
       } else {
         setError(result.error ?? 'Could not resend code');
@@ -78,7 +82,7 @@ export function ConfirmSignUpScreen({ email, password, name, onSuccess, onResend
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
-        <View style={styles.content}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
             <PiLogo size={56} />
             <Text style={styles.title}>Verify your email</Text>
@@ -127,10 +131,16 @@ export function ConfirmSignUpScreen({ email, password, name, onSuccess, onResend
                 <Text style={styles.linkText}>Resend code</Text>
               )}
             </TouchableOpacity>
+
+            {onBack ? (
+              <TouchableOpacity style={styles.linkButton} onPress={onBack} disabled={loading}>
+                <Text style={styles.linkText}>Wrong email? Go back</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
 
           <Text style={styles.footer}>Powered by PiResearch Labs</Text>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -139,7 +149,7 @@ export function ConfirmSignUpScreen({ email, password, name, onSuccess, onResend
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   keyboardView: { flex: 1 },
-  content: { flex: 1, padding: spacing.xxl, justifyContent: 'center' },
+  content: { flexGrow: 1, padding: spacing.xxl, justifyContent: 'center' },
   header: { alignItems: 'center', marginBottom: 32 },
   logo: { marginBottom: spacing.sm },
   title: { fontSize: 24, fontWeight: '700', color: colors.primary, marginBottom: spacing.xs },

@@ -5,11 +5,11 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { useEventAnalytics } from '@/hooks/useEvents';
 import { colors, spacing } from '@/theme/colors';
 

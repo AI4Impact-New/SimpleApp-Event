@@ -41,6 +41,12 @@ export type MyProfile = {
 const rawUrl = process.env.EXPO_PUBLIC_API_URL || 'https://ke8dywmhil.execute-api.ap-south-1.amazonaws.com';
 const API_URL = rawUrl.replace(/\/api\/?$/, '');
 
+/** Server clock minus device clock, from the response Date header, so exam timers ignore a wrong phone clock. */
+function withClockOffset(response: { data: ExamAttempt; headers: Record<string, any> }): ExamAttempt {
+  const serverNow = Date.parse(String(response.headers?.date ?? ''));
+  return { ...response.data, clock_offset_ms: Number.isNaN(serverNow) ? 0 : serverNow - Date.now() };
+}
+
 class ApiService {
   private client: AxiosInstance;
   // Unauthenticated routes (public verification, catalog prices): no token, no 401 handling
@@ -56,7 +62,8 @@ class ApiService {
 
     // Attach auth token to requests
     this.client.interceptors.request.use(async (config) => {
-      const token = await authService.getToken();
+      // Amplify refreshes an expired ID token here, so requests after the first hour don't each 401 once first
+      const token = await authService.getFreshToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -206,22 +213,22 @@ class ApiService {
   }
 
   async getCourseCalendarIcs(courseId: string): Promise<string> {
-    const token = await authService.getToken();
+    const token = await authService.getFreshToken();
     const url = `${this.client.defaults.baseURL}/courses/${courseId}/calendar.ics`;
     const res = await fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
-    if (!res.ok) throw new Error('Failed to get calendar');
+    if (!res.ok) throw Object.assign(new Error('Failed to get calendar'), { status: res.status });
     return res.text();
   }
 
   async getEventCalendarIcs(eventId: string): Promise<string> {
-    const token = await authService.getToken();
+    const token = await authService.getFreshToken();
     const url = `${this.client.defaults.baseURL}/events/${eventId}/calendar.ics`;
     const res = await fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
-    if (!res.ok) throw new Error('Failed to get calendar');
+    if (!res.ok) throw Object.assign(new Error('Failed to get calendar'), { status: res.status });
     return res.text();
   }
 
@@ -273,12 +280,12 @@ class ApiService {
 
   async startExamAttempt(examId: string): Promise<ExamAttempt> {
     const response = await this.client.post(`/learning/exams/${examId}/attempts`, {});
-    return response.data;
+    return withClockOffset(response);
   }
 
   async getExamAttempt(attemptId: string): Promise<ExamAttempt> {
     const response = await this.client.get(`/learning/attempts/${attemptId}`);
-    return response.data;
+    return withClockOffset(response);
   }
 
   async submitExamAttempt(attemptId: string, answers: ExamAnswers): Promise<ExamAttempt> {

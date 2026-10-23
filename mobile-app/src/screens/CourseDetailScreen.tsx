@@ -5,17 +5,15 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
   Platform,
   RefreshControl,
-  Share,
-  Linking,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
-import { useCourse, useRegisterCourse, useMarkCourseInterest } from '@/hooks/useCourses';
+import { useCourse, useRegisterCourse, useMarkCourseInterest, useMyCourses } from '@/hooks/useCourses';
 import { useCoursePrice, useCreateDemoOrder } from '@/hooks/useBilling';
 import { apiErrorMessage } from '@/services/apiErrors';
 import { formatPaise } from '@/utils/money';
@@ -23,6 +21,9 @@ import { uuidv4 } from '@/utils/uuid';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { api } from '@/services/api';
 import type { CoursePhase, CourseClass } from '@/types/course';
+import { PILOT_SELF_REGISTRATION } from '@/config/features';
+import { shareTextFile } from '@/utils/sharePdf';
+import { formatLocalTimeRange } from '@/utils/datetime';
 
 const cardShadow = Platform.select({
   ios: {
@@ -45,13 +46,20 @@ interface CourseDetailScreenProps {
 
 export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenCheckout }: CourseDetailScreenProps) {
   const { data: course, isLoading, error, refetch, isRefetching } = useCourse(courseId);
-  const { data: price } = useCoursePrice(courseId);
+  const { data: price, isError: priceError, refetch: refetchPrice, isFetching: priceFetching } = useCoursePrice(courseId);
+  const { data: myCourses } = useMyCourses();
   const createOrder = useCreateDemoOrder();
   // One request UUID per intentional order; kept across network-failure retries so the server returns the same quote.
   const orderRequestIdRef = useRef<string | null>(null);
   const registerCourse = useRegisterCourse();
   const markInterest = useMarkCourseInterest();
-  const [interested, setInterested] = useState(false);
+  const [markedInterested, setMarkedInterested] = useState(false);
+  // Server-side interest survives reopening the page; the local flag covers the gap until /me/courses refetches.
+  const interested =
+    markedInterested ||
+    (myCourses as { course_id?: string; status?: string }[] | undefined)?.some(
+      (r) => r.course_id === courseId && r.status === 'interested'
+    ) === true;
 
   const handleRegister = async () => {
     try {
@@ -68,7 +76,7 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
   const handleInterest = async () => {
     try {
       await markInterest.mutateAsync(courseId);
-      setInterested(true);
+      setMarkedInterested(true);
       Alert.alert('Done', "You're marked as interested. We'll be in touch.");
     } catch (err: any) {
       Alert.alert('Error', apiErrorMessage(err, 'Failed to mark interest.'));
@@ -97,20 +105,57 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
   const handleAddToCalendar = async () => {
     try {
       const ics = await api.getCourseCalendarIcs(courseId);
-      await Share.share({
-        message: ics,
-        title: `${course?.title ?? 'Course'} schedule`,
+      // Share a real .ics file: calendar apps import files, not pasted text.
+      await shareTextFile({
+        text: ics,
+        fileName: 'course-schedule.ics',
+        mimeType: 'text/calendar',
+        UTI: 'com.apple.ical.ics',
+        dialogTitle: `${course?.title ?? 'Course'} schedule`,
       });
-    } catch (e) {
-      Alert.alert('Error', 'Could not load calendar. Try again later.');
+    } catch (e: any) {
+      Alert.alert(
+        'Calendar unavailable',
+        e?.status === 403
+          ? 'The class calendar is available once you are enrolled in this course.'
+          : 'Could not load the calendar. Check your connection and try again.'
+      );
     }
   };
+
+  // Check the error first: a failed load has no data, and would otherwise spin forever.
+  if (error && !course) {
+    const status = (error as any)?.response?.status;
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={onBack} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Course</Text>
+        </View>
+        <View style={styles.errorWrap}>
+          <Ionicons name={status === 404 || status === 403 ? 'alert-circle-outline' : 'cloud-offline-outline'} size={40} color={colors.textMuted} />
+          <Text style={styles.errorText}>
+            {status === 404 || status === 403
+              ? 'This course is not available.'
+              : apiErrorMessage(error, 'Failed to load course.')}
+          </Text>
+          {status !== 404 && status !== 403 ? (
+            <TouchableOpacity style={[styles.registerBtn, { marginTop: spacing.lg }]} onPress={() => refetch()} activeOpacity={0.75}>
+              <Text style={styles.registerBtnText}>Retry</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (isLoading || !course) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <TouchableOpacity onPress={onBack} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Course</Text>
@@ -118,22 +163,6 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
         <View style={styles.loadingWrap}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Course</Text>
-        </View>
-        <View style={styles.errorWrap}>
-          <Text style={styles.errorText}>Failed to load course.</Text>
         </View>
       </SafeAreaView>
     );
@@ -151,7 +180,7 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn} activeOpacity={0.7}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{course.title}</Text>
@@ -285,17 +314,22 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
                       <Text style={[styles.bulletDesc, { marginLeft: 4 }]}>{cl.duration_minutes} min</Text>
                     )}
                   </View>
+                  {cl.class_type !== 'recorded' && cl.start_time ? (
+                    <Text style={[styles.bulletDesc, { width: '100%' }]}>{formatLocalTimeRange(cl.start_time, cl.end_time)}</Text>
+                  ) : null}
                 </View>
               ))}
             </View>
-            <TouchableOpacity
-              style={[styles.registerBtn, { marginTop: 12, backgroundColor: colors.border }]}
-              onPress={handleAddToCalendar}
-              activeOpacity={0.75}
-            >
-              <Ionicons name="calendar-outline" size={20} color={colors.text} />
-              <Text style={[styles.registerBtnText, { color: colors.text }]}>Add to Calendar (.ics)</Text>
-            </TouchableOpacity>
+            {hasAccess ? (
+              <TouchableOpacity
+                style={[styles.registerBtn, { marginTop: 12, backgroundColor: colors.border }]}
+                onPress={handleAddToCalendar}
+                activeOpacity={0.75}
+              >
+                <Ionicons name="calendar-outline" size={20} color={colors.text} />
+                <Text style={[styles.registerBtnText, { color: colors.text }]}>Add to Calendar (.ics)</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
         )}
 
@@ -313,7 +347,7 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
                 ) : null}
               </View>
               <Text style={[styles.bulletDesc, { marginTop: 6 }]}>
-                Demo checkout only. No money is collected and it does not grant access; registration stays free.
+                Demo checkout only. No money is collected and it does not grant course access.
               </Text>
               <TouchableOpacity
                 style={[styles.registerBtn, { marginTop: 12, backgroundColor: colors.border }]}
@@ -328,6 +362,25 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
                     <Ionicons name="card-outline" size={20} color={colors.text} />
                     <Text style={[styles.registerBtnText, { color: colors.text }]}>Demo checkout</Text>
                   </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : priceError ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Course fee</Text>
+            <View style={styles.benefitsCard}>
+              <Text style={styles.bulletDesc}>Could not load the course fee.</Text>
+              <TouchableOpacity
+                style={[styles.registerBtn, { marginTop: 12, backgroundColor: colors.border }]}
+                onPress={() => refetchPrice()}
+                disabled={priceFetching}
+                activeOpacity={0.75}
+              >
+                {priceFetching ? (
+                  <ActivityIndicator size="small" color={colors.text} />
+                ) : (
+                  <Text style={[styles.registerBtnText, { color: colors.text }]}>Retry</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -351,21 +404,24 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
             </View>
           ) : (
             <>
-              <TouchableOpacity
-                style={[styles.registerBtn, { marginBottom: 10 }]}
-                onPress={handleRegister}
-                disabled={registerCourse.isPending}
-                activeOpacity={0.75}
-              >
-                {registerCourse.isPending ? (
-                  <ActivityIndicator size="small" color={colors.white} />
-                ) : (
-                  <>
-                    <Ionicons name="book-outline" size={22} color={colors.white} />
-                    <Text style={styles.registerBtnText}>Register to this course</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+              {/* Registration grants access immediately, so it only appears in approved pilot/free builds. */}
+              {PILOT_SELF_REGISTRATION ? (
+                <TouchableOpacity
+                  style={[styles.registerBtn, { marginBottom: 10 }]}
+                  onPress={handleRegister}
+                  disabled={registerCourse.isPending}
+                  activeOpacity={0.75}
+                >
+                  {registerCourse.isPending ? (
+                    <ActivityIndicator size="small" color={colors.white} />
+                  ) : (
+                    <>
+                      <Ionicons name="book-outline" size={22} color={colors.white} />
+                      <Text style={styles.registerBtnText}>Register to this course</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              ) : null}
               <TouchableOpacity
                 style={[styles.registerBtn, { backgroundColor: colors.border }]}
                 onPress={handleInterest}
@@ -381,6 +437,11 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
                   </>
                 )}
               </TouchableOpacity>
+              {!PILOT_SELF_REGISTRATION ? (
+                <Text style={[styles.bulletDesc, { textAlign: 'center', marginTop: spacing.md }]}>
+                  The AI4Impact team enrolls learners. Tap I&apos;m Interested and we&apos;ll contact you.
+                </Text>
+              ) : null}
             </>
           )}
         </View>
@@ -436,6 +497,8 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 15,
     color: colors.error,
+    textAlign: 'center',
+    marginTop: spacing.md,
   },
   scroll: {
     flex: 1,

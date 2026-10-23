@@ -48,6 +48,7 @@ export function useSubmitExamAttempt() {
       api.submitExamAttempt(attemptId, answers),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['learning'] });
+      queryClient.invalidateQueries({ queryKey: ['me', 'learning'] });
     },
   });
 }

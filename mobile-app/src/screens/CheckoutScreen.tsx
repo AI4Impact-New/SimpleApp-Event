@@ -5,13 +5,13 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
   Alert,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { api } from '@/services/api';
@@ -45,6 +45,22 @@ export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
       await finish.mutateAsync({ orderId, action });
     } catch (err: any) {
       const status = err?.response?.status;
+      if (!err?.response) {
+        // The request may or may not have reached the server: check the order before trying again.
+        const retry = async () => {
+          const latest = (await refetch()).data;
+          if (latest && latest.status === 'pending') await runAction(action);
+        };
+        if (Platform.OS === 'web') {
+          if (window.confirm('Connection problem. The order was not updated yet. Retry?')) void retry();
+        } else {
+          Alert.alert('Connection problem', 'The order was not updated yet.', [
+            { text: 'Retry', onPress: () => void retry() },
+            { text: 'Not now', style: 'cancel' },
+          ]);
+        }
+        return;
+      }
       if (status === 410) notify('Link expired', 'This checkout link has expired. Start a new order from the course page.');
       else if (status === 409) notify('Order finalised', apiErrorMessage(err, 'This order is already finalised.'));
       else notify('Checkout failed', apiErrorMessage(err, 'Could not update this order.'));
@@ -73,8 +89,16 @@ export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
         fileName: `AI4Impact-demo-invoice-${orderId}.pdf`,
         dialogTitle: 'Demo invoice',
       });
-    } catch {
-      notify('Download failed', 'The invoice could not be downloaded. Please retry.');
+    } catch (err: any) {
+      const status = err?.response?.status;
+      notify(
+        'Download failed',
+        status === 403 || status === 404
+          ? 'This invoice is not available.'
+          : status === 409
+            ? 'An invoice is only available for a completed demo order.'
+            : apiErrorMessage(err, 'The invoice could not be downloaded. Please retry.')
+      );
     } finally {
       setDownloading(false);
     }
@@ -126,7 +150,7 @@ export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
         <View style={styles.demoBanner}>
           <Ionicons name="information-circle" size={20} color="#92400e" />
           <Text style={styles.demoText}>
-            DEMO / PRO FORMA. No money is collected and this does not grant course access. Use Register on the course page to enrol.
+            DEMO / PRO FORMA. No money is collected and this does not grant course access. The AI4Impact team handles enrollment.
           </Text>
         </View>
 

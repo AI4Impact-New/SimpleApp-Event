@@ -5,20 +5,22 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
   Alert,
   Linking,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { useLearningHome, useCourseExams, useIssueCertificate } from '@/hooks/useLearning';
+import { useLearningHome, useCourseExams, useIssueCertificate, useMyCertificates } from '@/hooks/useLearning';
+import { api } from '@/services/api';
+import { shareTextFile } from '@/utils/sharePdf';
 import { apiErrorMessage } from '@/services/apiErrors';
 import type { AccessState, Completion, Exam, LearningClass } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
-import { formatLocalDate, formatLocalDateTime, formatDuration } from '@/utils/datetime';
+import { formatLocalDate, formatLocalDateTime, formatLocalTimeRange, formatDuration } from '@/utils/datetime';
 
 interface CourseLearningScreenProps {
   courseId: string;
@@ -45,6 +47,8 @@ export function CourseLearningScreen({
   const home = useLearningHome(courseId);
   const exams = useCourseExams(courseId);
   const issueCertificate = useIssueCertificate();
+  const certificates = useMyCertificates();
+  const hasCertificate = (certificates.data ?? []).some((c) => c.course_id === courseId && !c.revoked_at);
   // Progress refreshes on app foreground (focusManager + staleTime 0) and when the player/exam invalidate it.
   const { refetch: refetchHome } = home;
   const { refetch: refetchExams } = exams;
@@ -60,9 +64,27 @@ export function CourseLearningScreen({
         { text: 'View certificates', onPress: onCertificateIssued },
         { text: 'OK' },
       ]);
-    } catch (err) {
-      Alert.alert('Not yet eligible', apiErrorMessage(err, 'Could not issue the certificate.'));
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const revoked = /revoked/i.test(err?.response?.data?.error ?? '');
+      const title = revoked ? 'Certificate revoked' : status === 409 ? 'Not yet eligible' : 'Certificate not issued';
+      Alert.alert(title, apiErrorMessage(err, 'Could not issue the certificate.'));
       refetchHome();
+    }
+  };
+
+  const handleAddToCalendar = async () => {
+    try {
+      const ics = await api.getCourseCalendarIcs(courseId);
+      await shareTextFile({
+        text: ics,
+        fileName: 'course-schedule.ics',
+        mimeType: 'text/calendar',
+        UTI: 'com.apple.ical.ics',
+        dialogTitle: 'Add classes to your calendar',
+      });
+    } catch {
+      Alert.alert('Calendar unavailable', 'Could not load the calendar. Check your connection and try again.');
     }
   };
 
@@ -123,6 +145,8 @@ export function CourseLearningScreen({
           completion={completion}
           issuing={issueCertificate.isPending}
           onIssue={handleIssue}
+          hasCertificate={hasCertificate}
+          onViewCertificate={onCertificateIssued}
         />
 
         {recorded.length > 0 && (
@@ -140,6 +164,10 @@ export function CourseLearningScreen({
             {live.map((cl) => (
               <LiveRow key={cl.id} lecture={cl} />
             ))}
+            <TouchableOpacity style={styles.calendarBtn} onPress={handleAddToCalendar} activeOpacity={0.75}>
+              <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+              <Text style={styles.calendarBtnText}>Add live classes to calendar</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -147,6 +175,13 @@ export function CourseLearningScreen({
           <Text style={styles.sectionTitle}>Assessments</Text>
           {exams.isLoading ? (
             <ActivityIndicator color={colors.primary} />
+          ) : exams.isError ? (
+            <View style={styles.inlineError}>
+              <Text style={styles.muted}>{apiErrorMessage(exams.error, 'Could not load assessments.')}</Text>
+              <TouchableOpacity onPress={() => refetchExams()} accessibilityRole="button">
+                <Text style={styles.retryLink}>Retry</Text>
+              </TouchableOpacity>
+            </View>
           ) : examList.length === 0 ? (
             <Text style={styles.muted}>No assessments published yet.</Text>
           ) : (
@@ -162,10 +197,14 @@ function CompletionCard({
   completion,
   issuing,
   onIssue,
+  hasCertificate,
+  onViewCertificate,
 }: {
   completion: Completion;
   issuing: boolean;
   onIssue: () => void;
+  hasCertificate: boolean;
+  onViewCertificate: () => void;
 }) {
   const { rules } = completion;
   const pct = Math.round(Number(completion.progress_percentage) || 0);
@@ -219,6 +258,12 @@ function CompletionCard({
         </View>
       ) : null}
 
+      {hasCertificate ? (
+        <TouchableOpacity style={[styles.primaryBtn, styles.fullBtn]} onPress={onViewCertificate} activeOpacity={0.75}>
+          <Ionicons name="ribbon" size={20} color={colors.white} />
+          <Text style={styles.primaryBtnText}>View certificate</Text>
+        </TouchableOpacity>
+      ) : (
       <TouchableOpacity
         style={[styles.primaryBtn, styles.fullBtn, !completion.eligible && styles.disabledBtn]}
         onPress={onIssue}
@@ -236,6 +281,7 @@ function CompletionCard({
           </>
         )}
       </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -310,8 +356,8 @@ function LiveRow({ lecture }: { lecture: LearningClass }) {
       <View style={styles.rowBody}>
         <Text style={styles.rowTitle} numberOfLines={2}>{lecture.title}</Text>
         <Text style={styles.muted}>
-          {lecture.start_time ? formatLocalDateTime(lecture.start_time) : 'Schedule TBD'}
-          {lecture.duration_minutes ? ` · ${lecture.duration_minutes} min` : ''}
+          {formatLocalTimeRange(lecture.start_time, lecture.end_time)}
+          {lecture.duration_minutes && !lecture.end_time ? ` · ${lecture.duration_minutes} min` : ''}
         </Text>
         {!online && lecture.location ? <Text style={styles.muted}>{lecture.location}</Text> : null}
         {lecture.minutes_attended != null ? (
@@ -323,6 +369,8 @@ function LiveRow({ lecture }: { lecture: LearningClass }) {
           style={styles.joinBtn}
           onPress={() => Linking.openURL(lecture.zoom_link!).catch(() => Alert.alert('Error', 'Could not open the class link.'))}
           activeOpacity={0.75}
+          accessibilityRole="link"
+          accessibilityLabel={`Join ${lecture.title}`}
         >
           <Text style={styles.joinBtnText}>Join</Text>
         </TouchableOpacity>
@@ -351,6 +399,28 @@ function ExamRow({ exam, onPress }: { exam: Exam; onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
+  calendarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+  },
+  calendarBtnText: {
+    color: colors.primary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  inlineError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  retryLink: {
+    color: colors.primary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,

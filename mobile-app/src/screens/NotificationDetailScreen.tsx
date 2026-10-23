@@ -1,6 +1,7 @@
 // Notification Detail Screen – full inbox message with a link to its course
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useNotifications } from '@/hooks/useLearning';
@@ -15,7 +16,7 @@ interface NotificationDetailScreenProps {
 
 export function NotificationDetailScreen({ notificationId, onBack, onOpenCourse }: NotificationDetailScreenProps) {
   // Read from the owned inbox list, never from navigation params: the server decides what this user can see.
-  const { data: notifications, isLoading } = useNotifications();
+  const { data: notifications, isLoading, isError, refetch, isFetching } = useNotifications();
   const item = notifications?.find((n) => n.id === notificationId);
 
   return (
@@ -24,6 +25,14 @@ export function NotificationDetailScreen({ notificationId, onBack, onOpenCourse 
       {isLoading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : !item && isError ? (
+        <View style={styles.center}>
+          <Ionicons name="cloud-offline-outline" size={44} color={colors.textMuted} />
+          <Text style={styles.muted}>Could not load this message. Check your connection and try again.</Text>
+          <TouchableOpacity style={[styles.primaryBtn, { paddingHorizontal: spacing.xl }]} onPress={() => refetch()} disabled={isFetching}>
+            {isFetching ? <ActivityIndicator size="small" color={colors.white} /> : <Text style={styles.primaryBtnText}>Retry</Text>}
+          </TouchableOpacity>
         </View>
       ) : !item ? (
         <View style={styles.center}>

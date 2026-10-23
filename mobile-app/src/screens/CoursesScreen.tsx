@@ -5,14 +5,17 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 import { useCourses } from '@/hooks/useCourses';
+import { useBillingCatalog } from '@/hooks/useBilling';
+import { apiErrorMessage } from '@/services/apiErrors';
+import { formatPaise } from '@/utils/money';
 import { Course } from '@/types/course';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 
@@ -35,6 +38,8 @@ const cardShadow = Platform.select({
 export function CoursesScreen({ onCoursePress }: CoursesScreenProps) {
   const { data: courses, isLoading, error, refetch, isRefetching } = useCourses();
   const list = Array.isArray(courses) ? courses : [];
+  // Prices are optional decoration on the list; the detail page shows a retry if the catalog fails.
+  const { data: prices } = useBillingCatalog();
 
   const renderCourse = ({ item }: { item: Course }) => (
     <TouchableOpacity
@@ -50,6 +55,21 @@ export function CoursesScreen({ onCoursePress }: CoursesScreenProps) {
         {item.short_description ? (
           <Text style={styles.description} numberOfLines={2}>{item.short_description}</Text>
         ) : null}
+        {(() => {
+          const price = prices?.find((p) => p.id === item.id);
+          if (!price || price.marked_price_paise <= 0) return null;
+          return (
+            <View style={styles.priceRow}>
+              <Text style={styles.priceTotal}>{formatPaise(price.total_paise)}</Text>
+              {price.discount_paise > 0 ? (
+                <>
+                  <Text style={styles.priceMarked}>{formatPaise(price.marked_price_paise)}</Text>
+                  <Text style={styles.priceDiscount}>{Number(price.discount_percentage)}% off</Text>
+                </>
+              ) : null}
+            </View>
+          );
+        })()}
         {item.learning_access ? (
           <View style={styles.enrolledBadge}>
             <Ionicons name="checkmark-circle" size={14} color={colors.success} />
@@ -67,7 +87,7 @@ export function CoursesScreen({ onCoursePress }: CoursesScreenProps) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.greeting}>Courses</Text>
-        <Text style={styles.subtitle}>Browse and register for AI4Impact programs</Text>
+        <Text style={styles.subtitle}>Browse AI4Impact programs</Text>
       </View>
 
       {isLoading ? (
@@ -77,7 +97,11 @@ export function CoursesScreen({ onCoursePress }: CoursesScreenProps) {
         </View>
       ) : error ? (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Failed to load courses</Text>
+          <Ionicons name="cloud-offline-outline" size={40} color={colors.textMuted} />
+          <Text style={styles.errorText}>{apiErrorMessage(error, 'Failed to load courses.')}</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()} activeOpacity={0.75}>
+            <Text style={styles.retryText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       ) : list.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -149,6 +173,42 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 15,
     color: colors.error,
+    textAlign: 'center',
+    marginTop: spacing.md,
+  },
+  retryBtn: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+  },
+  retryText: {
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+    flexWrap: 'wrap',
+    marginTop: spacing.xs,
+  },
+  priceTotal: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  priceMarked: {
+    fontSize: 13,
+    color: colors.textMuted,
+    textDecorationLine: 'line-through',
+  },
+  priceDiscount: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.success,
   },
   emptyContainer: {
     flex: 1,

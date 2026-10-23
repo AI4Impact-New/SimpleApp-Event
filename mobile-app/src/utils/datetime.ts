@@ -76,3 +76,27 @@ export function formatDuration(totalSeconds: number): string {
   const sec = String(s % 60).padStart(2, '0');
   return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
 }
+
+/** Device UTC offset as "GMT+5:30", shown next to live-class times so learners know which zone they are in. */
+export function localTimezoneLabel(date = new Date()): string {
+  const offset = -date.getTimezoneOffset();
+  const sign = offset >= 0 ? '+' : '-';
+  const abs = Math.abs(offset);
+  const minutes = abs % 60;
+  return `GMT${sign}${Math.floor(abs / 60)}${minutes ? `:${String(minutes).padStart(2, '0')}` : ''}`;
+}
+
+const localTimeFormat = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+
+/** "Mon, Oct 27, 6:00 PM – 7:30 PM (GMT+5:30)" in the device timezone; end time omitted when unknown. */
+export function formatLocalTimeRange(start?: string | null, end?: string | null): string {
+  if (!start) return 'Schedule TBD';
+  const startDate = new Date(start);
+  if (Number.isNaN(startDate.getTime())) return 'Schedule TBD';
+  const endDate = end ? new Date(end) : null;
+  const sameDay = endDate && !Number.isNaN(endDate.getTime()) && endDate.toDateString() === startDate.toDateString();
+  const endText = endDate && !Number.isNaN(endDate.getTime())
+    ? ` – ${sameDay ? localTimeFormat.format(endDate) : localDateTimeFormat.format(endDate)}`
+    : '';
+  return `${localDateTimeFormat.format(startDate)}${endText} (${localTimezoneLabel(startDate)})`;
+}

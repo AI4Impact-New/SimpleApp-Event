@@ -4,7 +4,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
@@ -13,6 +12,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { colors, spacing, borderRadius } from '@/theme/colors';
@@ -84,8 +84,7 @@ export function ProfileScreen({
     if (isRefresh) setRefreshing(true);
     try {
       const profile = await api.getMyProfile();
-      const nextUser: StoredUserData = {
-        id: profile.id,
+      const nextUser: Partial<StoredUserData> = {
         email: profile.email,
         name: profile.name,
         user_type: profile.user_type,
@@ -97,8 +96,7 @@ export function ProfileScreen({
         designation: profile.designation,
         company: profile.company,
       };
-      await authService.updateStoredUserData(nextUser);
-      setUser(nextUser);
+      setUser(await authService.updateStoredUserData(nextUser));
     } catch (_) {
       const res = await authService.getCurrentUser();
       setUser(res.success ? res.user : null);

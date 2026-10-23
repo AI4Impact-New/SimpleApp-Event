@@ -1,21 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { authService, StoredUserData } from '@/services/auth';
 import { api } from '@/services/api';
+import { apiErrorMessage } from '@/services/apiErrors';
 
 type UserType = 'student' | 'professional';
 
@@ -26,8 +29,14 @@ interface EditProfileScreenProps {
 
 export function EditProfileScreen({ onBack, onSaved }: EditProfileScreenProps) {
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const navigation = useNavigation();
+  // Values as loaded from the server; leaving with different values asks before discarding them.
+  const initialRef = useRef('');
+  const savedRef = useRef(false);
 
   const [name, setName] = useState('');
   const [userType, setUserType] = useState<UserType | null>(null);
@@ -43,31 +52,35 @@ export function EditProfileScreen({ onBack, onSaved }: EditProfileScreenProps) {
     let mounted = true;
 
     const loadProfile = async () => {
+      setLoading(true);
+      setLoadError('');
       try {
         const profile = await api.getMyProfile();
         if (!mounted) return;
-        setName(profile.name ?? '');
-        setUserType(profile.user_type ?? null);
-        setUniversity(profile.university ?? '');
-        setCourse(profile.course ?? '');
-        setYearOfStudy(profile.year_of_study ?? '');
-        setCity(profile.city ?? '');
-        setState(profile.state ?? '');
-        setDesignation(profile.designation ?? '');
-        setCompany(profile.company ?? '');
-      } catch (_) {
-        const res = await authService.getCurrentUser();
-        if (!mounted) return;
-        const user = res.success ? res.user : null;
-        setName(user?.name ?? '');
-        setUserType(user?.user_type ?? null);
-        setUniversity(user?.university ?? '');
-        setCourse(user?.course ?? '');
-        setYearOfStudy(user?.year_of_study ?? '');
-        setCity(user?.city ?? '');
-        setState(user?.state ?? '');
-        setDesignation(user?.designation ?? '');
-        setCompany(user?.company ?? '');
+        const values = {
+          name: profile.name ?? '',
+          userType: (profile.user_type ?? null) as UserType | null,
+          university: profile.university ?? '',
+          course: profile.course ?? '',
+          yearOfStudy: profile.year_of_study ?? '',
+          city: profile.city ?? '',
+          state: profile.state ?? '',
+          designation: profile.designation ?? '',
+          company: profile.company ?? '',
+        };
+        setName(values.name);
+        setUserType(values.userType);
+        setUniversity(values.university);
+        setCourse(values.course);
+        setYearOfStudy(values.yearOfStudy);
+        setCity(values.city);
+        setState(values.state);
+        setDesignation(values.designation);
+        setCompany(values.company);
+        initialRef.current = JSON.stringify(values);
+      } catch (err) {
+        // Don't edit from a cached copy: saving it could overwrite newer server values.
+        if (mounted) setLoadError(apiErrorMessage(err, 'Could not load your profile.'));
       } finally {
         if (mounted) setLoading(false);
       }
@@ -77,7 +90,22 @@ export function EditProfileScreen({ onBack, onSaved }: EditProfileScreenProps) {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [reloadKey]);
+
+  const current = JSON.stringify({ name, userType, university, course, yearOfStudy, city, state, designation, company });
+  const dirty = !loading && !loadError && initialRef.current !== '' && current !== initialRef.current;
+
+  useEffect(() => {
+    // Covers the header back button, Android back and the iOS swipe gesture.
+    return navigation.addListener('beforeRemove', (e: any) => {
+      if (!dirty || savedRef.current) return;
+      e.preventDefault();
+      Alert.alert('Discard changes?', 'Your profile changes have not been saved.', [
+        { text: 'Keep editing', style: 'cancel' },
+        { text: 'Discard', style: 'destructive', onPress: () => navigation.dispatch(e.data.action) },
+      ]);
+    });
+  }, [navigation, dirty]);
 
   const handleSave = async () => {
     if (!userType) {
@@ -121,7 +149,6 @@ export function EditProfileScreen({ onBack, onSaved }: EditProfileScreenProps) {
 
       const updated = await api.updateMyProfile(payload);
       const nextUser: Partial<StoredUserData> = {
-        id: updated?.id,
         email: updated?.email,
         name: updated?.name,
         user_type: updated?.user_type,
@@ -134,6 +161,7 @@ export function EditProfileScreen({ onBack, onSaved }: EditProfileScreenProps) {
         company: updated?.company,
       };
       await authService.updateStoredUserData(nextUser);
+      savedRef.current = true;
       onSaved();
     } catch (err: unknown) {
       const message = err && typeof err === 'object' && 'response' in err
@@ -156,11 +184,31 @@ export function EditProfileScreen({ onBack, onSaved }: EditProfileScreenProps) {
     );
   }
 
+  if (loadError) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={onBack} style={styles.backButton} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Go back">
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+            <Text style={styles.backText}>Back</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.loadingContainer}>
+          <Ionicons name="cloud-offline-outline" size={40} color={colors.textMuted} />
+          <Text style={[styles.inputLabel, { textAlign: 'center', marginTop: spacing.md }]}>{loadError}</Text>
+          <TouchableOpacity style={[styles.saveButton, { marginTop: spacing.lg, paddingHorizontal: spacing.xl }]} onPress={() => setReloadKey((k) => k + 1)}>
+            <Text style={styles.saveButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={onBack} style={styles.backButton} activeOpacity={0.7}>
+          <TouchableOpacity onPress={onBack} style={styles.backButton} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Go back">
             <Ionicons name="arrow-back" size={24} color={colors.text} />
             <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>

@@ -1,17 +1,17 @@
 // Login Screen
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert 
+  ScrollView,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { PiLogo } from '@/components/PiLogo';
 
@@ -56,12 +56,24 @@ export function LoginScreen({
       const { authService } = await import('@/services/auth');
       const result = await authService.completeNewPassword(email.trim(), newPassword);
       if (result.success) onLoginSuccess();
-      else setError(result.error || 'Could not set the new password');
+      else if (/expired/i.test(result.error ?? '')) {
+        // The challenge session is gone: return to the password form so they can sign in again.
+        cancelNewPassword();
+        setError(result.error || 'This sign-in attempt expired. Sign in again with your temporary password.');
+      } else setError(result.error || 'Could not set the new password');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Could not set the new password');
     } finally {
       setLoading(false);
     }
+  };
+
+  const cancelNewPassword = () => {
+    setNeedsNewPassword(false);
+    setNewPassword('');
+    setConfirmPassword('');
+    setPassword('');
+    setError('');
   };
 
   const handleLogin = async () => {
@@ -75,7 +87,7 @@ export function LoginScreen({
 
     try {
       const { authService } = await import('@/services/auth');
-      const result = await authService.login(email, password);
+      const result = await authService.login(email.trim(), password);
 
       if (result.success) {
         onLoginSuccess();
@@ -102,7 +114,7 @@ export function LoginScreen({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <View style={styles.content}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
             <PiLogo size={72} />
             <Text style={styles.title}>AI4Impact</Text>
@@ -126,6 +138,9 @@ export function LoginScreen({
                 style={styles.input}
                 value={email}
                 onChangeText={setEmail}
+                editable={!needsNewPassword}
+                textContentType="username"
+                autoComplete="email"
                 placeholder="your@email.com"
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -168,6 +183,9 @@ export function LoginScreen({
                   ) : (
                     <Text style={styles.buttonText}>Set Password & Sign In</Text>
                   )}
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.forgotButton} onPress={cancelNewPassword} disabled={loading}>
+                  <Text style={styles.linkText}>Back to sign in</Text>
                 </TouchableOpacity>
               </>
             ) : (
@@ -214,7 +232,7 @@ export function LoginScreen({
           <Text style={styles.footer}>
             Powered by PiResearch Labs
           </Text>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -229,7 +247,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     padding: spacing.xxl,
     justifyContent: 'center',
   },

@@ -6,7 +6,7 @@ test('offline heartbeat pauses playback, serializes recovery and opens a new ses
  const player={pause(){paused++},play(){played++},replaceAsync:async()=>{},playbackRate:1};
  const react={useCallback:f=>f,useRef:v=>({current:v}),useState:v=>[v,()=>{}],useEffect:f=>effects.push(f)};
  const api={getPlayback:async()=>({session_id:'s'+(++sessions),resume_seconds:12,duration_seconds:90,expires_in:3600,url:'https://example.invalid/video'}),sendLectureProgress:async()=>{beats++;if(offline)throw Error('Network error');return{}},getCourseProgress:()=>{reads++;return new Promise(r=>{release=()=>r({classes:[{id:'lecture',duration_seconds:90,watched_seconds:12}]})})}};
- const component=load('screens/LecturePlayerScreen.tsx',{'react':react,'react/jsx-runtime':{jsx:()=>null,jsxs:()=>null},'react-native':{StyleSheet:{create:x=>x},AppState:{addEventListener:()=>({remove(){}})}},'@expo/vector-icons':{},expo:{useEventListener:(_,event,fn)=>events[event]=fn},'expo-video':{useVideoPlayer:()=>player},'@tanstack/react-query':{useQueryClient:()=>({invalidateQueries(){}})},'@/components/ScreenHeader':{},'@/services/api':{api},'@/services/apiErrors':{apiErrorMessage:(_,s)=>s},'@/theme/colors':{colors:{},spacing:{},borderRadius:{}},'@/utils/datetime':{formatDuration:()=>''}},{setTimeout:()=>1,clearTimeout(){},setInterval:f=>{intervals.push(f);return 1},clearInterval(){}});
+ const component=load('screens/LecturePlayerScreen.tsx',{'react':react,'react/jsx-runtime':{jsx:()=>null,jsxs:()=>null},'react-native':{StyleSheet:{create:x=>x},AppState:{addEventListener:()=>({remove(){}})}},'@expo/vector-icons':{},expo:{useEventListener:(_,event,fn)=>events[event]=fn},'expo-video':{useVideoPlayer:()=>player},'@tanstack/react-query':{useQueryClient:()=>({invalidateQueries(){}})},'@/components/ScreenHeader':{},'@/components/SafeAreaView':{},'@/services/api':{api},'@/services/apiErrors':{apiErrorMessage:(_,s)=>s},'@/theme/colors':{colors:{},spacing:{},borderRadius:{}},'@/utils/datetime':{formatDuration:()=>''}},{setTimeout:()=>1,clearTimeout(){},setInterval:f=>{intervals.push(f);return 1},clearInterval(){}});
  component.LecturePlayerScreen({classId:'lecture',courseId:'course',title:'Lecture',onBack(){}});effects.forEach(f=>f());await flush();assert.equal(sessions,1);
  events.timeUpdate({currentTime:24});events.playingChange({isPlaying:true});intervals[0]();await flush();assert.equal(beats,1);assert.equal(paused,1);
  intervals[0]();intervals[0]();assert.equal(reads,1);assert.equal(beats,1);offline=false;release();await flush();assert.equal(sessions,2);assert.equal(played,0);
@@ -25,4 +25,18 @@ for(const status of [500,404])test('push rotation handles old-device removal '+s
  const notifications={setNotificationHandler(){},getPermissionsAsync:async()=>({status:'granted'}),getExpoPushTokenAsync:async()=>({data:'new-token'})};
  const mod=load('services/push.ts',{'react-native':{Platform:{OS:'ios'}},'expo-notifications':notifications,'expo-device':{isDevice:true},'expo-constants':{expoConfig:{extra:{eas:{projectId:'project'}}}},'@react-native-async-storage/async-storage':{getItem:async()=>null},'./api':{api},'@/utils/userStorage':{userStore:async()=>({read:async()=>stored,write:async x=>{written=x}})}},{process:{env:{}}});
  const result=await mod.registerForPush();assert.equal(result.ok,status===404);assert.equal(registrations,status===404?1:0);assert.equal(written?.deviceId,status===404?'new-id':undefined);
+});
+test('profile data never replaces the stored Cognito user id that keys per-user stores',async()=>{
+ const store={user_data:JSON.stringify({id:'cognito-sub',email:'a@example.com'})};
+ const secure={getItemAsync:async k=>store[k]??null,setItemAsync:async(k,v)=>{store[k]=v},deleteItemAsync:async k=>{delete store[k]}};
+ const {authService}=load('services/auth.ts',{'aws-amplify/auth':{},'@/utils/secureStorage':secure});
+ const next=await authService.updateStoredUserData({id:'database-user-id',name:'A'});
+ assert.equal(next.id,'cognito-sub');assert.equal(next.name,'A');assert.equal(JSON.parse(store.user_data).id,'cognito-sub');
+});
+test('live class times show an end time and the device timezone',()=>{
+ const dt=load('utils/datetime.ts',{},{Intl,Date});
+ assert.match(dt.localTimezoneLabel(new Date()),/^GMT[+-]\d{1,2}(:\d{2})?$/);
+ const range=dt.formatLocalTimeRange('2026-10-27T12:30:00Z','2026-10-27T14:00:00Z');
+ assert.match(range,/–/);assert.match(range,/\(GMT[+-]/);
+ assert.equal(dt.formatLocalTimeRange(null,null),'Schedule TBD');
 });

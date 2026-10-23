@@ -4,11 +4,13 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   AppState,
+  Pressable,
+  type GestureResponderEvent,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 import { useEventListener } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -36,6 +38,7 @@ const HEARTBEAT_MS = 20_000;
 const RENEW_BEFORE_EXPIRY_MS = 2 * 60_000;
 // Auto-renew the signed URL after a player error (e.g. CloudFront 403) at most once per this interval.
 const AUTO_RENEW_COOLDOWN_MS = 60_000;
+const SKIP_SECONDS = 10;
 
 /** Map access-window errors (playback or heartbeat) to a terminal state. */
 function blockedState(err: any): LoadState | null {
@@ -75,6 +78,11 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
   const [nextLoading, setNextLoading] = useState(false);
   const [speed, setSpeed] = useState(1);
   const speedRef = useRef(1);
+  // Mirrors of player state for the app's own control bar (native controls differ per platform and hide on web)
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [position, setPosition] = useState(0);
+  const [barWidth, setBarWidth] = useState(0);
+  const videoViewRef = useRef<VideoView>(null);
 
   const player = useVideoPlayer(null, (p) => {
     p.timeUpdateEventInterval = 1;
@@ -222,6 +230,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
 
   useEventListener(player, 'timeUpdate', ({ currentTime }) => {
     positionRef.current = currentTime;
+    setPosition(currentTime);
   });
 
   useEventListener(player, 'statusChange', ({ status, error }) => {
@@ -245,6 +254,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
 
   useEventListener(player, 'playingChange', ({ isPlaying }) => {
     playingRef.current = isPlaying;
+    setIsPlaying(isPlaying);
     if (!isPlaying) heartbeat(); // final heartbeat on pause
   });
 
@@ -313,6 +323,30 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
     player.playbackRate = value;
   };
 
+  const ready = loadState.kind === 'ready';
+  const videoDuration = player.duration || progress?.duration_seconds || 0;
+
+  const togglePlay = () => {
+    if (!ready) return;
+    if (player.playing) player.pause();
+    else player.play();
+  };
+
+  /** Seeking moves the playhead only; the server never credits skipped time. */
+  const seekTo = (seconds: number) => {
+    if (!ready) return;
+    const target = Math.max(0, videoDuration > 0 ? Math.min(seconds, videoDuration - 0.5) : seconds);
+    player.currentTime = target;
+    positionRef.current = target;
+    setPosition(target);
+  };
+
+  const seekFromBar = (event: GestureResponderEvent) => {
+    if (barWidth <= 0 || videoDuration <= 0) return;
+    const ratio = Math.min(1, Math.max(0, event.nativeEvent.locationX / barWidth));
+    seekTo(ratio * videoDuration);
+  };
+
   const retry = () => {
     setLoadState({ kind: 'loading' });
     openSession(positionRef.current || undefined);
@@ -327,6 +361,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
 
       <View style={styles.videoWrap}>
         <VideoView
+          ref={videoViewRef}
           player={player}
           style={styles.video}
           nativeControls
@@ -363,6 +398,70 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
             )}
           </View>
         ) : null}
+      </View>
+
+      <View style={[styles.controls, !ready && styles.controlsDisabled]}>
+        <Pressable
+          style={styles.seekBar}
+          onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
+          onPress={seekFromBar}
+          disabled={!ready}
+          accessibilityRole="adjustable"
+          accessibilityLabel="Seek"
+          accessibilityValue={{ min: 0, max: Math.round(videoDuration), now: Math.round(position) }}
+        >
+          <View style={styles.seekTrack}>
+            <View
+              style={[
+                styles.seekFill,
+                { width: `${videoDuration > 0 ? Math.min(100, (position / videoDuration) * 100) : 0}%` },
+              ]}
+            />
+          </View>
+        </Pressable>
+        <View style={styles.controlRow}>
+          <Text style={styles.timeText}>
+            {formatDuration(position)} / {formatDuration(videoDuration)}
+          </Text>
+          <View style={styles.controlButtons}>
+            <TouchableOpacity
+              onPress={() => seekTo(position - SKIP_SECONDS)}
+              disabled={!ready}
+              style={styles.controlBtn}
+              accessibilityRole="button"
+              accessibilityLabel={`Back ${SKIP_SECONDS} seconds`}
+            >
+              <Ionicons name="play-back" size={22} color={colors.white} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={togglePlay}
+              disabled={!ready}
+              style={[styles.controlBtn, styles.playBtn]}
+              accessibilityRole="button"
+              accessibilityLabel={isPlaying ? 'Pause' : 'Play'}
+            >
+              <Ionicons name={isPlaying ? 'pause' : 'play'} size={26} color={colors.white} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => seekTo(position + SKIP_SECONDS)}
+              disabled={!ready}
+              style={styles.controlBtn}
+              accessibilityRole="button"
+              accessibilityLabel={`Forward ${SKIP_SECONDS} seconds`}
+            >
+              <Ionicons name="play-forward" size={22} color={colors.white} />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            onPress={() => videoViewRef.current?.enterFullscreen().catch(() => {})}
+            disabled={!ready}
+            style={styles.controlBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Full screen"
+          >
+            <Ionicons name="expand" size={20} color={colors.white} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.body}>
@@ -474,6 +573,50 @@ const styles = StyleSheet.create({
   retryText: {
     color: colors.white,
     fontWeight: '600',
+  },
+  controls: {
+    backgroundColor: colors.black,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  controlsDisabled: {
+    opacity: 0.5,
+  },
+  seekBar: {
+    paddingVertical: spacing.sm,
+  },
+  seekTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    overflow: 'hidden',
+  },
+  seekFill: {
+    height: 4,
+    backgroundColor: colors.primary,
+  },
+  controlRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  controlButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  controlBtn: {
+    padding: spacing.sm,
+  },
+  playBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 999,
+  },
+  timeText: {
+    color: colors.white,
+    fontSize: 13,
+    fontVariant: ['tabular-nums'],
+    minWidth: 90,
   },
   body: {
     padding: spacing.lg,

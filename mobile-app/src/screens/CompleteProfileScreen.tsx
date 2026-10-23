@@ -6,13 +6,13 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
   ScrollView,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { PiLogo } from '@/components/PiLogo';
 import { Ionicons } from '@expo/vector-icons';

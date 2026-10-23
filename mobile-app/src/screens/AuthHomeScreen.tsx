@@ -1,6 +1,7 @@
 // Auth entry: Sign In or Create account
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { PiLogo } from '@/components/PiLogo';
 

@@ -4,6 +4,7 @@ import '@/utils/webAlert';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, AppState, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query';
 import { AppNavigator } from '@/navigation/AppNavigator';
 import { shouldRetry } from '@/services/apiErrors';
@@ -48,10 +49,12 @@ export default function App() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <StatusBar style="dark" />
-      <AppNavigator />
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <StatusBar style="dark" />
+        <AppNavigator />
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }
 

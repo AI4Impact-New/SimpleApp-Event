@@ -6,12 +6,12 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from '@/components/SafeAreaView';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { PiLogo } from '@/components/PiLogo';
 

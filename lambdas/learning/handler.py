@@ -9,7 +9,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from shared.auth import get_current_user, _normalize_groups
-from shared.user_repository import get_or_create_user_from_claims
+from shared.user_repository import get_or_create_user_from_claims, IdentityConflictError
 from shared.db import execute_query
 from learning import service, exams, certificates, devices, enquiries, billing, access_windows, staff, operations, assisted
 from learning.validation import ApiError, identifier
@@ -171,6 +171,8 @@ def handler(event, context):
             elif len(parts)==4 and parts[3]=="submit" and method=="POST": result=exams.submit_attempt(actor,aid,body)
         if result is None: raise ApiError(404,"Endpoint not found")
         return _response(status,result)
+    except IdentityConflictError as error:
+        return _response(409, {"error":str(error)})
     except ApiError as error:
         return _response(error.status,{"error":str(error)})
     except Exception:

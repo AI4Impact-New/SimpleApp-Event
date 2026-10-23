@@ -6,10 +6,19 @@ Data access for user operations.
 import logging
 from typing import Optional, List, Dict, Any
 
+from psycopg2.errors import UniqueViolation
+
 from shared.db import execute_query
 from shared.models import User, UserRole, UserRepository as IUserRepository
 
 logger = logging.getLogger(__name__)
+
+
+class IdentityConflictError(Exception):
+    """A different Cognito identity already owns this email's application record."""
+
+    def __init__(self):
+        super().__init__("Your account needs an identity-link review. Contact your AI4Impact administrator; your existing records have been preserved.")
 
 
 class UserRepository(IUserRepository):
@@ -34,6 +43,10 @@ class UserRepository(IUserRepository):
         )
         
         return self._row_to_user(result) if result else None
+
+    def get_by_email(self, email: str) -> Optional[User]:
+        row = execute_query("SELECT * FROM users WHERE lower(email) = lower(%s)", (email,), fetch="one")
+        return self._row_to_user(row) if row else None
 
     def get_by_cognito_ids(self, cognito_ids: List[str]) -> dict:
         """Get users by Cognito IDs; returns dict cognito_id -> User for faster list enrichment."""
@@ -129,6 +142,10 @@ class UserRepository(IUserRepository):
         if existing:
             return existing
         
+        # Email is not an identity proof: never silently rebind a retained profile.
+        if self.get_by_email(email):
+            raise IdentityConflictError()
+
         # Create new user
         from shared.models import User
         import uuid
@@ -141,7 +158,17 @@ class UserRepository(IUserRepository):
             role=UserRole.ATTENDEE,
         )
         
-        return self.create(user)
+        try:
+            return self.create(user)
+        except UniqueViolation:
+            # Concurrent first requests can race after the initial reads. The
+            # failed transaction has rolled back before these fresh lookups.
+            existing = self.get_by_cognito_id(cognito_id)
+            if existing:
+                return existing
+            if self.get_by_email(email):
+                raise IdentityConflictError() from None
+            raise
 
     def upsert_profile(
         self,

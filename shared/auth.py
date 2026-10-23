@@ -161,7 +161,11 @@ def require_auth(func):
         # Add user to event for handler access
         event["user"] = user
         
-        return func(event, context)
+        from shared.user_repository import IdentityConflictError
+        try:
+            return func(event, context)
+        except IdentityConflictError as exc:
+            return create_error_response(409, str(exc))
     
     return wrapper
 

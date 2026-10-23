@@ -81,6 +81,49 @@ function flushPendingNotification() {
   if (target) openFromNotification(target.courseId);
 }
 
+// ---- Browser tab titles (web) -----------------------------------------------------------------
+
+// Route names are internal identifiers; show learners a readable page name instead.
+const SCREEN_TITLES: Record<string, string> = {
+  AuthHome: 'Welcome',
+  Login: 'Sign in',
+  SignUp: 'Create account',
+  ConfirmSignUp: 'Verify email',
+  ForgotPassword: 'Reset password',
+  CompleteProfile: 'Complete your profile',
+  HomeMain: 'Home',
+  Events: 'Events',
+  Event: 'Event',
+  Poll: 'Poll',
+  QRScanner: 'Scan QR code',
+  LeaderboardHome: 'Leaderboards',
+  LeaderboardDetail: 'Leaderboard',
+  CoursesMain: 'Courses',
+  CourseDetail: 'Course details',
+  Checkout: 'Checkout',
+  MyLearningMain: 'My Learning',
+  CourseLearning: 'Course',
+  LecturePlayer: 'Lecture',
+  Exam: 'Assessment',
+  Certificates: 'My certificates',
+  VerifyCertificate: 'Verify certificate',
+  Purchases: 'Purchases',
+  InboxMain: 'Inbox',
+  NotificationDetail: 'Message',
+  ProfileMain: 'Profile',
+  EditProfile: 'Edit profile',
+  PrivacyPolicy: 'Privacy policy',
+};
+
+const documentTitle = {
+  formatter: (_options: unknown, route: { name: string; params?: any } | undefined) => {
+    // Lecture and exam titles travel in the route params; prefer them when present.
+    const specific = route?.name === 'LecturePlayer' ? route.params?.title : route?.name === 'Exam' ? route.params?.exam?.title : null;
+    const page = specific || (route ? SCREEN_TITLES[route.name] : undefined);
+    return page ? `${page} · AI4Impact` : 'AI4Impact';
+  },
+};
+
 // ---- Deep links -------------------------------------------------------------------------------
 // ai4impact://checkout/<orderId>, ai4impact://course/<courseId>, and the web quote link
 // https://admin.ai4impact.in/checkout?order=<orderId>. IDs are hints; the screens fetch with the user's session.
@@ -689,7 +732,7 @@ export function AppNavigator() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef} onReady={flushPendingNotification}>
+    <NavigationContainer ref={navigationRef} onReady={flushPendingNotification} documentTitle={documentTitle}>
       {isAuthenticated ? <SignedIn onLogout={handleLogout} /> : <AuthStack onLoginSuccess={handleLoginSuccessStable} />}
     </NavigationContainer>
   );

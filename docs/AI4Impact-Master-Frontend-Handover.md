@@ -121,7 +121,7 @@ Server owns scores, deadline/attempt rules, eligibility and access. Never expose
 
 Amounts use integer paise; preserve backend discount/rounding. Stable request UUID per intentional order, including network retries. Pending/demo-completed/cancelled states are not verified settlement. Changed-payload retry/final-state reversal can return 409; expired pending links 410. Refresh order after action. Web fetches authenticated PDF into Blob; native uses sharing helper. **PDFs are DEMO / PRO FORMA, not final paid/tax invoices; demo checkout never grants enrollment.**
 
-Live gateway/webhooks, refunds and tax/final invoice policy remain deferred. Never grant access based on a browser success redirect. Quote/invoice email remains gated by SES/domain approval; default Cognito invitations, verification and recovery are separate and proven through a real inbox.
+Live gateway/webhooks, refunds and tax/final invoice policy remain deferred. Never grant access based on a browser success redirect. Quote/invoice email remains gated by Resend sender verification and API key setup; default Cognito invitations, verification and recovery are separate and proven through a real inbox.
 
 ## Native acceptance checklist
 
@@ -139,7 +139,7 @@ Live gateway/webhooks, refunds and tax/final invoice policy remain deferred. Nev
 
 | Item | Owner/gate |
 |---|---|
-| SES domain/production approval, enable quote/invoice mail and prove delivery | AWS/backend, external approval |
+| Resend domain verification and sending key, enable quote/PDF mail and prove delivery | Backend + domain owner |
 | Expo/EAS UUID, native builds and push/device acceptance | Mobile team supplies UUID; backend configuration and team device tests |
 | Real gateway, tax/refund policy | CEO/payment stakeholders, then backend/frontend |
 | Approved videos, assessments, prices, access and certificate rules | Course owners/CEO; staff configure |
@@ -176,3 +176,10 @@ See `AI4Impact-Staff-Management.md`. The dashboard uses actual learning totals a
 - Rotated push tokens remove the old registration first. A non-404 cleanup failure keeps the stored registration and reports a retryable error. Live native push still needs the EAS project configuration and device acceptance testing.
 - Amplify student builds use the existing typecheck and export:web scripts. The duplicate service storage import forwards to the canonical storage utility.
 - `npm run test:resilience` in mobile-app covers offline recovery, browser actions and push rotation failures; it also runs in release CI. Landscape fullscreen still requires physical iOS/Android verification.
+
+
+### Resend transactional delivery (23 October 2026)
+
+Quote emails now use Resend with the existing branded HTML, plain text, demo link and attached pro forma PDF. The route and request payload are unchanged. The UI shows Resend setup readiness rather than SES approval. Sending stays disabled until configuration and real inbox testing. Welcome/invitation, verification and reset emails remain on Cognito default delivery; this switch does not change authentication.
+
+Provider acceptance is not inbox delivery. A network timeout or invalid success response keeps the action pending/uncertain for review; the UI must not claim it was sent or automatically generate a fresh request ID to resend. See `AI4Impact-Resend-Setup.md` for activation and operator steps.

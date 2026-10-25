@@ -1,0 +1,12 @@
+{
+  "run": "471c82ad5f",
+  "deleted_and_verified_cognito_accounts": 4,
+  "database": {
+    "deleted_qa_users": 4,
+    "deleted_qa_orders": 1,
+    "fixture_course_removed": true
+  },
+  "database_second_pass_empty": true,
+  "deleted_and_verified_object_versions": 3,
+  "temporary_function_and_log_group_removed": true
+}

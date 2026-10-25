@@ -148,6 +148,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
         await player.replaceAsync({ uri: playback.url });
         player.playbackRate = speedRef.current;
         if (autoplay) player.play();
+        else player.pause();
         offlineRef.current = false;
         setLoadState({ kind: 'ready' });
         // expires_in may be shortened by the lecture's access window; renew ahead of it either way.

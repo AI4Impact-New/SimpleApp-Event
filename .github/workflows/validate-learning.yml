@@ -32,7 +32,9 @@ jobs:
           terraform_version: '1.16.6'
       - name: Backend tests
         run: |
-          python -m pip install -r requirements.txt pytest
+          python -m pip install -r requirements.txt pytest pip-audit
+          # Disputed weak-HMAC-key advisory: this service accepts only Cognito RS256.
+          python -m pip_audit -r requirements.txt --ignore-vuln PYSEC-2025-183
           python -m pytest tests -q
       - name: Package Lambda functions
         run: bash scripts/build_lambdas.sh
@@ -46,6 +48,7 @@ jobs:
         working-directory: admin-dashboard
         run: |
           npm ci
+          npm audit --omit=dev
           npm run build
       - name: Admin browser regressions
         working-directory: admin-dashboard
@@ -91,6 +94,14 @@ jobs:
           EXPO_PUBLIC_COGNITO_REGION: ap-south-1
         run: |
           npm ci
+          # Remaining upstream node-forge advisories are confined to Expo build tooling.
+          # Keep critical advisories blocking while a patched upstream release is awaited.
+          npm audit --omit=dev --audit-level=critical
           npm run typecheck
           npm run test:resilience
           npm run export:web
+      - name: Student browser regressions
+        working-directory: mobile-app
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:browser

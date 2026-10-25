@@ -1,5 +1,6 @@
 // Profile Screen – user info, learning shortcuts, settings, help and sign out
 import React, { useState, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -106,9 +107,9 @@ export function ProfileScreen({
     }
   }, []);
 
-  useEffect(() => {
+  useFocusEffect(React.useCallback(() => {
     loadProfile();
-  }, [loadProfile]);
+  }, [loadProfile]));
 
   if (loading) {
     return (

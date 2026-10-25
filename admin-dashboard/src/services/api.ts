@@ -4,7 +4,7 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import { isIdToken } from '@/utils/jwt';
 import { CreateAdminUserInput } from '@/types/user';
 
-const rawUrl = process.env.NEXT_PUBLIC_API_URL || 'https://ggszk3v52a.execute-api.ap-south-1.amazonaws.com';
+const rawUrl = process.env.NEXT_PUBLIC_API_URL || 'https://ke8dywmhil.execute-api.ap-south-1.amazonaws.com';
 const API_URL = rawUrl.replace(/\/api\/?$/, '');
 
 class ApiService {

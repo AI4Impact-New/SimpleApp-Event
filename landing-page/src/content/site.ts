@@ -132,11 +132,9 @@ export const FINDER_OPTIONS: { label: string; trackId: Track["id"] }[] = [
 ];
 
 export const ANNOUNCEMENTS = [
-  "Free webinar this Sunday · Sun, 11 Oct, 11:00 AM – 1:00 PM IST",
-  "Data & GenAI Career Masterclass",
-  "Worth ₹4,999 — now FREE",
-  "Live with Puneet Nischal & Bhaskar M",
-  "Real fintech case study + career roadmap",
+  "Explore six career tracks in AI, data and product",
+  "Structured learning and real-world projects",
+  "Book free career guidance",
 ];
 
 export const NAV_LINKS: NavLink[] = [

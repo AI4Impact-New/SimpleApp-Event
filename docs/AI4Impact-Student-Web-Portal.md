@@ -17,10 +17,12 @@ npm ci
 npm run typecheck
 npm run export:web
 cd ..
-python3 scripts/deploy_student_portal.py --profile jm --region ap-south-1
+python3 scripts/deploy_student_portal.py --profile jm --region ap-south-1 --wait
 ```
 
-The script prints the job ID. Verify its status with `aws amplify get-job`. GitHub CI checks the student TypeScript build and web export, but does not automatically publish the portal. Deployment credentials and artifact-upload URLs are never bundled in the website or checked into Git.
+The export writes public `release.json` provenance. The deployment script rejects an export from a dirty or different commit before contacting Amplify. `--wait` checks the job result and confirms the hosted manifest matches the deployed commit. If local Terraform state/output access is unavailable, explicitly pass the existing app ID with `--app-id d26ztc5gxt79re`.
+
+GitHub CI checks TypeScript, resilience tests, the web export and browser regressions for profile refresh and exam confirmation. It does not automatically publish the portal: after merging, rebuild from the clean merged commit, publish it, and verify `https://main.d26ztc5gxt79re.amplifyapp.com/release.json`. An admin/landing deployment does not update the separately deployed student app. Deployment credentials and artifact-upload URLs are never bundled in the website or checked into Git.
 
 The public build configuration uses `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_COGNITO_USER_POOL_ID`, `EXPO_PUBLIC_COGNITO_APP_CLIENT_ID` and `EXPO_PUBLIC_COGNITO_REGION`. These identifiers are public configuration. Never add AWS credentials to an EXPO_PUBLIC variable.
 

@@ -10,9 +10,7 @@ import { TRACKS } from "@/content/site";
 import { Section } from "@/components/layout/Section";
 import { Card } from "@/components/core/Card";
 
-const CONTACT_EMAIL = "support@ai4impact.com";
-// TODO: temporary number — replace with the permanent support line.
-const CONTACT_PHONE = "+91 00000 00000";
+const CONTACT_EMAIL = "support@ai4impact.in";
 
 const INTERESTS =["Not sure yet — help me choose", ...TRACKS.map((t) => t.title)];
 
@@ -73,12 +71,6 @@ export function GuidanceSection({ title = DEFAULT_TITLE }: { title?: ReactNode }
               Email{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-(--text-on-dark) underline underline-offset-2">
                 {CONTACT_EMAIL}
-              </a>
-            </span>
-            <span>
-              Call or WhatsApp{" "}
-              <a href={`tel:${CONTACT_PHONE.replace(/\s/g, "")}`} className="font-medium text-(--text-on-dark) underline underline-offset-2">
-                {CONTACT_PHONE}
               </a>
             </span>
           </div>

@@ -1,0 +1,119 @@
+diff --git a/node_modules/expo-video/build/VideoPlayer.web.js b/node_modules/expo-video/build/VideoPlayer.web.js
+index 2c7224a..ce45779 100644
+--- a/node_modules/expo-video/build/VideoPlayer.web.js
++++ b/node_modules/expo-video/build/VideoPlayer.web.js
+@@ -220,9 +220,16 @@ export default class VideoPlayerWeb extends globalThis.expo.SharedObject {
+             newMainAudioSource.connect(audioContext.destination);
+         }
+     }
++    _playVideo(video) {
++        video.play()?.catch((error) => {
++            if (error.name === 'AbortError' || error.name === 'NotAllowedError') return;
++            this._error = { message: error.message || String(error) };
++            this.status = 'error';
++        });
++    }
+     play() {
+         this._mountedVideos.forEach((video) => {
+-            video.play();
++            this._playVideo(video);
+         });
+     }
+     pause() {
+@@ -237,7 +244,7 @@ export default class VideoPlayerWeb extends globalThis.expo.SharedObject {
+             if (uri) {
+                 video.setAttribute('src', uri);
+                 video.load();
+-                video.play();
++                this._playVideo(video);
+             }
+             else {
+                 video.removeAttribute('src');
+@@ -262,7 +269,7 @@ export default class VideoPlayerWeb extends globalThis.expo.SharedObject {
+     replay() {
+         this._mountedVideos.forEach((video) => {
+             video.currentTime = 0;
+-            video.play();
++            this._playVideo(video);
+         });
+         this.playing = true;
+     }
+@@ -277,7 +284,7 @@ export default class VideoPlayerWeb extends globalThis.expo.SharedObject {
+             video.pause();
+         }
+         else {
+-            video.play();
++            this._playVideo(video);
+         }
+         video.currentTime = firstVideo.currentTime;
+         video.volume = firstVideo.volume;
+@@ -302,7 +309,7 @@ export default class VideoPlayerWeb extends globalThis.expo.SharedObject {
+             });
+             this.playing = true;
+             this._mountedVideos.forEach((mountedVideo) => {
+-                mountedVideo.play();
++                this._playVideo(mountedVideo);
+             });
+         };
+         video.onpause = () => {
+diff --git a/node_modules/expo-video/src/VideoPlayer.web.tsx b/node_modules/expo-video/src/VideoPlayer.web.tsx
+index 49c7036..cbd7ab9 100644
+--- a/node_modules/expo-video/src/VideoPlayer.web.tsx
++++ b/node_modules/expo-video/src/VideoPlayer.web.tsx
+@@ -279,9 +279,19 @@ export default class VideoPlayerWeb
+     }
+   }
+ 
++  // Source replacement/pause can cancel an in-flight HTMLMediaElement.play().
++  // Browser cancellation/policy failures are expected; real media errors stay visible.
++  private _playVideo(video: HTMLVideoElement): void {
++    video.play()?.catch((error: Error) => {
++      if (error.name === 'AbortError' || error.name === 'NotAllowedError') return;
++      this._error = { message: error.message || String(error) };
++      this.status = 'error';
++    });
++  }
++
+   play(): void {
+     this._mountedVideos.forEach((video) => {
+-      video.play();
++      this._playVideo(video);
+     });
+   }
+ 
+@@ -298,7 +308,7 @@ export default class VideoPlayerWeb
+       if (uri) {
+         video.setAttribute('src', uri);
+         video.load();
+-        video.play();
++        this._playVideo(video);
+       } else {
+         video.removeAttribute('src');
+         video.load();
+@@ -325,7 +335,7 @@ export default class VideoPlayerWeb
+   replay(): void {
+     this._mountedVideos.forEach((video) => {
+       video.currentTime = 0;
+-      video.play();
++      this._playVideo(video);
+     });
+     this.playing = true;
+   }
+@@ -341,7 +351,7 @@ export default class VideoPlayerWeb
+     if (firstVideo.paused) {
+       video.pause();
+     } else {
+-      video.play();
++      this._playVideo(video);
+     }
+     video.currentTime = firstVideo.currentTime;
+     video.volume = firstVideo.volume;
+@@ -372,7 +382,7 @@ export default class VideoPlayerWeb
+       });
+       this.playing = true;
+       this._mountedVideos.forEach((mountedVideo) => {
+-        mountedVideo.play();
++        this._playVideo(mountedVideo);
+       });
+     };
+ 

@@ -1,0 +1,4260 @@
+{
+  "api-results": [
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/users/me",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "PUT",
+      "path": "/users/me",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/users/me",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "PUT",
+      "path": "/users/me",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "GET",
+      "path": "/users/me",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "PUT",
+      "path": "/users/me",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "marketing",
+      "method": "GET",
+      "path": "/users/me",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "marketing",
+      "method": "PUT",
+      "path": "/users/me",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "anonymous",
+      "method": "GET",
+      "path": "/users/me",
+      "status": 401,
+      "expected": [
+        401
+      ],
+      "pass": true
+    },
+    {
+      "role": "anonymous",
+      "method": "GET",
+      "path": "/courses",
+      "status": 401,
+      "expected": [
+        401
+      ],
+      "pass": true
+    },
+    {
+      "role": "anonymous",
+      "method": "GET",
+      "path": "/me/learning",
+      "status": 401,
+      "expected": [
+        401
+      ],
+      "pass": true
+    },
+    {
+      "role": "anonymous",
+      "method": "GET",
+      "path": "/admin/learning/overview",
+      "status": 401,
+      "expected": [
+        401
+      ],
+      "pass": true
+    },
+    {
+      "role": "anonymous",
+      "method": "GET",
+      "path": "/me/purchases",
+      "status": 401,
+      "expected": [
+        401
+      ],
+      "pass": true
+    },
+    {
+      "role": "anonymous",
+      "method": "GET",
+      "path": "/me/certificates",
+      "status": 401,
+      "expected": [
+        401
+      ],
+      "pass": true
+    },
+    {
+      "role": "anonymous",
+      "method": "GET",
+      "path": "/me/notifications",
+      "status": 401,
+      "expected": [
+        401
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/admin/learning/overview",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/admin/billing/orders",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/admin/operations/readiness",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/admin-users",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/users",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "GET",
+      "path": "/admin/learning/overview",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "GET",
+      "path": "/admin/billing/orders",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "GET",
+      "path": "/admin/operations/readiness",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "GET",
+      "path": "/admin-users",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "GET",
+      "path": "/users",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "marketing",
+      "method": "GET",
+      "path": "/admin/learning/overview",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "marketing",
+      "method": "GET",
+      "path": "/admin/billing/orders",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "marketing",
+      "method": "GET",
+      "path": "/admin/operations/readiness",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "marketing",
+      "method": "GET",
+      "path": "/admin-users",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "marketing",
+      "method": "GET",
+      "path": "/users",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/courses",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/events",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/attendance",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/me/courses",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/me/learning",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/me/purchases",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/me/certificates",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/me/notifications",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/courses",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/events",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/polls",
+      "status": 400,
+      "expected": [
+        400
+      ],
+      "pass": true,
+      "note": "Validation: missing event_id or invalid checkout action rejected"
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/materials",
+      "status": 400,
+      "expected": [
+        400
+      ],
+      "pass": true,
+      "note": "Validation: missing event_id or invalid checkout action rejected"
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/analytics/overview",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/learning/overview",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/billing/courses",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/billing/orders",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/operations/readiness",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/enquiries",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/marketing/interests",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/marketing/users",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin-users",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/users",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "marketing",
+      "method": "GET",
+      "path": "/admin/enquiries",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "marketing",
+      "method": "GET",
+      "path": "/admin/marketing/interests",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/admin/staff/actions",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "marketing",
+      "method": "POST",
+      "path": "/admin/staff/actions",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "POST",
+      "path": "/admin/staff/actions",
+      "status": 409,
+      "expected": [
+        409
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/me/devices",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/me/devices",
+      "status": 503,
+      "expected": [
+        503
+      ],
+      "pass": true
+    },
+    {
+      "role": "anonymous",
+      "method": "GET",
+      "path": "/billing/catalog",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/courses/86cbe450-7bac-435a-8f5a-23e2227d64e8",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/learning/courses/86cbe450-7bac-435a-8f5a-23e2227d64e8",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/billing/orders",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/billing/orders",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "pass": true
+    },
+    {
+      "test": "order-idempotency",
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "GET",
+      "path": "/billing/orders/6ec3fb39-497a-47c6-8ed6-6a2f90aeeac0",
+      "status": 404,
+      "expected": [
+        404
+      ],
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "GET",
+      "path": "/billing/orders/6ec3fb39-497a-47c6-8ed6-6a2f90aeeac0/invoice",
+      "status": 404,
+      "expected": [
+        404
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/billing/orders/6ec3fb39-497a-47c6-8ed6-6a2f90aeeac0/invoice",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/billing/orders/6ec3fb39-497a-47c6-8ed6-6a2f90aeeac0/demo-checkout",
+      "status": 400,
+      "expected": [
+        400
+      ],
+      "pass": true,
+      "note": "Validation: missing event_id or invalid checkout action rejected"
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/learning/courses/86cbe450-7bac-435a-8f5a-23e2227d64e8",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/me/learning",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "test": "demo-checkout-does-not-enroll",
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/certificates/968d4ef2-18cf-4d33-adc4-94b5336f5777/download",
+      "status": 404,
+      "expected": [
+        404
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/learning/attempts/968d4ef2-18cf-4d33-adc4-94b5336f5777",
+      "status": 404,
+      "expected": [
+        404
+      ],
+      "pass": true
+    },
+    {
+      "role": "anonymous",
+      "method": "GET",
+      "path": "/certificates/968d4ef2-18cf-4d33-adc4-94b5336f5777/verify",
+      "status": 404,
+      "expected": [
+        200,
+        404
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/learning/courses/not-a-uuid",
+      "status": 400,
+      "expected": [
+        400
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/billing/orders",
+      "status": 400,
+      "expected": [
+        400
+      ],
+      "pass": true
+    },
+    {
+      "role": "anonymous",
+      "method": "OPTIONS",
+      "path": "/learning/courses/968d4ef2-18cf-4d33-adc4-94b5336f5777",
+      "status": 204,
+      "expected": [
+        200,
+        204
+      ],
+      "pass": true
+    },
+    {
+      "role": "anonymous",
+      "method": "OPTIONS",
+      "path": "/admin/enquiries",
+      "status": 204,
+      "expected": [
+        200,
+        204
+      ],
+      "pass": true
+    },
+    {
+      "role": "anonymous",
+      "method": "OPTIONS",
+      "path": "/billing/orders",
+      "status": 204,
+      "expected": [
+        200,
+        204
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/billing/orders/6ec3fb39-497a-47c6-8ed6-6a2f90aeeac0/demo-checkout",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/billing/orders/6ec3fb39-497a-47c6-8ed6-6a2f90aeeac0/demo-checkout",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "POST",
+      "path": "/billing/orders/6ec3fb39-497a-47c6-8ed6-6a2f90aeeac0/demo-checkout",
+      "status": 404,
+      "expected": [
+        404
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/learning/courses/86cbe450-7bac-435a-8f5a-23e2227d64e8",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/me/learning",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "test": "completed-demo-checkout-still-no-enrollment",
+      "pass": true
+    }
+  ],
+  "fixture-api-results": [
+    {
+      "role": "admin",
+      "method": "POST",
+      "path": "/courses",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/courses/74c11648-ceb4-486f-bf62-cf9eeb8fe209/interest",
+      "status": 200,
+      "expected": [
+        200,
+        201
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "PUT",
+      "path": "/courses/74c11648-ceb4-486f-bf62-cf9eeb8fe209/registrations",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "GET",
+      "path": "/learning/courses/74c11648-ceb4-486f-bf62-cf9eeb8fe209",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "marketing",
+      "method": "GET",
+      "path": "/admin/courses/74c11648-ceb4-486f-bf62-cf9eeb8fe209/learners",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/courses/74c11648-ceb4-486f-bf62-cf9eeb8fe209/learners",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "PUT",
+      "path": "/admin/courses/74c11648-ceb4-486f-bf62-cf9eeb8fe209/completion-rules",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "POST",
+      "path": "/admin/courses/74c11648-ceb4-486f-bf62-cf9eeb8fe209/classes",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "POST",
+      "path": "/admin/classes/67cdff2f-8651-4b5a-a09e-2572b97df375/video-upload",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "pass": true
+    },
+    {
+      "test": "private-video-upload-1",
+      "status": 204,
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "POST",
+      "path": "/admin/classes/67cdff2f-8651-4b5a-a09e-2572b97df375/video-confirm",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "GET",
+      "path": "/learning/classes/67cdff2f-8651-4b5a-a09e-2572b97df375/playback",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "POST",
+      "path": "/admin/courses/74c11648-ceb4-486f-bf62-cf9eeb8fe209/classes",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "POST",
+      "path": "/admin/classes/2d7609a6-db0e-44da-b8b4-d076ed3c7592/video-upload",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "pass": true
+    },
+    {
+      "test": "private-video-upload-2",
+      "status": 204,
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "POST",
+      "path": "/admin/classes/2d7609a6-db0e-44da-b8b4-d076ed3c7592/video-confirm",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "GET",
+      "path": "/learning/classes/2d7609a6-db0e-44da-b8b4-d076ed3c7592/playback",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/learning/classes/2d7609a6-db0e-44da-b8b4-d076ed3c7592/playback",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/learning/classes/67cdff2f-8651-4b5a-a09e-2572b97df375/playback",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "test": "signed-video-range",
+      "status": 206,
+      "pass": true
+    },
+    {
+      "test": "unsigned-video-denied",
+      "status": 403,
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "POST",
+      "path": "/admin/courses/74c11648-ceb4-486f-bf62-cf9eeb8fe209/exams",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "POST",
+      "path": "/learning/exams/8795d5a1-4b12-4dab-adcb-2a623415234e/attempts",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/learning/courses/74c11648-ceb4-486f-bf62-cf9eeb8fe209/certificate",
+      "status": 409,
+      "expected": [
+        409
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/courses/74c11648-ceb4-486f-bf62-cf9eeb8fe209/video-analytics",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    }
+  ],
+  "events-results": [
+    {
+      "role": "admin",
+      "method": "POST",
+      "path": "/events",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "PUT",
+      "path": "/events/a456620e-77cf-40ef-9faf-7d344442151f",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/events/a456620e-77cf-40ef-9faf-7d344442151f",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/events/a456620e-77cf-40ef-9faf-7d344442151f/calendar.ics",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/events/a456620e-77cf-40ef-9faf-7d344442151f/join",
+      "status": 200,
+      "expected": [
+        200,
+        201
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/events/a456620e-77cf-40ef-9faf-7d344442151f/join",
+      "status": 400,
+      "expected": [
+        400
+      ],
+      "pass": true,
+      "note": "Duplicate check-in rejected"
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/attendance/event/a456620e-77cf-40ef-9faf-7d344442151f",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "POST",
+      "path": "/polls",
+      "status": 201,
+      "expected": [
+        201
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/polls/b9a88c3a-06eb-49ae-9e26-01745686884d",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/polls/b9a88c3a-06eb-49ae-9e26-01745686884d/vote",
+      "status": 200,
+      "expected": [
+        200,
+        201
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/polls/b9a88c3a-06eb-49ae-9e26-01745686884d/vote",
+      "status": 400,
+      "expected": [
+        400,
+        409
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/polls/b9a88c3a-06eb-49ae-9e26-01745686884d/results",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "PUT",
+      "path": "/polls/b9a88c3a-06eb-49ae-9e26-01745686884d",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/polls?event_id=a456620e-77cf-40ef-9faf-7d344442151f",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/materials?event_id=a456620e-77cf-40ef-9faf-7d344442151f",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "GET",
+      "path": "/events/a456620e-77cf-40ef-9faf-7d344442151f/analytics",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "DELETE",
+      "path": "/events/a456620e-77cf-40ef-9faf-7d344442151f",
+      "status": 403,
+      "expected": [
+        403
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "DELETE",
+      "path": "/polls/b9a88c3a-06eb-49ae-9e26-01745686884d",
+      "status": 204,
+      "expected": [
+        200,
+        204
+      ],
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "DELETE",
+      "path": "/events/a456620e-77cf-40ef-9faf-7d344442151f",
+      "status": 204,
+      "expected": [
+        200,
+        204
+      ],
+      "pass": true
+    }
+  ],
+  "certificate-results": [
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/me/certificates",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "POST",
+      "path": "/learning/courses/74c11648-ceb4-486f-bf62-cf9eeb8fe209/certificate",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "test": "certificate-idempotency",
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/certificates/6c686e10-ac7d-4b61-a4a0-ae90a9c5dfe5/download",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "test": "private-certificate-pdf-download",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "role": "other",
+      "method": "GET",
+      "path": "/certificates/6c686e10-ac7d-4b61-a4a0-ae90a9c5dfe5/download",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "role": "anonymous",
+      "method": "GET",
+      "path": "/certificates/6c686e10-ac7d-4b61-a4a0-ae90a9c5dfe5/verify",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "test": "public-verification-no-email",
+      "pass": true
+    },
+    {
+      "test": "public-website-valid-certificate-browser",
+      "pass": true
+    },
+    {
+      "role": "admin",
+      "method": "POST",
+      "path": "/admin/certificates/6c686e10-ac7d-4b61-a4a0-ae90a9c5dfe5/revoke",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "role": "student",
+      "method": "GET",
+      "path": "/certificates/6c686e10-ac7d-4b61-a4a0-ae90a9c5dfe5/download",
+      "status": 410,
+      "pass": true
+    },
+    {
+      "role": "anonymous",
+      "method": "GET",
+      "path": "/certificates/6c686e10-ac7d-4b61-a4a0-ae90a9c5dfe5/verify",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "test": "public-revocation",
+      "pass": true
+    },
+    {
+      "test": "public-website-revoked-certificate-browser",
+      "pass": true
+    }
+  ],
+  "student-journey-results": [
+    {
+      "name": "authenticated student home",
+      "pass": true
+    },
+    {
+      "name": "Courses tab",
+      "pass": true
+    },
+    {
+      "name": "My Learning tab",
+      "pass": true
+    },
+    {
+      "name": "Inbox tab",
+      "pass": true
+    },
+    {
+      "name": "Profile tab",
+      "pass": true
+    },
+    {
+      "name": "open disposable enrolled course",
+      "pass": true
+    },
+    {
+      "name": "play recording 1 and save completion",
+      "pass": true
+    },
+    {
+      "name": "play recording 2 and save completion",
+      "pass": true
+    },
+    {
+      "name": "start timed exam",
+      "pass": true
+    },
+    {
+      "name": "submit exam and receive server score",
+      "pass": false,
+      "error": "expect(locator).toBeVisible() failed\n\nLocator: getByText('Passed', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 15000ms\n  - waiting for getByText('Passed', { exact: true })\n"
+    }
+  ],
+  "student-local-journey-results": [
+    {
+      "name": "authenticated student home",
+      "pass": true
+    },
+    {
+      "name": "Courses tab",
+      "pass": true
+    },
+    {
+      "name": "My Learning tab",
+      "pass": true
+    },
+    {
+      "name": "Inbox tab",
+      "pass": true
+    },
+    {
+      "name": "Profile tab",
+      "pass": true
+    },
+    {
+      "name": "open disposable enrolled course",
+      "pass": true
+    },
+    {
+      "name": "play recording 1 and save completion",
+      "pass": true
+    },
+    {
+      "name": "play recording 2 and save completion",
+      "pass": true
+    },
+    {
+      "name": "start timed exam",
+      "pass": true
+    },
+    {
+      "name": "submit exam and receive server score",
+      "pass": true
+    },
+    {
+      "name": "issue completion certificate",
+      "pass": true
+    }
+  ],
+  "profile-results": [
+    {
+      "test": "profile unsaved changes: cancel and confirm discard",
+      "pass": true
+    },
+    {
+      "test": "profile immediately refreshes after save",
+      "pass": false,
+      "observed": "previous name stays visible until reload"
+    },
+    {
+      "test": "saved profile persists and displays after reload",
+      "pass": true
+    },
+    {
+      "test": "purchase history shows demo status",
+      "pass": true
+    }
+  ],
+  "forms-results": [
+    {
+      "test": "guidance consent gating, error recovery, retry idempotency and success (intercepted API)",
+      "pass": true
+    },
+    {
+      "test": "employer enquiry consent and success (intercepted API)",
+      "pass": true
+    }
+  ],
+  "hosted-exam-repro": {
+    "submitRequests": [],
+    "dialogs": [],
+    "consoleMessages": [
+      "[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect."
+    ],
+    "stillOnExam": true
+  },
+  "page-sweep": {
+    "checks": 94,
+    "javascript_errors": 0,
+    "failed_http_responses": 0,
+    "horizontal_overflow_checks_failed": 0,
+    "results": [
+      {
+        "label": "admin",
+        "width": 1440,
+        "path": "/dashboard",
+        "finalPath": "/dashboard",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Make every learning journey count.",
+          "Courses at a glance",
+          "Learning progress",
+          "Your people, the right access"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 390,
+        "path": "/dashboard",
+        "finalPath": "/dashboard",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "AI4Impact",
+          "Make every learning journey count.",
+          "Courses at a glance",
+          "Learning progress",
+          "Your people, the right access"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 1440,
+        "path": "/dashboard/courses",
+        "finalPath": "/dashboard/courses",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 390,
+        "path": "/dashboard/courses",
+        "finalPath": "/dashboard/courses",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "AI4Impact",
+          "Courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 1440,
+        "path": "/dashboard/courses/new",
+        "finalPath": "/dashboard/courses/new",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Basic info",
+          "Classes / Sessions",
+          "Highlights",
+          "Phases / Modules",
+          "Benefits",
+          "Audience (who should attend)",
+          "Career outcomes",
+          "Certificate"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 390,
+        "path": "/dashboard/courses/new",
+        "finalPath": "/dashboard/courses/new",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "AI4Impact",
+          "Basic info",
+          "Classes / Sessions",
+          "Highlights",
+          "Phases / Modules",
+          "Benefits",
+          "Audience (who should attend)",
+          "Career outcomes",
+          "Certificate"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 1440,
+        "path": "/dashboard/learning",
+        "finalPath": "/dashboard/learning",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Learning Studio",
+          "Your courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 390,
+        "path": "/dashboard/learning",
+        "finalPath": "/dashboard/learning",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "AI4Impact",
+          "Learning Studio",
+          "Your courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 1440,
+        "path": "/dashboard/course-enquiries",
+        "finalPath": "/dashboard/course-enquiries",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Course Enquiries"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 390,
+        "path": "/dashboard/course-enquiries",
+        "finalPath": "/dashboard/course-enquiries",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "AI4Impact",
+          "Course Enquiries"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 1440,
+        "path": "/dashboard/fees",
+        "finalPath": "/dashboard/fees",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Fees & payment links",
+          "Test Course",
+          "Forward Deployed AI Engineer",
+          "Data & AI Platform Engineer",
+          "Data Science, Analytics & Decision Intelligence",
+          "Applied AI & Machine Learning Engineer",
+          "Generative AI & Agentic Systems Engineer",
+          "AI Product & Automation Builder",
+          "Create a demo pay-by-link",
+          "Demo orders & invoices"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 390,
+        "path": "/dashboard/fees",
+        "finalPath": "/dashboard/fees",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "AI4Impact",
+          "Fees & payment links",
+          "Test Course",
+          "Forward Deployed AI Engineer",
+          "Data & AI Platform Engineer",
+          "Data Science, Analytics & Decision Intelligence",
+          "Applied AI & Machine Learning Engineer",
+          "Generative AI & Agentic Systems Engineer",
+          "AI Product & Automation Builder",
+          "Create a demo pay-by-link",
+          "Demo orders & invoices"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 1440,
+        "path": "/dashboard/events",
+        "finalPath": "/dashboard/events",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Events",
+          "No events yet"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 390,
+        "path": "/dashboard/events",
+        "finalPath": "/dashboard/events",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "AI4Impact",
+          "Events",
+          "No events yet"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 1440,
+        "path": "/dashboard/polls",
+        "finalPath": "/dashboard/polls",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Polls"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 390,
+        "path": "/dashboard/polls",
+        "finalPath": "/dashboard/polls",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "AI4Impact",
+          "Polls"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 1440,
+        "path": "/dashboard/materials",
+        "finalPath": "/dashboard/materials",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Materials",
+          "Choose an event"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 390,
+        "path": "/dashboard/materials",
+        "finalPath": "/dashboard/materials",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "AI4Impact",
+          "Materials",
+          "Choose an event"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 1440,
+        "path": "/dashboard/analytics",
+        "finalPath": "/dashboard/analytics",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Analytics",
+          "Choose an event"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 390,
+        "path": "/dashboard/analytics",
+        "finalPath": "/dashboard/analytics",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "AI4Impact",
+          "Analytics",
+          "Choose an event"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 1440,
+        "path": "/dashboard/admin-users",
+        "finalPath": "/dashboard/admin-users",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "A trusted team. The right access.",
+          "Give marketing a focused workspace",
+          "Staff directory"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 390,
+        "path": "/dashboard/admin-users",
+        "finalPath": "/dashboard/admin-users",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "AI4Impact",
+          "A trusted team. The right access.",
+          "Give marketing a focused workspace",
+          "Staff directory"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 1440,
+        "path": "/dashboard/users",
+        "finalPath": "/dashboard/users",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Users",
+          "Users"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 390,
+        "path": "/dashboard/users",
+        "finalPath": "/dashboard/users",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "AI4Impact",
+          "Users",
+          "Users"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 1440,
+        "path": "/dashboard/operations",
+        "finalPath": "/dashboard/operations",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Launch readiness",
+          "Database",
+          "Published courses",
+          "Courses without classes",
+          "Recordings needing upload",
+          "New enquiries",
+          "Failed push jobs",
+          "Native push notifications",
+          "Before launch"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin",
+        "width": 390,
+        "path": "/dashboard/operations",
+        "finalPath": "/dashboard/operations",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "AI4Impact",
+          "Launch readiness",
+          "Database",
+          "Published courses",
+          "Courses without classes",
+          "Recordings needing upload",
+          "New enquiries",
+          "Failed push jobs",
+          "Native push notifications",
+          "Before launch"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin-detail",
+        "width": 1440,
+        "path": "/dashboard/courses/86cbe450-7bac-435a-8f5a-23e2227d64e8",
+        "finalPath": "/dashboard/courses/86cbe450-7bac-435a-8f5a-23e2227d64e8",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Test Course",
+          "Overview",
+          "Certificate"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin-detail",
+        "width": 1440,
+        "path": "/dashboard/courses/86cbe450-7bac-435a-8f5a-23e2227d64e8/edit",
+        "finalPath": "/dashboard/courses/86cbe450-7bac-435a-8f5a-23e2227d64e8/edit",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Basic info",
+          "Classes / Sessions",
+          "Highlights",
+          "Phases / Modules",
+          "Benefits",
+          "Audience (who should attend)",
+          "Career outcomes",
+          "Certificate"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "admin-detail",
+        "width": 1440,
+        "path": "/dashboard/learning/86cbe450-7bac-435a-8f5a-23e2227d64e8",
+        "finalPath": "/dashboard/learning/86cbe450-7bac-435a-8f5a-23e2227d64e8",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Test Course",
+          "Classes & recordings"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "marketing",
+        "width": 1440,
+        "path": "/dashboard/course-enquiries",
+        "finalPath": "/dashboard/course-enquiries",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Course Enquiries"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "marketing-denied",
+        "width": 1440,
+        "path": "/dashboard/admin-users",
+        "finalPath": "/dashboard/course-enquiries",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "AI4Impact",
+          "Course Enquiries"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "anonymous",
+        "width": 1440,
+        "path": "/dashboard",
+        "finalPath": "/login",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Welcome back"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "anonymous",
+        "width": 1440,
+        "path": "/dashboard/learning",
+        "finalPath": "/login",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Welcome back"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "anonymous",
+        "width": 1440,
+        "path": "/dashboard/admin-users",
+        "finalPath": "/login",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Welcome back"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "anonymous",
+        "width": 1440,
+        "path": "/checkout",
+        "finalPath": "/checkout",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Demo checkout",
+          "Sign in to your student account"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/",
+        "finalPath": "/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Choose the role.Build the skills.Prove you can do the work.",
+          "Six roles. One standard:can you do the work?",
+          "Start from where you want to be.",
+          "From choosing a role to doing it.",
+          "Projects that look like the job.",
+          "Earn proof of whatyou can actually build.",
+          "Programme+. Onebundle for themove into the role.",
+          "Learn from peoplewho do this work.",
+          "All tracks at a glance.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/courses/",
+        "finalPath": "/courses/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Pick the roleyou want to do.",
+          "Ship AI systems into production.",
+          "Build the data that AI runs on.",
+          "Decide what gets built, and why.",
+          "All tracks at a glance.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/courses/",
+        "finalPath": "/courses/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Pick the roleyou want to do.",
+          "Ship AI systems into production.",
+          "Build the data that AI runs on.",
+          "Decide what gets built, and why.",
+          "All tracks at a glance.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/programme-plus/",
+        "finalPath": "/programme-plus/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Everything betweena finished capstoneand a real interview.",
+          "Five modules.",
+          "Want to know ifProgramme+ isworth it for you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/programme-plus/",
+        "finalPath": "/programme-plus/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Everything betweena finished capstoneand a real interview.",
+          "Five modules.",
+          "Want to know ifProgramme+ isworth it for you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/certification/",
+        "finalPath": "/certification/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Earn proof of whatyou can actually build.",
+          "Issued by IIAA, withan academic partner.",
+          "Nine things on every certificate.",
+          "Completing a course is not the same as earning the certificate.",
+          "Anyone can check it."
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/certification/",
+        "finalPath": "/certification/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Earn proof of whatyou can actually build.",
+          "Issued by IIAA, withan academic partner.",
+          "Nine things on every certificate.",
+          "Completing a course is not the same as earning the certificate.",
+          "Anyone can check it."
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/verify/",
+        "finalPath": "/verify/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Verify a certificate"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/verify/",
+        "finalPath": "/verify/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Verify a certificate"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/trainers/",
+        "finalPath": "/trainers/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Learn from peoplewho do the work."
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/trainers/",
+        "finalPath": "/trainers/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Learn from peoplewho do the work."
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/hire-from-us/",
+        "finalPath": "/hire-from-us/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Hire job-readydata and AI talent.",
+          "Tell us what you need"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/hire-from-us/",
+        "finalPath": "/hire-from-us/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Hire job-readydata and AI talent.",
+          "Tell us what you need"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/login",
+        "finalPath": "/login/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Welcome back. Your next milestone is waiting.",
+          "Recorded sessions",
+          "Weekly clarification calls",
+          "Projects & capstone",
+          "Certificates",
+          "Student sign in"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/login",
+        "finalPath": "/login/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Welcome back. Your next milestone is waiting.",
+          "Recorded sessions",
+          "Weekly clarification calls",
+          "Projects & capstone",
+          "Certificates",
+          "Student sign in"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/courses",
+        "finalPath": "/courses/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Pick the roleyou want to do.",
+          "Ship AI systems into production.",
+          "Build the data that AI runs on.",
+          "Decide what gets built, and why.",
+          "All tracks at a glance.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/courses",
+        "finalPath": "/courses/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Pick the roleyou want to do.",
+          "Ship AI systems into production.",
+          "Build the data that AI runs on.",
+          "Decide what gets built, and why.",
+          "All tracks at a glance.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/courses/forward-deployed-ai-engineer",
+        "finalPath": "/courses/forward-deployed-ai-engineer/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Become the engineer who takes AI from problem to production.",
+          "Most AI projects stall between the demo and the people who need it.",
+          "What you will be able to show.",
+          "What you need before day one.",
+          "Week by week.",
+          "Recorded lessons.Live help every week.",
+          "What goes in your portfolio.",
+          "Who teaches this track.",
+          "Roles this track prepares you for.",
+          "Finish the course.Then earn the certificate.",
+          "Programme+. Onebundle for themove into the role.",
+          "Questions aboutthis track.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/courses/forward-deployed-ai-engineer",
+        "finalPath": "/courses/forward-deployed-ai-engineer/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Become the engineer who takes AI from problem to production.",
+          "Most AI projects stall between the demo and the people who need it.",
+          "What you will be able to show.",
+          "What you need before day one.",
+          "Week by week.",
+          "Recorded lessons.Live help every week.",
+          "What goes in your portfolio.",
+          "Who teaches this track.",
+          "Roles this track prepares you for.",
+          "Finish the course.Then earn the certificate.",
+          "Programme+. Onebundle for themove into the role.",
+          "Questions aboutthis track.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/programme-plus",
+        "finalPath": "/programme-plus/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Everything betweena finished capstoneand a real interview.",
+          "Five modules.",
+          "Want to know ifProgramme+ isworth it for you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/programme-plus",
+        "finalPath": "/programme-plus/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Everything betweena finished capstoneand a real interview.",
+          "Five modules.",
+          "Want to know ifProgramme+ isworth it for you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/courses/data-ai-platform-engineer",
+        "finalPath": "/courses/data-ai-platform-engineer/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Build the data platforms that AI depends on.",
+          "AI is only as good as the data platform underneath it.",
+          "What you will be able to show.",
+          "What you need before day one.",
+          "Week by week.",
+          "Recorded lessons.Live help every week.",
+          "What goes in your portfolio.",
+          "Who teaches this track.",
+          "Roles this track prepares you for.",
+          "Finish the course.Then earn the certificate.",
+          "Programme+. Onebundle for themove into the role.",
+          "Questions aboutthis track.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/courses/data-ai-platform-engineer",
+        "finalPath": "/courses/data-ai-platform-engineer/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Build the data platforms that AI depends on.",
+          "AI is only as good as the data platform underneath it.",
+          "What you will be able to show.",
+          "What you need before day one.",
+          "Week by week.",
+          "Recorded lessons.Live help every week.",
+          "What goes in your portfolio.",
+          "Who teaches this track.",
+          "Roles this track prepares you for.",
+          "Finish the course.Then earn the certificate.",
+          "Programme+. Onebundle for themove into the role.",
+          "Questions aboutthis track.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/courses/data-science-analytics-decision-intelligence",
+        "finalPath": "/courses/data-science-analytics-decision-intelligence/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Turn data into decisions \u2014 not just dashboards.",
+          "Organisations are full of dashboards and short on decisions.",
+          "What you will be able to show.",
+          "What you need before day one.",
+          "Week by week.",
+          "Recorded lessons.Live help every week.",
+          "What goes in your portfolio.",
+          "Who teaches this track.",
+          "Roles this track prepares you for.",
+          "Finish the course.Then earn the certificate.",
+          "Programme+. Onebundle for themove into the role.",
+          "Questions aboutthis track.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/courses/data-science-analytics-decision-intelligence",
+        "finalPath": "/courses/data-science-analytics-decision-intelligence/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Turn data into decisions \u2014 not just dashboards.",
+          "Organisations are full of dashboards and short on decisions.",
+          "What you will be able to show.",
+          "What you need before day one.",
+          "Week by week.",
+          "Recorded lessons.Live help every week.",
+          "What goes in your portfolio.",
+          "Who teaches this track.",
+          "Roles this track prepares you for.",
+          "Finish the course.Then earn the certificate.",
+          "Programme+. Onebundle for themove into the role.",
+          "Questions aboutthis track.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/courses/applied-ai-machine-learning-engineer",
+        "finalPath": "/courses/applied-ai-machine-learning-engineer/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Build machine learning systems that work beyond the notebook.",
+          "A model in a notebook is not a product.",
+          "What you will be able to show.",
+          "What you need before day one.",
+          "Week by week.",
+          "Recorded lessons.Live help every week.",
+          "What goes in your portfolio.",
+          "Who teaches this track.",
+          "Roles this track prepares you for.",
+          "Finish the course.Then earn the certificate.",
+          "Programme+. Onebundle for themove into the role.",
+          "Questions aboutthis track.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/courses/applied-ai-machine-learning-engineer",
+        "finalPath": "/courses/applied-ai-machine-learning-engineer/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Build machine learning systems that work beyond the notebook.",
+          "A model in a notebook is not a product.",
+          "What you will be able to show.",
+          "What you need before day one.",
+          "Week by week.",
+          "Recorded lessons.Live help every week.",
+          "What goes in your portfolio.",
+          "Who teaches this track.",
+          "Roles this track prepares you for.",
+          "Finish the course.Then earn the certificate.",
+          "Programme+. Onebundle for themove into the role.",
+          "Questions aboutthis track.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/courses/generative-ai-agentic-systems-engineer",
+        "finalPath": "/courses/generative-ai-agentic-systems-engineer/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Build AI systems that can reason, retrieve, act and improve.",
+          "Anyone can build a chatbot demo. Few can make it reliable.",
+          "What you will be able to show.",
+          "What you need before day one.",
+          "Week by week.",
+          "Recorded lessons.Live help every week.",
+          "What goes in your portfolio.",
+          "Who teaches this track.",
+          "Roles this track prepares you for.",
+          "Finish the course.Then earn the certificate.",
+          "Programme+. Onebundle for themove into the role.",
+          "Questions aboutthis track.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/courses/generative-ai-agentic-systems-engineer",
+        "finalPath": "/courses/generative-ai-agentic-systems-engineer/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Build AI systems that can reason, retrieve, act and improve.",
+          "Anyone can build a chatbot demo. Few can make it reliable.",
+          "What you will be able to show.",
+          "What you need before day one.",
+          "Week by week.",
+          "Recorded lessons.Live help every week.",
+          "What goes in your portfolio.",
+          "Who teaches this track.",
+          "Roles this track prepares you for.",
+          "Finish the course.Then earn the certificate.",
+          "Programme+. Onebundle for themove into the role.",
+          "Questions aboutthis track.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/courses/ai-product-automation-builder",
+        "finalPath": "/courses/ai-product-automation-builder/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Turn business problems into AI products people actually use.",
+          "The bottleneck in AI is no longer the model \u2014 it is the product.",
+          "What you will be able to show.",
+          "What you need before day one.",
+          "Week by week.",
+          "Recorded lessons.Live help every week.",
+          "What goes in your portfolio.",
+          "Who teaches this track.",
+          "Roles this track prepares you for.",
+          "Finish the course.Then earn the certificate.",
+          "Programme+. Onebundle for themove into the role.",
+          "Questions aboutthis track.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/courses/ai-product-automation-builder",
+        "finalPath": "/courses/ai-product-automation-builder/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Turn business problems into AI products people actually use.",
+          "The bottleneck in AI is no longer the model \u2014 it is the product.",
+          "What you will be able to show.",
+          "What you need before day one.",
+          "Week by week.",
+          "Recorded lessons.Live help every week.",
+          "What goes in your portfolio.",
+          "Who teaches this track.",
+          "Roles this track prepares you for.",
+          "Finish the course.Then earn the certificate.",
+          "Programme+. Onebundle for themove into the role.",
+          "Questions aboutthis track.",
+          "Not sure whichrole fits you?"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/certification",
+        "finalPath": "/certification/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Earn proof of whatyou can actually build.",
+          "Issued by IIAA, withan academic partner.",
+          "Nine things on every certificate.",
+          "Completing a course is not the same as earning the certificate.",
+          "Anyone can check it."
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/certification",
+        "finalPath": "/certification/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Earn proof of whatyou can actually build.",
+          "Issued by IIAA, withan academic partner.",
+          "Nine things on every certificate.",
+          "Completing a course is not the same as earning the certificate.",
+          "Anyone can check it."
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/trainers/bhaskar-m/",
+        "finalPath": "/trainers/bhaskar-m/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Bhaskar M",
+          "About",
+          "Courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/trainers/bhaskar-m/",
+        "finalPath": "/trainers/bhaskar-m/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Bhaskar M",
+          "About",
+          "Courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/trainers/kamal-k-naidu/",
+        "finalPath": "/trainers/kamal-k-naidu/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Kamal K Naidu",
+          "About",
+          "Courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/trainers/kamal-k-naidu/",
+        "finalPath": "/trainers/kamal-k-naidu/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Kamal K Naidu",
+          "About",
+          "Courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/trainers/shuja-l-p/",
+        "finalPath": "/trainers/shuja-l-p/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Shuja L P",
+          "About",
+          "Courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/trainers/shuja-l-p/",
+        "finalPath": "/trainers/shuja-l-p/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Shuja L P",
+          "About",
+          "Courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/trainers/naveen-g/",
+        "finalPath": "/trainers/naveen-g/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Naveen G",
+          "About",
+          "Courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/trainers/naveen-g/",
+        "finalPath": "/trainers/naveen-g/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Naveen G",
+          "About",
+          "Courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/trainers/puneet-nischal/",
+        "finalPath": "/trainers/puneet-nischal/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Puneet Nischal",
+          "About",
+          "Courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/trainers/puneet-nischal/",
+        "finalPath": "/trainers/puneet-nischal/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Puneet Nischal",
+          "About",
+          "Courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/trainers/ritesh/",
+        "finalPath": "/trainers/ritesh/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Ritesh",
+          "About",
+          "Courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/trainers/ritesh/",
+        "finalPath": "/trainers/ritesh/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Ritesh",
+          "About",
+          "Courses"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/trainers",
+        "finalPath": "/trainers/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Learn from peoplewho do the work."
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/trainers",
+        "finalPath": "/trainers/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Learn from peoplewho do the work."
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/verify",
+        "finalPath": "/verify/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Verify a certificate"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/verify",
+        "finalPath": "/verify/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Verify a certificate"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/hire-from-us",
+        "finalPath": "/hire-from-us/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Hire job-readydata and AI talent.",
+          "Tell us what you need"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/hire-from-us",
+        "finalPath": "/hire-from-us/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Hire job-readydata and AI talent.",
+          "Tell us what you need"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/terms",
+        "finalPath": "/terms/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Terms of Use",
+          "01Acceptance of these terms",
+          "02Eligibility and accounts",
+          "03Programmes, schedules and content",
+          "04Certification",
+          "05Career support",
+          "06Acceptable use",
+          "07Intellectual property",
+          "08Fees and payments",
+          "09Disclaimers and limitation of liability",
+          "10Suspension and termination",
+          "11Governing law and disputes",
+          "12Changes to these terms"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/terms",
+        "finalPath": "/terms/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Terms of Use",
+          "01Acceptance of these terms",
+          "02Eligibility and accounts",
+          "03Programmes, schedules and content",
+          "04Certification",
+          "05Career support",
+          "06Acceptable use",
+          "07Intellectual property",
+          "08Fees and payments",
+          "09Disclaimers and limitation of liability",
+          "10Suspension and termination",
+          "11Governing law and disputes",
+          "12Changes to these terms"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/privacy",
+        "finalPath": "/privacy/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Privacy Policy",
+          "01Who we are and what this covers",
+          "02Data we collect",
+          "03Why we use your data",
+          "04Consent and legal basis",
+          "05Who we share data with",
+          "06How long we keep data",
+          "07Your rights",
+          "08How we protect data",
+          "09Cookies",
+          "10Children",
+          "11Grievance Officer"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/privacy",
+        "finalPath": "/privacy/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Privacy Policy",
+          "01Who we are and what this covers",
+          "02Data we collect",
+          "03Why we use your data",
+          "04Consent and legal basis",
+          "05Who we share data with",
+          "06How long we keep data",
+          "07Your rights",
+          "08How we protect data",
+          "09Cookies",
+          "10Children",
+          "11Grievance Officer"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/refund-policy",
+        "finalPath": "/refund-policy/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Refund Policy",
+          "01Overview",
+          "02Refund eligibility",
+          "03Non-refundable items",
+          "04Cohort deferral",
+          "05Instalments and financing",
+          "06How to request a refund",
+          "07Processing time",
+          "08If we cancel or reschedule"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/refund-policy",
+        "finalPath": "/refund-policy/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Refund Policy",
+          "01Overview",
+          "02Refund eligibility",
+          "03Non-refundable items",
+          "04Cohort deferral",
+          "05Instalments and financing",
+          "06How to request a refund",
+          "07Processing time",
+          "08If we cancel or reschedule"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 1440,
+        "path": "/isms-policy",
+        "finalPath": "/isms-policy/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 1440,
+          "width": 1440
+        },
+        "headings": [
+          "Information Security Management System (ISMS) Policy",
+          "01Purpose",
+          "02Scope",
+          "03Security objectives",
+          "04Our commitments",
+          "05Roles and responsibilities",
+          "06Incident management",
+          "07Responsible disclosure",
+          "08Review"
+        ],
+        "visibleError": false
+      },
+      {
+        "label": "landing",
+        "width": 390,
+        "path": "/isms-policy",
+        "finalPath": "/isms-policy/",
+        "status": 200,
+        "error": null,
+        "jsErrors": [],
+        "badResponses": [],
+        "overflow": {
+          "scroll": 390,
+          "width": 390
+        },
+        "headings": [
+          "Information Security Management System (ISMS) Policy",
+          "01Purpose",
+          "02Scope",
+          "03Security objectives",
+          "04Our commitments",
+          "05Roles and responsibilities",
+          "06Incident management",
+          "07Responsible disclosure",
+          "08Review"
+        ],
+        "visibleError": false
+      }
+    ]
+  },
+  "admin-regressions": {
+    "startTime": "2026-10-25T19:12:53.034Z",
+    "duration": 4906.523,
+    "expected": 11,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "admin-production-dependency-audit": {
+    "counts": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 1,
+      "total": 1
+    },
+    "packages": {
+      "next": {
+        "severity": "critical",
+        "range": "10.0.0 - 15.5.27",
+        "isDirect": true,
+        "advisories": [
+          {
+            "title": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when SVG files are used",
+            "url": "https://github.com/advisories/GHSA-2464-fhr4-w9xw"
+          },
+          {
+            "title": "Next.js: Denial of Service in App Router using Server Actions",
+            "url": "https://github.com/advisories/GHSA-p3m5-59mp-jv5r"
+          }
+        ]
+      }
+    }
+  },
+  "student-production-dependency-audit": {
+    "counts": {
+      "info": 0,
+      "low": 1,
+      "moderate": 8,
+      "high": 18,
+      "critical": 1,
+      "total": 28
+    },
+    "packages": {
+      "@aws-sdk/xml-builder": {
+        "severity": "moderate",
+        "range": "3.894.0 - 3.972.18",
+        "isDirect": false,
+        "advisories": []
+      },
+      "@babel/core": {
+        "severity": "low",
+        "range": "<=7.29.0",
+        "isDirect": true,
+        "advisories": [
+          {
+            "title": "@babel/core: Arbitrary File Read via sourceMappingURL Comment",
+            "url": "https://github.com/advisories/GHSA-4x5r-pxfx-6jf8"
+          }
+        ]
+      },
+      "@expo/cli": {
+        "severity": "high",
+        "range": "<=0.0.0-canary-20231123-1b19f96-4 || >=0.0.1-canary-20231125-d600e44",
+        "isDirect": false,
+        "advisories": []
+      },
+      "@expo/code-signing-certificates": {
+        "severity": "high",
+        "range": "*",
+        "isDirect": false,
+        "advisories": []
+      },
+      "@expo/metro-config": {
+        "severity": "moderate",
+        "range": "<=0.0.1-canary-20240418-8d74597 || 0.8.0 - 55.0.21 || 56.0.0-canary-20260212-4f61309 - 56.0.5",
+        "isDirect": false,
+        "advisories": []
+      },
+      "@react-navigation/core": {
+        "severity": "moderate",
+        "range": "<=7.22.0 || 8.0.0-alpha.0 - 8.0.0-alpha.9",
+        "isDirect": false,
+        "advisories": []
+      },
+      "@xmldom/xmldom": {
+        "severity": "high",
+        "range": "<=0.8.14",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "xmldom: XML injection via unsafe CDATA serialization allows attacker-controlled markup insertion",
+            "url": "https://github.com/advisories/GHSA-wh4c-j3r5-mjhp"
+          },
+          {
+            "title": "xmldom: Uncontrolled recursion in XML serialization leads to DoS",
+            "url": "https://github.com/advisories/GHSA-2v35-w6hq-6mfw"
+          },
+          {
+            "title": "xmldom has XML injection through unvalidated DocumentType serialization",
+            "url": "https://github.com/advisories/GHSA-f6ww-3ggp-fr8h"
+          },
+          {
+            "title": "xmldom has XML node injection through unvalidated processing instruction serialization",
+            "url": "https://github.com/advisories/GHSA-x6wf-f3px-wcqx"
+          },
+          {
+            "title": "xmldom has XML node injection through unvalidated comment serialization",
+            "url": "https://github.com/advisories/GHSA-j759-j44w-7fr8"
+          },
+          {
+            "title": "xmldom: XML fragment injection via invalid EntityReference.nodeName during requireWellFormed serialization",
+            "url": "https://github.com/advisories/GHSA-6gmq-8vp8-gcm6"
+          },
+          {
+            "title": "xmldom: Element name injection via createElement() bypasses requireWellFormed",
+            "url": "https://github.com/advisories/GHSA-w2rr-34g9-rvrj"
+          },
+          {
+            "title": "xmldom: Attribute name injection via setAttribute() bypasses requireWellFormed",
+            "url": "https://github.com/advisories/GHSA-4w3w-2rp5-g8jm"
+          },
+          {
+            "title": "xmldom: Processing Instruction Target Injection Bypasses requireWellFormed",
+            "url": "https://github.com/advisories/GHSA-c7q8-3ch8-vqpv"
+          },
+          {
+            "title": "xmldom: DocType `name` Injection Bypasses requireWellFormed",
+            "url": "https://github.com/advisories/GHSA-27p8-2357-5qqv"
+          },
+          {
+            "title": "xmldom: Parser silently accepts a not-well-formed end tag whose name is followed by a line break and trailing content",
+            "url": "https://github.com/advisories/GHSA-6h8r-xr42-gp59"
+          },
+          {
+            "title": "xmldom: Quadratic-time attribute deduplication",
+            "url": "https://github.com/advisories/GHSA-8344-3jmq-59r6"
+          },
+          {
+            "title": "xmldom: End-tag Whitespace-Trim Regex ReDoS \u2014 quadratic backtracking in the 0.8.x end-tag parser",
+            "url": "https://github.com/advisories/GHSA-x4fp-j954-r2f4"
+          },
+          {
+            "title": "xmldom: Quadratic-memory consumption",
+            "url": "https://github.com/advisories/GHSA-965w-775f-mr7g"
+          },
+          {
+            "title": "xmldom: Quadratic-time parsing via the malformed-input recovery path \u2014 `parseElementStartPart` re-scan and `normalize()` adjacent-text merge",
+            "url": "https://github.com/advisories/GHSA-93r5-fhx6-vmg9"
+          }
+        ]
+      },
+      "axios": {
+        "severity": "high",
+        "range": "1.0.0 - 1.19.0",
+        "isDirect": true,
+        "advisories": [
+          {
+            "title": "Axios has a NO_PROXY Hostname Normalization Bypass that Leads to SSRF",
+            "url": "https://github.com/advisories/GHSA-3p68-rc4w-qgx5"
+          },
+          {
+            "title": "Axios: Authentication Bypass via Prototype Pollution Gadget in `validateStatus` Merge Strategy",
+            "url": "https://github.com/advisories/GHSA-w9j2-pvgh-6h63"
+          },
+          {
+            "title": "Axios: Incomplete Fix for CVE-2025-62718 \u2014 NO_PROXY Protection Bypassed via RFC 1122 Loopback Subnet (127.0.0.0/8) in Axios 1.15.0",
+            "url": "https://github.com/advisories/GHSA-pmwg-cvhr-8vh7"
+          },
+          {
+            "title": "Axios: Invisible JSON Response Tampering via Prototype Pollution Gadget in `parseReviver`",
+            "url": "https://github.com/advisories/GHSA-3w6x-2g7m-8v23"
+          },
+          {
+            "title": "Axios: Null Byte Injection via Reverse-Encoding in AxiosURLSearchParams",
+            "url": "https://github.com/advisories/GHSA-xhjh-pmcv-23jw"
+          },
+          {
+            "title": "Axios: CRLF Injection in multipart/form-data body via unsanitized blob.type in formDataToStream",
+            "url": "https://github.com/advisories/GHSA-445q-vr5w-6q77"
+          },
+          {
+            "title": "Axios: no_proxy bypass via IP alias allows SSRF",
+            "url": "https://github.com/advisories/GHSA-m7pr-hjqh-92cm"
+          },
+          {
+            "title": "Axios' HTTP adapter-streamed uploads bypass maxBodyLength when maxRedirects: 0",
+            "url": "https://github.com/advisories/GHSA-5c9x-8gcm-mpgx"
+          },
+          {
+            "title": "Axios: HTTP adapter streamed responses bypass maxContentLength",
+            "url": "https://github.com/advisories/GHSA-vf2m-468p-8v99"
+          },
+          {
+            "title": "Axios: Prototype Pollution Gadgets - Response Tampering, Data Exfiltration, and Request Hijacking",
+            "url": "https://github.com/advisories/GHSA-pf86-5x62-jrwf"
+          },
+          {
+            "title": "Axios: Header Injection via Prototype Pollution",
+            "url": "https://github.com/advisories/GHSA-6chq-wfr3-2hj9"
+          },
+          {
+            "title": "Axios: XSRF Token Cross-Origin Leakage via Prototype Pollution Gadget in `withXSRFToken` Boolean Coercion",
+            "url": "https://github.com/advisories/GHSA-xx6v-rp6x-q39c"
+          },
+          {
+            "title": "Axios has prototype pollution read-side gadgets in HTTP adapter that allow credential injection and request hijacking",
+            "url": "https://github.com/advisories/GHSA-q8qp-cvcw-x6jj"
+          },
+          {
+            "title": "Axios has Unrestricted Cloud Metadata Exfiltration via Header Injection Chain",
+            "url": "https://github.com/advisories/GHSA-fvcv-3m26-pcqx"
+          },
+          {
+            "title": "Axios: unbounded recursion in toFormData causes DoS via deeply nested request data",
+            "url": "https://github.com/advisories/GHSA-62hf-57xw-28j9"
+          },
+          {
+            "title": "Axios: Regular Expression Denial of Service (ReDoS) via Cookie Name Injection",
+            "url": "https://github.com/advisories/GHSA-hfxv-24rg-xrqf"
+          },
+          {
+            "title": "Allocation of Resources Without Limits or Throttling in Axios",
+            "url": "https://github.com/advisories/GHSA-777c-7fjr-54vf"
+          },
+          {
+            "title": "Axios: Proxy-Authorization Credential Leak to Origin Server Across HTTP-to-HTTPS Redirect in Axios Node.js HTTP Adapter",
+            "url": "https://github.com/advisories/GHSA-p92q-9vqr-4j8v"
+          },
+          {
+            "title": "Axios: Proxy-Authorization header leaks to redirect target when proxy is re-evaluated to direct connection",
+            "url": "https://github.com/advisories/GHSA-j5f8-grm9-p9fc"
+          },
+          {
+            "title": "axios Vulnerable to Credential Theft and Response Hijacking via Prototype Pollution Gadget in Config Merge",
+            "url": "https://github.com/advisories/GHSA-3g43-6gmg-66jw"
+          },
+          {
+            "title": "axios Vulnerable to Full Man-in-the-Middle via Prototype Pollution Gadget in `config.proxy`",
+            "url": "https://github.com/advisories/GHSA-35jp-ww65-95wh"
+          },
+          {
+            "title": "axios has DoS & Header Injection via Prototype Pollution Read-Side Gadgets in axios merge functions",
+            "url": "https://github.com/advisories/GHSA-898c-q2cr-xwhg"
+          },
+          {
+            "title": "Axios: Prototype pollution gadgets can alter axios request construction",
+            "url": "https://github.com/advisories/GHSA-mmx7-hfxf-jppx"
+          },
+          {
+            "title": "Axios: Deep formToJSON Key Recursion Can Cause Denial of Service",
+            "url": "https://github.com/advisories/GHSA-pmv8-rq9r-6j72"
+          },
+          {
+            "title": "Axios: HTTP/2 streamed uploads bypass `maxBodyLength`",
+            "url": "https://github.com/advisories/GHSA-mwf2-3pr3-8698"
+          },
+          {
+            "title": "Axios: Nested axios option objects can consume polluted prototype values",
+            "url": "https://github.com/advisories/GHSA-7q8q-rj6j-mhjq"
+          },
+          {
+            "title": "Axios: Fetch adapter `ReadableStream` uploads bypass `maxBodyLength`",
+            "url": "https://github.com/advisories/GHSA-jqh4-m9w3-8hp9"
+          },
+          {
+            "title": "Axios: Excessive recursion in formDataToJSON can cause denial of service",
+            "url": "https://github.com/advisories/GHSA-42h9-826w-cgv3"
+          },
+          {
+            "title": "Axios: Prototype pollution gadget in fetch adapter can alter outbound requests",
+            "url": "https://github.com/advisories/GHSA-vh66-26gq-q6x8"
+          },
+          {
+            "title": "Axios: Prototype-Pollution Gadget in the Default Instance Allows Inherited Object.prototype.method to Override HTTP Method",
+            "url": "https://github.com/advisories/GHSA-9fr6-4gfg-395g"
+          },
+          {
+            "title": "Axios: HTTP/2 adapter bypasses configured DNS lookup and proxy controls",
+            "url": "https://github.com/advisories/GHSA-3pq3-5fj3-cg6v"
+          },
+          {
+            "title": "Axios: Denial of Service via Unhandled 'error' Event in HTTP/2 ClientHttp2Session Initialization",
+            "url": "https://github.com/advisories/GHSA-542g-h47m-68v8"
+          },
+          {
+            "title": "Axios: Header Injection via Inherited headers After Minimal Interceptor",
+            "url": "https://github.com/advisories/GHSA-j8rh-479h-cp32"
+          },
+          {
+            "title": "Axios: Fetch Adapter Header Injection via Inherited FormData getHeaders",
+            "url": "https://github.com/advisories/GHSA-4hqw-qxg8-jxx2"
+          }
+        ]
+      },
+      "brace-expansion": {
+        "severity": "high",
+        "range": "<=1.1.20 || 3.0.0 - 5.0.11",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "brace-expansion: Zero-step sequence causes process hang and memory exhaustion",
+            "url": "https://github.com/advisories/GHSA-f886-m6hf-6m8v"
+          },
+          {
+            "title": "brace-expansion: Zero-step sequence causes process hang and memory exhaustion",
+            "url": "https://github.com/advisories/GHSA-f886-m6hf-6m8v"
+          },
+          {
+            "title": "brace-expansion: Large numeric range defeats documented `max` DoS protection",
+            "url": "https://github.com/advisories/GHSA-jxxr-4gwj-5jf2"
+          },
+          {
+            "title": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+            "url": "https://github.com/advisories/GHSA-3jxr-9vmj-r5cp"
+          },
+          {
+            "title": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+            "url": "https://github.com/advisories/GHSA-3jxr-9vmj-r5cp"
+          },
+          {
+            "title": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+            "url": "https://github.com/advisories/GHSA-mh99-v99m-4gvg"
+          },
+          {
+            "title": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+            "url": "https://github.com/advisories/GHSA-mh99-v99m-4gvg"
+          },
+          {
+            "title": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+            "url": "https://github.com/advisories/GHSA-rgw5-rvv9-x895"
+          },
+          {
+            "title": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+            "url": "https://github.com/advisories/GHSA-rgw5-rvv9-x895"
+          },
+          {
+            "title": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+            "url": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr"
+          },
+          {
+            "title": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+            "url": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr"
+          },
+          {
+            "title": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+            "url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7"
+          },
+          {
+            "title": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+            "url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7"
+          },
+          {
+            "title": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+            "url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p"
+          },
+          {
+            "title": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+            "url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p"
+          }
+        ]
+      },
+      "decode-uri-component": {
+        "severity": "moderate",
+        "range": "<=0.4.2",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "decode-uri-component: Denial of service via exponential decoding of malformed percent-encoded input",
+            "url": "https://github.com/advisories/GHSA-vcc3-ghjq-m6fr"
+          }
+        ]
+      },
+      "expo": {
+        "severity": "high",
+        "range": ">=45.0.0-beta.1",
+        "isDirect": true,
+        "advisories": []
+      },
+      "fast-xml-builder": {
+        "severity": "high",
+        "range": "<=1.1.6",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "fast-xml-builder allows attribute values with unwanted quotes to bypass malicious or unwanted attributes",
+            "url": "https://github.com/advisories/GHSA-5wm8-gmm8-39j9"
+          }
+        ]
+      },
+      "fast-xml-parser": {
+        "severity": "high",
+        "range": "<=5.6.0",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "fast-xml-parser affected by numeric entity expansion bypassing all entity expansion limits (incomplete fix for CVE-2026-26278)",
+            "url": "https://github.com/advisories/GHSA-8gc5-j5rx-235r"
+          },
+          {
+            "title": "Entity Expansion Limits Bypassed When Set to Zero Due to JavaScript Falsy Evaluation in fast-xml-parser",
+            "url": "https://github.com/advisories/GHSA-jp2q-39xq-3w4g"
+          },
+          {
+            "title": "fast-xml-parser XMLBuilder: XML Comment and CDATA Injection via Unescaped Delimiters",
+            "url": "https://github.com/advisories/GHSA-gh4j-gqv2-49f6"
+          }
+        ]
+      },
+      "follow-redirects": {
+        "severity": "moderate",
+        "range": "<=1.15.11",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "follow-redirects leaks Custom Authentication Headers to Cross-Domain Redirect Targets",
+            "url": "https://github.com/advisories/GHSA-r4q5-vmmm-2653"
+          }
+        ]
+      },
+      "form-data": {
+        "severity": "high",
+        "range": "4.0.0 - 4.0.5",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "form-data: CRLF injection in form-data via unescaped multipart field names and filenames",
+            "url": "https://github.com/advisories/GHSA-hmw2-7cc7-3qxx"
+          }
+        ]
+      },
+      "image-size": {
+        "severity": "high",
+        "range": "0.6.3 - 2.0.2",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "image-size: JXL and HEIF parsers allow denial of service through infinite loops",
+            "url": "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq"
+          },
+          {
+            "title": "image-size: ICNS parser allows denial of service through an infinite loop",
+            "url": "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr"
+          }
+        ]
+      },
+      "js-cookie": {
+        "severity": "high",
+        "range": "<=3.0.5",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "JavaScript Cookie: Per-instance prototype hijack in assign() enables cookie-attribute injection",
+            "url": "https://github.com/advisories/GHSA-qjx8-664m-686j"
+          }
+        ]
+      },
+      "js-yaml": {
+        "severity": "high",
+        "range": "<=3.15.1",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "JS-YAML: Quadratic-complexity DoS in merge key handling via repeated aliases",
+            "url": "https://github.com/advisories/GHSA-h67p-54hq-rp68"
+          },
+          {
+            "title": "js-yaml: YAML merge-key chains can force quadratic CPU consumption",
+            "url": "https://github.com/advisories/GHSA-52cp-r559-cp3m"
+          },
+          {
+            "title": "JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) \u2014 CVE-2026-59870 fix not backported",
+            "url": "https://github.com/advisories/GHSA-5p4m-2wfm-xmqj"
+          },
+          {
+            "title": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+            "url": "https://github.com/advisories/GHSA-2883-xcg3-v3hh"
+          }
+        ]
+      },
+      "lodash": {
+        "severity": "high",
+        "range": "<=4.17.23",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "lodash vulnerable to Code Injection via `_.template` imports key names",
+            "url": "https://github.com/advisories/GHSA-r5fr-rjxr-66jc"
+          },
+          {
+            "title": "lodash vulnerable to Prototype Pollution via array path bypass in `_.unset` and `_.omit`",
+            "url": "https://github.com/advisories/GHSA-f23m-r3pf-42rh"
+          }
+        ]
+      },
+      "nanoid": {
+        "severity": "high",
+        "range": "<=3.3.17",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "nanoid: non-secure generators can loop indefinitely with negative size",
+            "url": "https://github.com/advisories/GHSA-28wg-ghj8-5hjv"
+          },
+          {
+            "title": "nanoid: custom generators can loop indefinitely when size is zero",
+            "url": "https://github.com/advisories/GHSA-2v37-7h3g-55p8"
+          },
+          {
+            "title": "nanoid: Integer Overflow or Wraparound",
+            "url": "https://github.com/advisories/GHSA-xwg4-73v4-xw9w"
+          }
+        ]
+      },
+      "node-forge": {
+        "severity": "high",
+        "range": "*",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "node-forge RSA PKCS#1 v1.5 signature verification accepts extra nested DigestAlgorithm elements",
+            "url": "https://github.com/advisories/GHSA-86w9-cpqp-85rv"
+          }
+        ]
+      },
+      "picomatch": {
+        "severity": "high",
+        "range": "<=2.3.1 || 4.0.0 - 4.0.3",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "Picomatch: Method Injection in POSIX Character Classes causes incorrect Glob Matching",
+            "url": "https://github.com/advisories/GHSA-3v7f-55p6-f55p"
+          },
+          {
+            "title": "Picomatch: Method Injection in POSIX Character Classes causes incorrect Glob Matching",
+            "url": "https://github.com/advisories/GHSA-3v7f-55p6-f55p"
+          },
+          {
+            "title": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
+            "url": "https://github.com/advisories/GHSA-c2c7-rcm5-vvqj"
+          },
+          {
+            "title": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
+            "url": "https://github.com/advisories/GHSA-c2c7-rcm5-vvqj"
+          }
+        ]
+      },
+      "postcss": {
+        "severity": "high",
+        "range": "<=8.5.22",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "PostCSS has XSS via Unescaped </style> in its CSS Stringify Output",
+            "url": "https://github.com/advisories/GHSA-qx2v-qp2m-jg93"
+          },
+          {
+            "title": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
+            "url": "https://github.com/advisories/GHSA-6g55-p6wh-862q"
+          },
+          {
+            "title": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q \u2014 attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+            "url": "https://github.com/advisories/GHSA-fxqj-rqcc-2cmp"
+          },
+          {
+            "title": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+            "url": "https://github.com/advisories/GHSA-r28c-9q8g-f849"
+          }
+        ]
+      },
+      "query-string": {
+        "severity": "moderate",
+        "range": "5.0.0 - 9.4.1",
+        "isDirect": false,
+        "advisories": []
+      },
+      "shell-quote": {
+        "severity": "critical",
+        "range": "<=1.8.4",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "shell-quote quote() does not escape newlines in object .op values",
+            "url": "https://github.com/advisories/GHSA-w7jw-789q-3m8p"
+          },
+          {
+            "title": "shell-quote: Quadratic-complexity Denial of Service in `parse()` (CWE-407)",
+            "url": "https://github.com/advisories/GHSA-395f-4hp3-45gv"
+          }
+        ]
+      },
+      "uuid": {
+        "severity": "moderate",
+        "range": "<11.1.1",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided",
+            "url": "https://github.com/advisories/GHSA-w5hq-g745-h8pq"
+          }
+        ]
+      },
+      "ws": {
+        "severity": "high",
+        "range": "6.0.0 - 6.2.3 || 7.0.0 - 7.5.10",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "ws: Memory exhaustion DoS from tiny fragments and data chunks",
+            "url": "https://github.com/advisories/GHSA-96hv-2xvq-fx4p"
+          },
+          {
+            "title": "ws: Memory exhaustion DoS from tiny fragments and data chunks",
+            "url": "https://github.com/advisories/GHSA-96hv-2xvq-fx4p"
+          }
+        ]
+      },
+      "yaml": {
+        "severity": "moderate",
+        "range": "2.0.0 - 2.8.2",
+        "isDirect": false,
+        "advisories": [
+          {
+            "title": "yaml is vulnerable to Stack Overflow via deeply nested YAML collections",
+            "url": "https://github.com/advisories/GHSA-48c2-rrv3-qjmp"
+          }
+        ]
+      }
+    }
+  },
+  "cleanup": {
+    "run": "471c82ad5f",
+    "deleted_and_verified_cognito_accounts": 4,
+    "database": {
+      "deleted_qa_users": 4,
+      "deleted_qa_orders": 1,
+      "fixture_course_removed": true
+    },
+    "database_second_pass_empty": true,
+    "deleted_and_verified_object_versions": 3,
+    "temporary_function_and_log_group_removed": true
+  }
+}

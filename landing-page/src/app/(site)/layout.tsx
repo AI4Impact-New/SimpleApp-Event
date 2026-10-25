@@ -8,7 +8,7 @@ import { ANNOUNCEMENTS, FOOTER_COLUMNS, FOOTER_COPY, NAV_LINKS } from "@/content
 export default function SiteLayout({ children }: { children: ReactNode }) {
   return (
     <>
-      <AnnouncementBar items={ANNOUNCEMENTS} ctaLabel="Register free" ctaHref="#guidance" />
+      <AnnouncementBar items={ANNOUNCEMENTS} ctaLabel="Explore tracks" ctaHref="/courses" />
       <NavBar links={NAV_LINKS} guidanceHref="#guidance" loginHref="/login" />
       <main className="flex flex-1 flex-col">{children}</main>
       <Footer columns={FOOTER_COLUMNS} {...FOOTER_COPY} />

@@ -8,7 +8,7 @@ This release addresses the baseline findings in REPORT.md. Hosted acceptance and
 - Backend: PyJWT 2.15.1, Requests 2.34.2 and cryptography 50.0.2. Python 3.12 Lambda packaging accepts the compatible manylinux 2.28 wheels. The production Lambda runtime remains Python 3.12/x86_64.
 - Student: refresh profile on navigation focus; handle browser video play cancellation without hiding actual media errors; explicitly preserve paused playback when a session is opened without autoplay.
 - Student release: public commit provenance, rejection of stale/dirty exports, explicit existing Amplify app ID support, optional wait and hosted-commit verification. The manually deployed student portal must be released separately after merging.
-- Website: replace the expired webinar promotion with existing evergreen course/guidance information and remove the placeholder telephone number. Guidance uses the existing official support email.
+- Website: replace the expired webinar promotion with existing evergreen course/guidance information and remove the placeholder telephone number. Guidance uses the existing official support email. Next.js and its lint configuration move to patched 16.4.3; the Zod dependency advisory is also addressed.
 - CI: add isolated student browser regressions for immediate profile refresh and exam confirmation, plus dependency audit gates.
 
 ## Pre-merge validation

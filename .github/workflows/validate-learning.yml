@@ -74,6 +74,7 @@ jobs:
           AMPLIFY_LANDING_EXPORT: 'true'
         run: |
           npm ci
+          npm audit
           npm run build
 
   student-web:

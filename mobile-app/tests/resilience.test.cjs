@@ -2,15 +2,16 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 function load(file,mocks,globals={}){const module={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(__dirname,'../src',file),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText,{module,exports:module.exports,require:name=>{if(name in mocks)return mocks[name];throw Error('Unmocked '+name)},console,...globals});return module.exports;}
 const flush=async()=>{for(let i=0;i<12;i++)await Promise.resolve()};
 test('offline heartbeat pauses playback, serializes recovery and opens a new session without autoplay',async()=>{
- const effects=[],events={},intervals=[];let paused=0,played=0,sessions=0,beats=0,reads=0,offline=true,release;
+ const effects=[],events={},intervals=[],positions=[];let paused=0,played=0,sessions=0,beats=0,reads=0,offline=true,release;
  const player={pause(){paused++},play(){played++},replaceAsync:async()=>{},playbackRate:1};
  const react={useCallback:f=>f,useRef:v=>({current:v}),useState:v=>[v,()=>{}],useEffect:f=>effects.push(f)};
- const api={getPlayback:async()=>({session_id:'s'+(++sessions),resume_seconds:12,duration_seconds:90,expires_in:3600,url:'https://example.invalid/video'}),sendLectureProgress:async()=>{beats++;if(offline)throw Error('Network error');return{}},getCourseProgress:()=>{reads++;return new Promise(r=>{release=()=>r({classes:[{id:'lecture',duration_seconds:90,watched_seconds:12}]})})}};
+ const api={getPlayback:async()=>({session_id:'s'+(++sessions),resume_seconds:12,duration_seconds:90,expires_in:3600,url:'https://example.invalid/video'}),sendLectureProgress:async(...args)=>{positions.push(args[2]);beats++;if(offline)throw Error('Network error');return{}},getCourseProgress:()=>{reads++;return new Promise(r=>{release=()=>r({classes:[{id:'lecture',duration_seconds:90,watched_seconds:12}]})})}};
  const component=load('screens/LecturePlayerScreen.tsx',{'react':react,'react/jsx-runtime':{jsx:()=>null,jsxs:()=>null},'react-native':{StyleSheet:{create:x=>x},AppState:{addEventListener:()=>({remove(){}})}},'@expo/vector-icons':{},expo:{useEventListener:(_,event,fn)=>events[event]=fn},'expo-video':{useVideoPlayer:()=>player},'@tanstack/react-query':{useQueryClient:()=>({invalidateQueries(){}})},'@/components/ScreenHeader':{},'@/components/SafeAreaView':{},'@/services/api':{api},'@/services/apiErrors':{apiErrorMessage:(_,s)=>s},'@/theme/colors':{colors:{},spacing:{},borderRadius:{}},'@/utils/datetime':{formatDuration:()=>''}},{setTimeout:()=>1,clearTimeout(){},setInterval:f=>{intervals.push(f);return 1},clearInterval(){}});
  component.LecturePlayerScreen({classId:'lecture',courseId:'course',title:'Lecture',onBack(){}});effects.forEach(f=>f());await flush();assert.equal(sessions,1);
  const pausesBeforeHeartbeat=paused;events.timeUpdate({currentTime:24});events.playingChange({isPlaying:true});intervals[0]();await flush();assert.equal(beats,1);assert.equal(paused,pausesBeforeHeartbeat+1);
  intervals[0]();intervals[0]();assert.equal(reads,1);assert.equal(beats,1);offline=false;release();await flush();assert.equal(sessions,2);assert.equal(played,0);
  events.playingChange({isPlaying:true});intervals[0]();await flush();assert.equal(beats,2);
+ player.duration=90.033;events.timeUpdate({currentTime:90.033});events.playToEnd();await flush();assert.equal(positions.at(-1),90);
 });
 test('browser alerts preserve each non-cancel action and escape dismissal',()=>{
  const nodes=[],Alert={};let viewed=0,ok=0,dismissed=0;

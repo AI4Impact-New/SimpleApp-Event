@@ -89,6 +89,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
   });
 
   const sessionRef = useRef<string | null>(null);
+  const creditDurationRef = useRef(0);
   const positionRef = useRef(0);
   const playingRef = useRef(false);
   const pendingSeekRef = useRef<number | null>(null);
@@ -143,6 +144,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
         const start = seekTo ?? playback.resume_seconds ?? 0;
         // Restart from the beginning when resuming at the very end.
         const duration = playback.duration_seconds || 0;
+        creditDurationRef.current = duration;
         pendingSeekRef.current = duration > 0 && start >= duration - 2 ? 0 : start;
         positionRef.current = pendingSeekRef.current;
         await player.replaceAsync({ uri: playback.url });
@@ -230,7 +232,8 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
   }, [classId]);
 
   useEventListener(player, 'timeUpdate', ({ currentTime }) => {
-    positionRef.current = currentTime;
+    // Media metadata can include a fractional tail beyond the server's integer duration.
+    positionRef.current = Math.min(currentTime, creditDurationRef.current || currentTime);
     setPosition(currentTime);
   });
 
@@ -260,7 +263,10 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
   });
 
   useEventListener(player, 'playToEnd', () => {
-    positionRef.current = player.duration || positionRef.current;
+    positionRef.current = Math.min(
+      player.duration || positionRef.current,
+      creditDurationRef.current || Infinity
+    );
     heartbeat();
   });
 

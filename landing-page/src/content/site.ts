@@ -41,8 +41,24 @@ export const TRACKS: Track[] = [
     href: "/courses/forward-deployed-ai-engineer",
   },
   {
-    id: "dp",
+    id: "az",
     number: "02",
+    family: "Data",
+    title: "Azure/Fabric Data Engineering",
+    description: "Build Azure and Microsoft Fabric pipelines, from ADF ingestion and Databricks lakehouses to Power BI reports.",
+    level: "Beginner–Intermediate",
+    duration: "8 weeks",
+    weekly: "8–10 hrs",
+    projects: "4 incl. capstone",
+    projectCount: 4,
+    fee: "₹34,999",
+    need: "Basic computer skills — SQL and Python are taught",
+    roles: "Azure Data Engineer · Fabric Data Engineer · BI Developer",
+    href: "/courses/azure-fabric-data-engineering",
+  },
+  {
+    id: "dp",
+    number: "03",
     family: "Data",
     title: "Data & AI Platform Engineer",
     description: "Build reliable batch and streaming platforms that feed analytics and AI workloads.",
@@ -58,7 +74,7 @@ export const TRACKS: Track[] = [
   },
   {
     id: "ds",
-    number: "03",
+    number: "04",
     family: "Data",
     title: "Data Science, Analytics & Decision Intelligence",
     description: "Turn messy business data into analysis, models and recommendations leaders act on.",
@@ -74,7 +90,7 @@ export const TRACKS: Track[] = [
   },
   {
     id: "ml",
-    number: "04",
+    number: "05",
     family: "Build",
     title: "Applied AI & Machine Learning Engineer",
     description: "Train, deploy and monitor ML models as reliable services, not notebook experiments.",
@@ -90,7 +106,7 @@ export const TRACKS: Track[] = [
   },
   {
     id: "gen",
-    number: "05",
+    number: "06",
     family: "Build",
     title: "Generative AI & Agentic Systems Engineer",
     description: "Build retrieval, tool-using agents and evaluation pipelines that hold up in production.",
@@ -106,7 +122,7 @@ export const TRACKS: Track[] = [
   },
   {
     id: "prod",
-    number: "06",
+    number: "07",
     family: "Product",
     title: "AI Product & Automation Builder",
     description: "Find AI opportunities, write the PRD, prototype and launch workflows people adopt.",
@@ -124,6 +140,7 @@ export const TRACKS: Track[] = [
 
 export const FINDER_OPTIONS: { label: string; trackId: Track["id"] }[] = [
   { label: "Ship AI into real businesses", trackId: "fde" },
+  { label: "Engineer data on Azure and Fabric", trackId: "az" },
   { label: "Build data platforms and pipelines", trackId: "dp" },
   { label: "Turn data into decisions", trackId: "ds" },
   { label: "Train and deploy ML models", trackId: "ml" },
@@ -132,7 +149,7 @@ export const FINDER_OPTIONS: { label: string; trackId: Track["id"] }[] = [
 ];
 
 export const ANNOUNCEMENTS = [
-  "Explore six career tracks in AI, data and product",
+  "Explore seven career tracks in AI, data and product",
   "Structured learning and real-world projects",
   "Book free career guidance",
 ];
@@ -168,7 +185,7 @@ export const TRAINERS: Trainer[] = [
     initials: "BM",
     role: "Hands-on Azure Data Engineer & Analyst",
     subtitle: "Azure data engineering, Databricks and Microsoft Fabric",
-    assignments: ["Lead trainer · DAPE"],
+    assignments: ["Lead trainer · AFDE", "Lead trainer · DAPE"],
     topics: ["Azure Data Factory", "Databricks", "Delta Lake", "Microsoft Fabric"],
   },
   {

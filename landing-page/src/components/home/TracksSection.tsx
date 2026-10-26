@@ -12,7 +12,7 @@ export function TracksSection() {
         eyebrow="Career tracks"
         title={
           <>
-            Six roles. One standard:
+            Seven roles. One standard:
             <br />
             can you do the work?
           </>

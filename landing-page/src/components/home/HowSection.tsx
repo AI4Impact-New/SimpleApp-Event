@@ -6,7 +6,7 @@ import { SectionHeader } from "@/components/navigation/SectionHeader";
 import { Section } from "@/components/layout/Section";
 
 const STEPS = [
-  { number: "01", title: "Choose", subtitle: "Pick a role, not a topic", description: "Six tracks, each mapped to a job you can apply for. A free call helps you choose." },
+  { number: "01", title: "Choose", subtitle: "Pick a role, not a topic", description: "Seven tracks, each mapped to a job you can apply for. A free call helps you choose." },
   { number: "02", title: "Learn", subtitle: "Recorded lessons, weekly live help", description: "Learn at your pace. Bring questions to the weekly clarification session." },
   { number: "03", title: "Build", subtitle: "Projects on realistic data", description: "Three or four reviewed projects and a fintech-first capstone." },
   { number: "04", title: "Prove", subtitle: "Earn the professional certificate", description: "Pass an independently reviewed capstone and defend it." },

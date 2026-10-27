@@ -1,11 +1,13 @@
 import {LivePrice} from "./LivePrice";
-import {TRACKS} from "@/content/site";
+import {TRACKS, getTrackAction} from "@/content/site";
 import { Button } from "@/components/core/Button";
 
 type CourseStickyBarProps = { title: string; fee: string; nextCohort: string };
 
 /** Enrol bar pinned to the viewport bottom while the course page scrolls; rests above the footer. */
 export function CourseStickyBar({ title, fee, nextCohort }: CourseStickyBarProps) {
+  const track = TRACKS.find(t => t.title === title);
+  const action = getTrackAction(track);
   return (
     <div className="sticky bottom-0 z-10 border-t border-(--border-default) bg-(--slate-100)/90 backdrop-blur">
       <div className="mx-auto flex max-w-(--container) items-center justify-between gap-(--space-4) px-(--container-pad) py-(--space-3)">
@@ -21,8 +23,8 @@ export function CourseStickyBar({ title, fee, nextCohort }: CourseStickyBarProps
           <Button size="sm" variant="outline" href="#curriculum" className="hidden sm:inline-flex">
             View curriculum
           </Button>
-          <Button size="sm" href={`https://main.d16744ddqs159z.amplifyapp.com/student?course=${TRACKS.find(t=>t.title===title)?.href?.split("/").pop()||""}`}>
-            Demo checkout
+          <Button size="sm" href={action.href}>
+            {action.label}
           </Button>
         </div>
       </div>

@@ -15,6 +15,8 @@ export type Track = {
   projects: string;
   projectCount: number;
   fee: string;
+  /** False until this track is published in the backend billing catalog. */
+  demoCheckoutEnabled?: boolean;
   /** Finder card only; falls back to `level` when absent. */
   need?: string;
   roles?: string;
@@ -42,6 +44,7 @@ export const TRACKS: Track[] = [
   },
   {
     id: "az",
+    demoCheckoutEnabled: false,
     number: "02",
     family: "Data",
     title: "Azure/Fabric Data Engineering",
@@ -409,3 +412,15 @@ export const LOGIN_FEATURES = [
   { icon: "projects", title: "Projects & capstone", body: "Submit work and read your mentor’s feedback." },
   { icon: "certificates", title: "Certificates", body: "Download and share verifiable credentials." },
 ] as const;
+
+/** Keep marketing-only tracks on guidance until their backend catalog entry is ready. */
+export function getTrackAction(track: Track | undefined) {
+  const slug = track?.href?.split("/").pop();
+  if (!slug || track?.demoCheckoutEnabled === false) {
+    return { href: "#guidance", label: "Book free guidance" };
+  }
+  return {
+    href: `https://main.d16744ddqs159z.amplifyapp.com/student?course=${encodeURIComponent(slug)}`,
+    label: "View demo checkout",
+  };
+}

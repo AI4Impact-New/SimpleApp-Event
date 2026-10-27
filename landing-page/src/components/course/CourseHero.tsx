@@ -5,12 +5,13 @@ import { Button } from "@/components/core/Button";
 import { Card } from "@/components/core/Card";
 import { MetaGrid } from "@/components/data/MetaGrid";
 import type { CourseDetail } from "@/content/courses";
-import type { Track } from "@/content/site";
+import { getTrackAction, type Track } from "@/content/site";
 
 type CourseHeroProps = { track: Track; course: CourseDetail };
 
 /** Course hero: breadcrumb, H1, enrol CTAs and a dark facts card with price and next cohort. */
 export function CourseHero({ track, course }: CourseHeroProps) {
+  const action = getTrackAction(track);
   return (
     <section className="bg-hero-grid">
       <div className="mx-auto grid max-w-(--container) items-center gap-(--space-12) px-(--container-pad) py-(--space-20) lg:grid-cols-[1.5fr_1fr] lg:py-(--space-24)">
@@ -34,8 +35,8 @@ export function CourseHero({ track, course }: CourseHeroProps) {
             {course.hero.lead}
           </p>
           <div className="mt-(--space-8) flex flex-wrap gap-(--space-3)">
-            <Button variant="light" size="lg" icon={ArrowRight} href={`https://main.d16744ddqs159z.amplifyapp.com/student?course=${track.href?.split("/").pop()}`} className="whitespace-normal">
-              View demo checkout
+            <Button variant="light" size="lg" icon={ArrowRight} href={action.href} className="whitespace-normal">
+              {action.label}
             </Button>
             <Button variant="dark-ghost" size="lg" href="#curriculum">
               View curriculum

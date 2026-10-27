@@ -13,15 +13,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 
 import { api } from '@/services/api';
+import { useMyAttendance } from '@/hooks/useEvents';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { Event } from '@/types/event';
 import { formatCompactDateTimeInIst } from '@/utils/datetime';
-
-interface AttendanceRecord {
-  id: string;
-  event_id: string;
-  timestamp?: string;
-}
 
 interface LeaderboardHomeScreenProps {
   onOpenLeaderboard: (eventId: string) => void;
@@ -30,10 +25,7 @@ interface LeaderboardHomeScreenProps {
 }
 
 export function LeaderboardHomeScreen({ onOpenLeaderboard, onOpenEvents, onBack }: LeaderboardHomeScreenProps) {
-  const attendanceQuery = useQuery({
-    queryKey: ['attendance'],
-    queryFn: () => api.getAttendance() as Promise<AttendanceRecord[]>,
-  });
+  const attendanceQuery = useMyAttendance();
 
   const eventsQuery = useQuery({
     queryKey: ['events', 'all-for-leaderboard'],

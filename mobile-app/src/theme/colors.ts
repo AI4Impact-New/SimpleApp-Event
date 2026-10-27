@@ -4,6 +4,9 @@
 export const colors = {
   primary: '#0ea5e9',
   primaryDark: '#0284c7',
+  /** Brand navy and amber, from the AI4Impact logo. */
+  brandNavy: '#081328',
+  brandAccent: '#fea92f',
   background: '#f9fafb',
   backgroundCard: '#ffffff',
   text: '#111827',

@@ -1,7 +1,8 @@
 import type { ProjectPreviewKey } from "@/components/cards/ProjectPreviews";
 import { TRACKS, TRAINERS, type Track, type Trainer } from "./site";
 
-export type CourseWeek = { title: string; topics: string[]; lab: string; assignment: string };
+/** `lab` and `assignment` are optional; a week with neither renders as a plain topic row. */
+export type CourseWeek = { title: string; topics: string[]; lab?: string; assignment?: string };
 
 export type CoursePhase = {
   title: string;
@@ -37,10 +38,13 @@ export type CourseDetail = {
   paceNote: string;
   projects: CourseProject[];
   capstone: {
+    /** Panel label; defaults to "Fintech-first capstone". */
+    eyebrow?: string;
     title: string;
     body: string;
-    dataset: string;
+    dataset?: string;
     stages: { title: string; body: string }[];
+    /** Empty hides the "Prefer another domain?" note. */
     altDomains: string[];
   };
   /** Trainer assignment code, matched against `Trainer.assignments`. */
@@ -647,7 +651,7 @@ const AFDE: CourseDetail = {
     title: "Engineer end-to-end data solutions on Azure and Microsoft Fabric.",
     lead: "Ingest with Azure Data Factory, transform with Databricks and Delta Lake, build in Microsoft Fabric and deliver Power BI reports — finishing with a metadata-driven, real-time project.",
   },
-  pricing: { instalments: "or 3 instalments", international: "$449 international", nextCohort: "2 Nov 2026" },
+  pricing: { instalments: "Instalments TBD", international: "international fee TBD", nextCohort: "2 Nov 2026" },
   problem: {
     title: "Most companies run their data on Azure. Few engineers can build it end to end.",
     body: "Teams moving to Azure and Fabric need engineers who can connect sources, build a lakehouse and hand trusted data to the business — not just click through one service. This track covers the full stack, from ingestion to the report.",
@@ -669,9 +673,8 @@ const AFDE: CourseDetail = {
   ],
   notFor: ["Experienced Azure data engineers seeking advanced platform architecture"],
   prerequisites: {
-    required: ["Basic computer and spreadsheet skills", "Logical reasoning"],
-    helpful: ["Any SQL or programming exposure"],
-    notRequired: ["Prior cloud experience"],
+    required: ["TBD"],
+    helpful: ["TBD"],
   },
   tools: [
     "Azure Data Factory",
@@ -695,21 +698,33 @@ const AFDE: CourseDetail = {
       items: [
         {
           title: "Cloud and Azure data services",
-          topics: ["Cloud computing and Azure basics", "ADLS Gen2, Blob Storage and Azure SQL", "ADF, Databricks, Synapse and Fabric overview"],
-          lab: "Set up an Azure account, a storage account and an Azure SQL database.",
-          assignment: "Land sample payments files in ADLS Gen2 and explain why a data lake fits.",
+          topics: [
+            "On-premises vs cloud, cloud computing and Azure basics",
+            "Data engineering processes, Azure data engineer roles and cloud use cases",
+            "ADF, Databricks, Synapse Analytics and Microsoft Fabric overview",
+            "File, relational and non-relational stores: Blob Storage, ADLS Gen2 and Azure SQL",
+          ],
         },
         {
           title: "Azure Data Factory",
-          topics: ["Linked services, datasets and integration runtimes", "Full, incremental and parameterised loads", "Triggers, monitoring and CI/CD"],
-          lab: "Copy data from Azure SQL to ADLS with a parameterised pipeline.",
-          assignment: "Build an incremental load and schedule it with a trigger.",
+          topics: [
+            "ETL vs ELT, on-prem vs cloud ETL tools and why ADF",
+            "ADF components, linked services and Azure, self-hosted and SSIS integration runtimes",
+            "Pipelines and activities: copy data, control flow and data flows",
+            "Full, batch, sequential and incremental loads with the copy data tool",
+            "Parameters, data migration, scheduling, triggers, monitoring and CI/CD",
+          ],
         },
         {
           title: "SQL and Python for data engineering",
-          topics: ["Joins, subqueries and window functions", "Python data structures and functions", "Map, filter, reduce and lambdas"],
-          lab: "Clean and aggregate transactions with SQL window functions.",
-          assignment: "Write Python functions that validate and reshape transaction records.",
+          topics: [
+            "SQL DDL and DML, aggregates, grouping, joins and set operators",
+            "Subqueries, data cleaning and transformation",
+            "Window, logical, string, date and analytical functions",
+            "Python variables, datatypes, operators, strings, indexing and slicing",
+            "Lists, tuples, sets, dictionaries, and built-in and user-defined functions",
+            "If, while, for, range(), map, filter, reduce and lambdas",
+          ],
         },
       ],
     },
@@ -720,15 +735,24 @@ const AFDE: CourseDetail = {
       items: [
         {
           title: "Spark and Azure Databricks",
-          topics: ["Spark architecture and RDDs", "Workspaces, clusters, catalog and DBFS", "Volumes, dbutils and ADLS integration"],
-          lab: "Connect Databricks to ADLS and manage files with dbutils.",
-          assignment: "Use RDD transformations and actions, and explain lazy evaluation.",
+          topics: [
+            "Apache Spark, Hadoop vs Spark, Spark architecture, context and APIs",
+            "Databricks Free Edition and runtime: workspace, cluster, catalog, DBFS, tables and Hive metastore",
+            "Volumes and dbutils file commands: create, copy, move, list and remove",
+            "Mounting ADLS with access keys",
+            "RDD transformations, actions, lazy evaluation and fault tolerance",
+          ],
         },
         {
           title: "PySpark, Delta Lake and medallion architecture",
-          topics: ["DataFrames, joins and window functions", "Managed and external Delta tables", "Bronze, silver and gold layers, DLT and Unity Catalog"],
-          lab: "Build bronze, silver and gold Delta tables for card transactions.",
-          assignment: "Schedule the Databricks notebooks from an ADF pipeline.",
+          topics: [
+            "DataFrames: reading files, column manipulation, group by, aggregates and joins",
+            "Caching, schema evolution, DAG, write formats, partitionBy and window functions",
+            "Spark SQL views, and tables from the UI and notebooks",
+            "Managed and external Delta tables and the lakehouse",
+            "Bronze, silver and gold layers, Delta Live Tables and Unity Catalog",
+            "Scheduling Databricks jobs from ADF pipelines",
+          ],
         },
       ],
     },
@@ -739,72 +763,56 @@ const AFDE: CourseDetail = {
       items: [
         {
           title: "Microsoft Fabric",
-          topics: ["OneLake, pipelines and Dataflows Gen2", "Fabric lakehouse, notebooks and warehouse", "Direct Lake and row- and column-level security"],
-          lab: "Load a Fabric lakehouse and warehouse with pipelines and COPY INTO.",
-          assignment: "Compare lakehouse and warehouse, and migrate one ADF pipeline to Fabric.",
+          topics: [
+            "Fabric analytics platform and OneLake",
+            "Fabric Data Factory: pipelines, Dataflows Gen2, copy jobs and ADF-to-Fabric migration",
+            "Synapse Data Engineering: notebooks, Apache Spark, lakehouse and Delta tables",
+            "Synapse Data Warehouse: tables and loads with COPY INTO, pipelines and Dataflow Gen2",
+            "Lakehouse vs warehouse",
+            "Power BI in Fabric: Direct Lake, DirectQuery, and row- and column-level security",
+          ],
         },
         {
           title: "Data warehousing and Power BI",
-          topics: ["OLTP vs OLAP, star and snowflake schemas", "Power Query and data modelling", "DAX, reports and Power BI Service"],
-          lab: "Model a payments star schema in Power BI Desktop.",
-          assignment: "Write DAX measures and publish a report to Power BI Service.",
+          topics: [
+            "Data warehousing, OLTP vs OLAP, star and snowflake schemas",
+            "Power BI Desktop, connecting data sources and Power Query",
+            "Data modelling and DAX",
+            "Reports, visualisation types, dashboards and publishing to Power BI Service",
+          ],
         },
         {
           title: "Real-time project",
-          topics: ["Key Vault, Azure DevOps repos and pull requests", "Dynamic linked services and metadata-driven pipelines", "Bronze and silver frameworks, triggers and job clusters"],
-          lab: "Set up source stores, metadata tables and a DevOps repo for your project.",
-          assignment: "Deliver the master pipeline and a Power BI report from the gold layer.",
+          topics: [
+            "Azure services, source data stores and metadata tables",
+            "Key Vault credentials, and Azure DevOps repos, branches and pull requests",
+            "Dynamic linked services, dynamic datasets and metadata-driven pipelines",
+            "Bronze and silver frameworks, a notebook per table and transformations",
+            "ADF job clusters and triggers for the master pipeline",
+            "Gold layer to Power BI: dimensional model, measures and published report",
+          ],
         },
       ],
     },
   ],
   paceNote: "The core runs over 8 weeks, ending with a week-long real-time project.",
-  projects: [
-    {
-      windowTitle: "pl_master_ingest.json",
-      preview: "dag",
-      title: "Metadata-driven ingestion pipeline",
-      description: "ADF pipelines with dynamic linked services and datasets that load every source table from a metadata table.",
-      dataset: "Payments, merchants and customers in Azure SQL",
-      tags: ["ADF pipeline", "Metadata tables", "Triggers"],
-    },
-    {
-      windowTitle: "gold/fct_transactions.sql",
-      preview: "sql",
-      title: "Databricks medallion lakehouse",
-      description: "Bronze, silver and gold Delta tables built with PySpark notebooks and governed with Unity Catalog.",
-      dataset: "Card transactions landed in ADLS Gen2",
-      tags: ["Delta tables", "PySpark notebooks", "Unity Catalog"],
-    },
-    {
-      windowTitle: "Payments Overview · Power BI",
-      preview: "dashboard",
-      title: "Fabric warehouse and Power BI report",
-      description: "A Fabric warehouse and a Direct Lake Power BI report with DAX measures and row-level security.",
-      dataset: "Gold-layer payments data in OneLake",
-      tags: ["Fabric warehouse", "DAX measures", "Row-level security"],
-    },
-  ],
+  projects: [],
   capstone: {
-    title: "End-to-end Azure payments data project",
-    body: "Build a real-time project that ingests source data with metadata-driven ADF pipelines, transforms it through Databricks bronze, silver and gold layers and publishes a Power BI report — with secrets in Key Vault and code in Azure DevOps.",
-    dataset: "Payments, merchants, refunds and customer tables from operational databases",
+    eyebrow: "Week 8 · Real-time project",
+    title: "End-to-end Azure data engineering project",
+    body: "Build a metadata-driven project that ingests source data with ADF pipelines, transforms it through Databricks bronze and silver frameworks and loads the gold layer into Power BI — with credentials in Key Vault and code in Azure DevOps.",
     stages: [
-      { title: "Set up", body: "Azure services, source stores, Key Vault and DevOps repo" },
-      { title: "Ingest", body: "Dynamic linked services and metadata-driven pipelines" },
-      { title: "Transform", body: "Bronze and silver frameworks and gold tables" },
-      { title: "Report", body: "Dimensional model, measures and published report" },
+      { title: "Set up", body: "Azure services, source data stores, metadata tables, Key Vault and DevOps repo" },
+      { title: "Ingest", body: "Dynamic linked services, dynamic datasets and metadata-driven pipelines" },
+      { title: "Transform", body: "Bronze and silver frameworks, a notebook per table, job cluster and master pipeline trigger" },
+      { title: "Report", body: "Gold layer to Power BI: dimensional model, measures and report published to Power BI Service" },
     ],
-    altDomains: ["SaaS", "E-commerce", "Logistics", "Healthcare"],
+    altDomains: [],
   },
   trainerCode: "AFDE",
-  roles: [
-    { title: "Azure Data Engineer", body: "Build pipelines with ADF and Databricks" },
-    { title: "Fabric Data Engineer", body: "Build lakehouses and warehouses in Fabric" },
-    { title: "BI Developer", body: "Model data and build Power BI reports" },
-  ],
-  certificate: { capstone: "End-to-end Azure payments data project", credentialId: "IIAA-AFDE-2026-000123" },
-  faqs: [COMMON_FAQS.week, COMMON_FAQS.handholding, COMMON_FAQS.fintech, COMMON_FAQS.job],
+  roles: [{ title: "TBD", body: "Roles for this track are to be confirmed." }],
+  certificate: { capstone: "End-to-end Azure data engineering project", credentialId: "IIAA-AFDE-2026-000123" },
+  faqs: [COMMON_FAQS.handholding, COMMON_FAQS.job],
 };
 
 const DAPE: CourseDetail = {

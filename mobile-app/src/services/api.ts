@@ -113,8 +113,8 @@ class ApiService {
     return response.data;
   }
 
-  async getAttendance() {
-    const response = await this.client.get('/attendance');
+  async getAttendance(params?: { limit?: number }) {
+    const response = await this.client.get('/attendance', { params });
     const raw = response.data;
     return Array.isArray(raw) ? raw : raw?.attendance ?? raw?.data ?? [];
   }

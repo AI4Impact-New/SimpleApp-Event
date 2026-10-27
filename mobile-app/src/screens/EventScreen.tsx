@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
-import { useEvent, useJoinEvent, useEventAnalytics } from '@/hooks/useEvents';
+import { useEvent, useJoinEvent, useEventAnalytics, useMyAttendance } from '@/hooks/useEvents';
 import { usePolls } from '@/hooks/usePolls';
 import { useMaterials } from '@/hooks/useMaterials';
 import { PollCard } from '@/components/PollCard';
@@ -23,6 +23,7 @@ import { Material } from '@/types/material';
 import { api } from '@/services/api';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { formatDateTimeInIst } from '@/utils/datetime';
+import { shareTextFile } from '@/utils/sharePdf';
 
 interface EventScreenProps {
   eventId: string;
@@ -36,14 +37,19 @@ export function EventScreen({ eventId, onBack, onPollPress }: EventScreenProps) 
   const { data: materialsData, isLoading: materialsLoading, refetch: refetchMaterials, isRefetching: materialsRefetching } = useMaterials(eventId);
   const joinEvent = useJoinEvent();
   const { data: analytics, refetch: refetchAnalytics, isRefetching: analyticsRefetching } = useEventAnalytics(eventId);
-  const isRefreshing = eventRefetching || pollsRefetching || materialsRefetching || analyticsRefetching;
+  const { data: attendance, isLoading: attendanceLoading, refetch: refetchAttendance, isRefetching: attendanceRefetching } = useMyAttendance();
+  const isRefreshing = eventRefetching || pollsRefetching || materialsRefetching || analyticsRefetching || attendanceRefetching;
   const onRefresh = () => {
     refetchEvent();
     refetchPolls();
     refetchMaterials();
     refetchAnalytics();
+    refetchAttendance();
   };
-  const [joined, setJoined] = useState(false);
+  // Local flag covers the moment after joining, before the attendance refetch lands.
+  const [joinedLocally, setJoined] = useState(false);
+  const joined = joinedLocally || !!attendance?.some((record) => record.event_id === eventId);
+  const [addingToCalendar, setAddingToCalendar] = useState(false);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [selectedPollOptions, setSelectedPollOptions] = useState<Record<string, string | null>>({});
   const [submittedPollOptions, setSubmittedPollOptions] = useState<Record<string, string | null>>({});
@@ -65,6 +71,30 @@ export function EventScreen({ eventId, onBack, onPollPress }: EventScreenProps) 
       } else {
         Alert.alert('Error', msg || 'Failed to join event');
       }
+    }
+  };
+
+  const handleAddToCalendar = async () => {
+    setAddingToCalendar(true);
+    try {
+      const ics = await api.getEventCalendarIcs(eventId);
+      // Share a real .ics file: calendar apps import files, not pasted text.
+      await shareTextFile({
+        text: ics,
+        fileName: 'event.ics',
+        mimeType: 'text/calendar',
+        UTI: 'com.apple.ical.ics',
+        dialogTitle: event?.name ?? 'Event',
+      });
+    } catch (e: any) {
+      Alert.alert(
+        'Calendar unavailable',
+        e?.status === 404
+          ? 'This event is no longer available.'
+          : 'Could not load the calendar. Check your connection and try again.'
+      );
+    } finally {
+      setAddingToCalendar(false);
     }
   };
 
@@ -195,7 +225,11 @@ export function EventScreen({ eventId, onBack, onPollPress }: EventScreenProps) 
         </View>
 
         {/* Join / Attending */}
-        {!joined ? (
+        {attendanceLoading && !joined ? (
+          <View style={styles.joinPlaceholder}>
+            <ActivityIndicator color={colors.primary} size="small" />
+          </View>
+        ) : !joined ? (
           <TouchableOpacity
             style={[styles.joinButton, joinEvent.isPending && styles.joinButtonDisabled]}
             onPress={handleJoin}
@@ -217,6 +251,22 @@ export function EventScreen({ eventId, onBack, onPollPress }: EventScreenProps) 
             <Text style={styles.joinedText}>You're attending this event</Text>
           </View>
         )}
+
+        <TouchableOpacity
+          style={[styles.calendarButton, addingToCalendar && styles.joinButtonDisabled]}
+          onPress={handleAddToCalendar}
+          disabled={addingToCalendar}
+          activeOpacity={0.75}
+        >
+          {addingToCalendar ? (
+            <ActivityIndicator color={colors.primary} size="small" />
+          ) : (
+            <>
+              <Ionicons name="calendar-outline" size={20} color={colors.text} />
+              <Text style={styles.calendarButtonText}>Add to calendar</Text>
+            </>
+          )}
+        </TouchableOpacity>
 
         {/* Polls Section */}
         <View style={styles.section}>
@@ -419,6 +469,32 @@ const styles = StyleSheet.create({
   joinButtonText: {
     color: colors.white,
     fontSize: 17,
+    fontWeight: '600',
+  },
+  joinPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  calendarButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginHorizontal: spacing.xl,
+    backgroundColor: colors.backgroundCard,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: 14,
+    marginBottom: spacing.lg,
+  },
+  calendarButtonText: {
+    color: colors.text,
+    fontSize: 15,
     fontWeight: '600',
   },
   joinedBanner: {

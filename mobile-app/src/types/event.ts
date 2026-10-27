@@ -35,3 +35,9 @@ export interface EventAnalytics {
     total_actions: number;
   }[];
 }
+
+export interface AttendanceRecord {
+  id: string;
+  event_id: string;
+  timestamp?: string;
+}

@@ -42,12 +42,17 @@ function WeekDetail({ icon: Icon, label, children }: { icon: LucideIcon; label: 
 }
 
 export function CurriculumSection({ course }: { course: CourseDetail }) {
+  const hasWeekDetails = course.phases.some((phase) => phase.items.some((week) => week.lab || week.assignment));
   return (
     <Section id="curriculum" tone="alt">
       <SectionHeader
         eyebrow="Curriculum"
         title="Week by week."
-        lead="Every week has a hands-on lab and an assignment. Open a week to see both."
+        lead={
+          hasWeekDetails
+            ? "Every week has a hands-on lab and an assignment. Open a week to see both."
+            : "The topics covered in each week."
+        }
       />
       <div className="mt-(--space-12) flex flex-col gap-(--space-10)">
         {course.phases.map((phase, p) => (
@@ -72,16 +77,21 @@ export function CurriculumSection({ course }: { course: CourseDetail }) {
                 leading: <WeekNumber n={phase.weeks[0] + i} />,
                 title: week.title,
                 subtitle: week.topics.join(" · "),
-                content: (
-                  <div className="grid gap-(--space-4) sm:ml-[calc(var(--space-10)+var(--space-4))] sm:grid-cols-2">
-                    <WeekDetail icon={FlaskConical} label="Lab">
-                      {week.lab}
-                    </WeekDetail>
-                    <WeekDetail icon={ClipboardCheck} label="Weekly assignment">
-                      {week.assignment}
-                    </WeekDetail>
-                  </div>
-                ),
+                content:
+                  week.lab || week.assignment ? (
+                    <div className="grid gap-(--space-4) sm:ml-[calc(var(--space-10)+var(--space-4))] sm:grid-cols-2">
+                      {week.lab ? (
+                        <WeekDetail icon={FlaskConical} label="Lab">
+                          {week.lab}
+                        </WeekDetail>
+                      ) : null}
+                      {week.assignment ? (
+                        <WeekDetail icon={ClipboardCheck} label="Weekly assignment">
+                          {week.assignment}
+                        </WeekDetail>
+                      ) : null}
+                    </div>
+                  ) : undefined,
               }))}
             />
           </div>

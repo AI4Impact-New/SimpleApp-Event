@@ -183,11 +183,13 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
 
       <Section id="projects" tone="alt">
         <SectionHeader eyebrow="Projects" title="What goes in your portfolio." />
-        <div className="mt-(--space-10) grid gap-(--space-5) lg:grid-cols-3">
-          {course.projects.map(({ preview, ...project }) => (
-            <ProjectCard key={project.title} theme="light" subgrid preview={PROJECT_PREVIEWS[preview]} {...project} />
-          ))}
-        </div>
+        {course.projects.length ? (
+          <div className="mt-(--space-10) grid gap-(--space-5) lg:grid-cols-3">
+            {course.projects.map(({ preview, ...project }) => (
+              <ProjectCard key={project.title} theme="light" subgrid preview={PROJECT_PREVIEWS[preview]} {...project} />
+            ))}
+          </div>
+        ) : null}
         <div className="mt-(--space-10)">
           <CapstonePanel capstone={course.capstone} />
         </div>

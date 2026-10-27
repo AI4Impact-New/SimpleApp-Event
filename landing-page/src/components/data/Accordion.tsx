@@ -8,7 +8,8 @@ export type AccordionItem = {
   subtitle?: ReactNode;
   /** Leading marker, e.g. a week number. */
   leading?: ReactNode;
-  content: ReactNode;
+  /** Omit for a static row with no chevron. */
+  content?: ReactNode;
 };
 
 type AccordionProps = {
@@ -20,9 +21,9 @@ type AccordionProps = {
 export function Accordion({ items, className = "" }: AccordionProps) {
   return (
     <Card className={`divide-y divide-(--border-default) overflow-hidden ${className}`}>
-      {items.map((item, i) => (
-        <details key={i} className="group">
-          <summary className="flex cursor-pointer list-none items-center gap-(--space-4) px-(--space-6) py-(--space-5) [&::-webkit-details-marker]:hidden">
+      {items.map((item, i) => {
+        const heading = (
+          <>
             {item.leading}
             <span className="flex min-w-0 flex-1 flex-col gap-(--space-1)">
               <span className="font-(family-name:--font-display) text-(length:--fs-body) font-semibold leading-(--lh-snug) text-(--text-strong)">
@@ -32,15 +33,29 @@ export function Accordion({ items, className = "" }: AccordionProps) {
                 <span className="text-(length:--fs-2xs) leading-(--lh-snug) text-(--text-body)">{item.subtitle}</span>
               ) : null}
             </span>
-            <ChevronDown
-              size={16}
-              aria-hidden
-              className="shrink-0 text-(--text-body) transition-transform duration-(--dur-base) ease-(--ease-out) group-open:rotate-180"
-            />
-          </summary>
-          <div className="px-(--space-6) pb-(--space-6)">{item.content}</div>
-        </details>
-      ))}
+          </>
+        );
+        if (item.content == null) {
+          return (
+            <div key={i} className="flex items-center gap-(--space-4) px-(--space-6) py-(--space-5)">
+              {heading}
+            </div>
+          );
+        }
+        return (
+          <details key={i} className="group">
+            <summary className="flex cursor-pointer list-none items-center gap-(--space-4) px-(--space-6) py-(--space-5) [&::-webkit-details-marker]:hidden">
+              {heading}
+              <ChevronDown
+                size={16}
+                aria-hidden
+                className="shrink-0 text-(--text-body) transition-transform duration-(--dur-base) ease-(--ease-out) group-open:rotate-180"
+              />
+            </summary>
+            <div className="px-(--space-6) pb-(--space-6)">{item.content}</div>
+          </details>
+        );
+      })}
     </Card>
   );
 }

@@ -60,7 +60,7 @@ export function CourseHero({ track, course }: CourseHeroProps) {
                 <LivePrice slug={track.href?.split("/").pop()||""} initial={track.fee}/>
               </span>
               <span className="text-(length:--fs-xs) leading-(--lh-snug) text-(--text-on-dark-body)">
-                {course.pricing.instalments} · {course.pricing.international}
+                {[course.pricing.instalments, course.pricing.international].filter(Boolean).join(" · ")}
               </span>
             </div>
             <div className="flex flex-col gap-(--space-1) text-right">

@@ -1,8 +1,21 @@
+import { CalendarClock, CirclePlay, Hammer, Workflow, type LucideIcon } from "lucide-react";
 import type { ProjectPreviewKey } from "@/components/cards/ProjectPreviews";
 import { TRACKS, TRAINERS, type Track, type Trainer } from "./site";
 
-/** `lab` and `assignment` are optional; a week with neither renders as a plain topic row. */
-export type CourseWeek = { title: string; topics: string[]; lab?: string; assignment?: string };
+/** A syllabus module inside a week, with its full topic list. */
+export type CourseModule = { title: string; topics: string[] };
+
+/**
+ * `lab`, `assignment` and `modules` are optional; a week with none of them renders as a plain topic row.
+ * `modules` shows the full syllabus breakdown when the week is opened.
+ */
+export type CourseWeek = {
+  title: string;
+  topics: string[];
+  lab?: string;
+  assignment?: string;
+  modules?: CourseModule[];
+};
 
 export type CoursePhase = {
   title: string;
@@ -26,12 +39,18 @@ export type CourseDetail = {
   /** Wording on the hero enrol button, e.g. "Enrol in Forward Deployed AI Engineering". */
   enrolLabel: string;
   hero: { title: string; lead: string };
-  pricing: { instalments: string; international: string; nextCohort: string };
+  pricing: { instalments?: string; international: string; nextCohort: string };
   problem: { title: string; body: string; points: string[] };
   outcomes: { value: string; label: string }[];
   builtFor: string[];
   notFor: string[];
-  prerequisites: { required: string[]; helpful: string[]; notRequired?: string[] };
+  prerequisites: { required: string[]; helpful?: string[]; notRequired?: string[] };
+  /** Overrides the default "How you learn" section (recorded lessons with weekly live help). */
+  delivery?: {
+    title: [string, string];
+    features: { icon: LucideIcon; title: string; description: string }[];
+    note: string;
+  };
   tools: string[];
   coreWeeks: number;
   phases: CoursePhase[];
@@ -651,7 +670,7 @@ const AFDE: CourseDetail = {
     title: "Engineer end-to-end data solutions on Azure and Microsoft Fabric.",
     lead: "Ingest with Azure Data Factory, transform with Databricks and Delta Lake, build in Microsoft Fabric and deliver Power BI reports — finishing with a metadata-driven, real-time project.",
   },
-  pricing: { instalments: "Instalments TBD", international: "international fee TBD", nextCohort: "2 Nov 2026" },
+  pricing: { international: "$300 international", nextCohort: "14 Dec 2026" },
   problem: {
     title: "Most companies run their data on Azure. Few engineers can build it end to end.",
     body: "Teams moving to Azure and Fabric need engineers who can connect sources, build a lakehouse and hand trusted data to the business — not just click through one service. This track covers the full stack, from ingestion to the report.",
@@ -662,9 +681,9 @@ const AFDE: CourseDetail = {
     ],
   },
   outcomes: [
-    { value: "1", label: "metadata-driven ADF and Databricks project, bronze to gold" },
-    { value: "3", label: "medallion layers built on Delta Lake" },
-    { value: "1", label: "Power BI report published from the gold layer" },
+    { value: "1", label: "mini project applying the Azure services you learn" },
+    { value: "1", label: "end-to-end metadata-driven project, from ADF ingestion to a published Power BI report" },
+    { value: "3", label: "medallion layers — bronze, silver and gold — built on Delta Lake" },
   ],
   builtFor: [
     "Graduates and career switchers starting in data engineering",
@@ -673,8 +692,17 @@ const AFDE: CourseDetail = {
   ],
   notFor: ["Experienced Azure data engineers seeking advanced platform architecture"],
   prerequisites: {
-    required: ["TBD"],
-    helpful: ["TBD"],
+    required: ["SQL basics — covered in Week 3", "Python basics — covered in Week 3"],
+  },
+  delivery: {
+    title: ["Online and recorded.", "One hour every weekday."],
+    features: [
+      { icon: CirclePlay, title: "Online, recorded lessons", description: "Structured recorded lessons you watch online." },
+      { icon: CalendarClock, title: "One hour a day", description: "A one-hour session every weekday, Monday to Friday." },
+      { icon: Hammer, title: "Mini project", description: "Apply the Azure services you learn in a guided mini project." },
+      { icon: Workflow, title: "End-to-end project", description: "Build a metadata-driven project from source data to Power BI." },
+    ],
+    note: "Plan for 10–15 hrs/week, including practice.",
   },
   tools: [
     "Azure Data Factory",
@@ -697,16 +725,50 @@ const AFDE: CourseDetail = {
       weeks: [1, 3],
       items: [
         {
-          title: "Cloud and Azure data services",
+          title: "Cloud Introduction · Overview of ADE Services · Azure Data Storages",
           topics: [
             "On-premises vs cloud, cloud computing and Azure basics",
             "Data engineering processes, Azure data engineer roles and cloud use cases",
             "ADF, Databricks, Synapse Analytics and Microsoft Fabric overview",
             "File, relational and non-relational stores: Blob Storage, ADLS Gen2 and Azure SQL",
           ],
+          modules: [
+            {
+              title: "Cloud Introduction",
+              topics: [
+                "On-premises vs cloud-based servers",
+                "Cloud computing basics",
+                "Setting up an Azure account",
+                "Introduction to Microsoft Azure",
+                "Applications of Azure",
+                "Data engineering processes",
+                "Azure data engineer roles and tasks",
+                "Use cases for the cloud",
+                "Azure Data Lake Storage (ADLS) Gen2",
+                "Azure Blob Storage",
+                "Azure SQL Database",
+              ],
+            },
+            {
+              title: "Overview of ADE Services",
+              topics: ["Azure Data Factory", "Azure Databricks", "Azure Synapse Analytics", "Microsoft Fabric"],
+            },
+            {
+              title: "Azure Data Storages",
+              topics: [
+                "File stores",
+                "Relational data stores",
+                "Non-relational data stores",
+                "Azure Blob Storage",
+                "Azure Data Lake Storage",
+                "Why a data lake",
+                "Azure SQL Database",
+              ],
+            },
+          ],
         },
         {
-          title: "Azure Data Factory",
+          title: "Azure Data Factory · ADF Scenarios",
           topics: [
             "ETL vs ELT, on-prem vs cloud ETL tools and why ADF",
             "ADF components, linked services and Azure, self-hosted and SSIS integration runtimes",
@@ -714,9 +776,42 @@ const AFDE: CourseDetail = {
             "Full, batch, sequential and incremental loads with the copy data tool",
             "Parameters, data migration, scheduling, triggers, monitoring and CI/CD",
           ],
+          modules: [
+            {
+              title: "Azure Data Factory",
+              topics: [
+                "Introduction to Azure Data Factory (ADF)",
+                "ETL vs ELT",
+                "On-prem vs cloud ETL tools",
+                "Why ADF",
+                "ADF components",
+                "Linked services in ADF",
+                "Integration runtime (IR): Azure, self-hosted and SSIS",
+                "Pipelines and activities: copy data, control flow and data flow",
+                "Data ingestion methods",
+                "Full load",
+                "Copy data tool",
+                "Batch load",
+                "Sequential load",
+                "Incremental load",
+                "Working with various copy data scenarios",
+              ],
+            },
+            {
+              title: "ADF Scenarios",
+              topics: [
+                "Working with Azure SQL Database",
+                "Working with parameters in ADF",
+                "ADF data migration",
+                "Scheduling and triggering pipelines",
+                "Monitoring pipelines",
+                "CI/CD in ADF",
+              ],
+            },
+          ],
         },
         {
-          title: "SQL and Python for data engineering",
+          title: "SQL · Python Basics",
           topics: [
             "SQL DDL and DML, aggregates, grouping, joins and set operators",
             "Subqueries, data cleaning and transformation",
@@ -724,6 +819,40 @@ const AFDE: CourseDetail = {
             "Python variables, datatypes, operators, strings, indexing and slicing",
             "Lists, tuples, sets, dictionaries, and built-in and user-defined functions",
             "If, while, for, range(), map, filter, reduce and lambdas",
+          ],
+          modules: [
+            {
+              title: "SQL",
+              topics: [
+                "SQL commands for data analysis (DDL and DML)",
+                "Aggregate functions and grouping data",
+                "SQL joins and set operators",
+                "Advanced data analysis: subqueries",
+                "Data cleaning and transformation",
+                "Window and logical functions",
+                "String and date functions",
+                "Analytical functions",
+              ],
+            },
+            {
+              title: "Python Basics",
+              topics: [
+                "Variables",
+                "Datatypes in Python",
+                "Operators in Python: arithmetic, logical and comparison",
+                "Working with strings",
+                "Indexing",
+                "Slicing",
+                "Data structures in Python: lists, tuples, sets and dictionaries",
+                "Functions: built-in and user-defined",
+                "Conditional flow statements: if condition, while loop and for iteration",
+                "range() function",
+                "Map",
+                "Filter",
+                "Reduce",
+                "Lambda expressions",
+              ],
+            },
           ],
         },
       ],
@@ -734,7 +863,7 @@ const AFDE: CourseDetail = {
       weeks: [4, 5],
       items: [
         {
-          title: "Spark and Azure Databricks",
+          title: "Spark Introduction · Azure Databricks Introduction · Databricks Utils · RDD (PySpark)",
           topics: [
             "Apache Spark, Hadoop vs Spark, Spark architecture, context and APIs",
             "Databricks Free Edition and runtime: workspace, cluster, catalog, DBFS, tables and Hive metastore",
@@ -742,9 +871,53 @@ const AFDE: CourseDetail = {
             "Mounting ADLS with access keys",
             "RDD transformations, actions, lazy evaluation and fault tolerance",
           ],
+          modules: [
+            {
+              title: "Spark Introduction",
+              topics: [
+                "Introduction to Apache Spark",
+                "Hadoop vs Spark",
+                "Understanding Spark architecture",
+                "Spark context",
+                "Spark APIs",
+                "Spark data structures: RDDs and DataFrames",
+                "Introduction to Azure Databricks",
+                "Azure Databricks Free Edition",
+                "Databricks runtime engine",
+              ],
+            },
+            {
+              title: "Azure Databricks Introduction",
+              topics: [
+                "Databricks components: workspace, cluster, catalog, DBFS, tables and Hive metastore",
+              ],
+            },
+            {
+              title: "Databricks Utils",
+              topics: [
+                "Volume: introduction and creating a volume",
+                "Working with files using dbutils: notebook introduction",
+                "Creating a directory",
+                "Copy, move, list and remove commands",
+                "Use cases",
+              ],
+            },
+            {
+              title: "RDD (PySpark)",
+              topics: [
+                "Integrating ADLS with Databricks",
+                "Mounting with access keys",
+                "Creating Spark RDDs",
+                "Spark transformations",
+                "Spark actions",
+                "Lazy evaluation",
+                "Fault tolerance",
+              ],
+            },
+          ],
         },
         {
-          title: "PySpark, Delta Lake and medallion architecture",
+          title: "DataFrames (PySpark) · Delta Lake",
           topics: [
             "DataFrames: reading files, column manipulation, group by, aggregates and joins",
             "Caching, schema evolution, DAG, write formats, partitionBy and window functions",
@@ -752,6 +925,39 @@ const AFDE: CourseDetail = {
             "Managed and external Delta tables and the lakehouse",
             "Bronze, silver and gold layers, Delta Live Tables and Unity Catalog",
             "Scheduling Databricks jobs from ADF pipelines",
+          ],
+          modules: [
+            {
+              title: "DataFrames (PySpark)",
+              topics: [
+                "DataFrame introduction",
+                "Creating Spark DataFrames",
+                "Reading data from different files",
+                "Column manipulations",
+                "Group by and aggregate functions",
+                "Joins in PySpark",
+                "Caching",
+                "Schema evolution",
+                "DAG",
+                "Writing data to different formats",
+                "Partitioning data using partitionBy",
+                "Window functions",
+              ],
+            },
+            {
+              title: "Delta Lake",
+              topics: [
+                "Spark SQL: creating a view and SQL statements on a view",
+                "Creating tables using the UI and using notebooks",
+                "Delta Lake",
+                "Creating Delta tables: managed and external tables",
+                "Lakehouse",
+                "Medallion architecture: bronze, silver and gold layers",
+                "Scheduling Databricks jobs using ADF pipelines",
+                "Delta Live Tables (DLT)",
+                "Unity Catalog",
+              ],
+            },
           ],
         },
       ],
@@ -771,18 +977,74 @@ const AFDE: CourseDetail = {
             "Lakehouse vs warehouse",
             "Power BI in Fabric: Direct Lake, DirectQuery, and row- and column-level security",
           ],
+          modules: [
+            {
+              title: "Microsoft Fabric",
+              topics: [
+                "Introduction to Microsoft Fabric",
+                "Fabric analytics platform",
+                "Fabric OneLake",
+                "Fabric Data Factory: data pipelines and Dataflows Gen2",
+                "Transforming data",
+                "Loading data to a lakehouse",
+                "Copy job",
+                "Creating a pipeline in Fabric",
+                "Transforming data with Dataflow Gen2",
+                "ADF to Fabric migration",
+                "Fabric Synapse Data Engineering",
+                "Fabric notebooks",
+                "Analysing data with Apache Spark",
+                "Lakehouse",
+                "Delta tables",
+                "Fabric Synapse Data Warehouse",
+                "Creating a warehouse in Fabric",
+                "Ways to load data into a warehouse",
+                "Creating tables in a warehouse",
+                "Loading data using the COPY INTO command",
+                "Loading data using a pipeline to a warehouse",
+                "Loading data using Dataflow Gen2",
+                "Lakehouse vs warehouse",
+                "Microsoft Power BI in Fabric",
+                "Accessing data using Power BI Desktop",
+                "Direct Lake",
+                "DirectQuery",
+                "Row-level security",
+                "Column-level security",
+              ],
+            },
+          ],
         },
         {
-          title: "Data warehousing and Power BI",
+          title: "Power BI",
           topics: [
             "Data warehousing, OLTP vs OLAP, star and snowflake schemas",
             "Power BI Desktop, connecting data sources and Power Query",
             "Data modelling and DAX",
             "Reports, visualisation types, dashboards and publishing to Power BI Service",
           ],
+          modules: [
+            {
+              title: "Power BI",
+              topics: [
+                "Introduction to data warehousing",
+                "OLTP vs OLAP",
+                "Star schema vs snowflake schema",
+                "Overview of Power BI",
+                "Power BI Desktop",
+                "Connecting Power BI with different data sources",
+                "Power Query for data transformation",
+                "Data modelling",
+                "DAX",
+                "Reports and visualisation types",
+                "Dashboards",
+                "Publishing reports",
+                "Power BI Service",
+              ],
+            },
+          ],
         },
         {
-          title: "Real-time project",
+          title: "Real Time Project",
           topics: [
             "Azure services, source data stores and metadata tables",
             "Key Vault credentials, and Azure DevOps repos, branches and pull requests",
@@ -791,11 +1053,42 @@ const AFDE: CourseDetail = {
             "ADF job clusters and triggers for the master pipeline",
             "Gold layer to Power BI: dimensional model, measures and published report",
           ],
+          modules: [
+            {
+              title: "Real Time Project",
+              topics: [
+                "Overview of the project",
+                "Creating Azure services",
+                "Setting up data stores for the source",
+                "Creating metadata tables",
+                "Masking credentials with Key Vault",
+                "Creating and setting up an Azure DevOps repo",
+                "Creating a working branch",
+                "Creating a PR",
+                "Merging code with the collaboration branch",
+                "Creating dynamic linked services",
+                "Creating dynamic datasets",
+                "Creating metadata-driven pipelines",
+                "Creating a framework for the bronze layer",
+                "Creating a framework for the silver layer",
+                "Creating a notebook for every table",
+                "Applying required transformations",
+                "Creating a job cluster in Azure Data Factory",
+                "Creating a trigger to call the master pipeline",
+                "Scheduling a trigger to call the master pipeline",
+                "Loading data from the gold layer to Power BI",
+                "Creating dimensional modelling",
+                "Creating measures",
+                "Creating a report",
+                "Publishing the report to Power BI Service",
+              ],
+            },
+          ],
         },
       ],
     },
   ],
-  paceNote: "The core runs over 8 weeks, ending with a week-long real-time project.",
+  paceNote: "The course runs online over 8 weeks, with one hour of recorded lessons every weekday, ending with a week-long real-time project.",
   projects: [],
   capstone: {
     eyebrow: "Week 8 · Real-time project",
@@ -810,7 +1103,12 @@ const AFDE: CourseDetail = {
     altDomains: [],
   },
   trainerCode: "AFDE",
-  roles: [{ title: "TBD", body: "Roles for this track are to be confirmed." }],
+  roles: [
+    { title: "Azure Data Engineer", body: "Build pipelines with Azure Data Factory and Databricks" },
+    { title: "Data Engineer", body: "Build Spark and Delta Lake lakehouses with medallion layers" },
+    { title: "Fabric Data Engineer", body: "Build lakehouses and warehouses in Microsoft Fabric" },
+    { title: "Data Analyst", body: "Analyse data with SQL and build Power BI reports" },
+  ],
   certificate: { capstone: "End-to-end Azure data engineering project", credentialId: "IIAA-AFDE-2026-000123" },
   faqs: [COMMON_FAQS.handholding, COMMON_FAQS.job],
 };

@@ -65,6 +65,8 @@ function IconList({ items, icon, muted = false }: { items: string[]; icon: keyof
   );
 }
 
+const PREREQ_COLUMNS = { 1: "", 2: "md:grid-cols-2", 3: "md:grid-cols-3" } as const;
+
 function ColumnLabel({ children }: { children: string }) {
   return (
     <Eyebrow tone="muted" line={false} className="mb-(--space-5)">
@@ -79,6 +81,9 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
   const { course, track } = found;
 
   const trainers = getCourseTrainers(course);
+  const prereqColumns = (1 +
+    Number(Boolean(course.prerequisites.helpful?.length)) +
+    Number(Boolean(course.prerequisites.notRequired?.length))) as keyof typeof PREREQ_COLUMNS;
 
   return (
     <>
@@ -132,15 +137,17 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
 
       <Section id="prerequisites">
         <SectionHeader eyebrow="Prerequisites" title="What you need before day one." />
-        <CellGrid columns="md:grid-cols-3" className="mt-(--space-10)">
+        <CellGrid columns={PREREQ_COLUMNS[prereqColumns]} className="mt-(--space-10)">
           <div className="bg-(--surface-card) p-(--space-6)">
             <ColumnLabel>Required</ColumnLabel>
             <IconList items={course.prerequisites.required} icon="check" />
           </div>
-          <div className="bg-(--surface-card) p-(--space-6)">
-            <ColumnLabel>Helpful</ColumnLabel>
-            <IconList items={course.prerequisites.helpful} icon="dash" />
-          </div>
+          {course.prerequisites.helpful?.length ? (
+            <div className="bg-(--surface-card) p-(--space-6)">
+              <ColumnLabel>Helpful</ColumnLabel>
+              <IconList items={course.prerequisites.helpful} icon="dash" />
+            </div>
+          ) : null}
           {course.prerequisites.notRequired?.length ? (
             <div className="bg-(--surface-card) p-(--space-6)">
               <ColumnLabel>Not required</ColumnLabel>
@@ -164,20 +171,24 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
           eyebrow="How you learn"
           title={
             <>
-              Recorded lessons.
+              {course.delivery?.title[0] ?? "Recorded lessons."}
               <br />
-              Live help every week.
+              {course.delivery?.title[1] ?? "Live help every week."}
             </>
           }
         />
         <CellGrid columns="sm:grid-cols-2 lg:grid-cols-4" className="mt-(--space-10)">
-          {LEARNING_FEATURES.map((f, i) => (
+          {(course.delivery?.features ?? LEARNING_FEATURES).map((f, i) => (
             <FeatureCell key={f.title} number={String(i + 1).padStart(2, "0")} {...f} />
           ))}
         </CellGrid>
         <p className="mt-(--space-5) text-(length:--fs-xs) leading-(--lh-body) text-(--text-body)">
-          Plan for <b className="font-semibold text-(--text-strong)">{track.weekly}/week</b>, including the live
-          session.
+          {course.delivery?.note ?? (
+            <>
+              Plan for <b className="font-semibold text-(--text-strong)">{track.weekly}/week</b>, including the live
+              session.
+            </>
+          )}
         </p>
       </Section>
 

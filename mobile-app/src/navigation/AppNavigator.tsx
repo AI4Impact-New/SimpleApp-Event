@@ -49,12 +49,23 @@ import {
 import { clearPrivateStores } from '@/utils/userStorage';
 import { parseDeepLink, type LinkTarget } from '@/utils/deepLinks';
 import { colors, spacing } from '@/theme/colors';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebNavBar } from '@/components/web/WebNavBar';
+import { WebPageFrame } from '@/components/web/WebPageFrame';
+import { WebAuthFrame } from '@/components/web/WebAuthFrame';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 type SignUpFlowParams = { email?: string; password?: string; name?: string };
 type LoginParams = { email?: string; notice?: string };
 const navigationRef = createNavigationContainerRef<any>();
+
+// Browser portal: every signed-in page sits in the site's centered content column.
+const webScreenLayout = isWeb
+  ? ({ route, children }: { route: { name: string }; children: React.ReactElement }) => (
+      <WebPageFrame routeName={route.name}>{children}</WebPageFrame>
+    )
+  : undefined;
 
 /** Open a course workspace from any tab, keeping My Learning underneath it. */
 function openCourseLearning(navigation: any, courseId: string) {
@@ -303,13 +314,15 @@ function SignedIn({ onLogout }: { onLogout: () => void }) {
   }
   if (gate.kind === 'incomplete') {
     return (
-      <CompleteProfileScreen
-        email={gate.email}
-        name={gate.name}
-        initialProfile={gate.profile}
-        onComplete={() => setGate({ kind: 'ready' })}
-        onSignOut={onLogout}
-      />
+      <WebAuthFrame>
+        <CompleteProfileScreen
+          email={gate.email}
+          name={gate.name}
+          initialProfile={gate.profile}
+          onComplete={() => setGate({ kind: 'ready' })}
+          onSignOut={onLogout}
+        />
+      </WebAuthFrame>
     );
   }
   return <MainTabs onLogout={onLogout} />;
@@ -333,7 +346,10 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
     <>
       <PushBridge />
       <Tab.Navigator
+        // Web gets a website header (top navigation) instead of an app tab bar.
+        tabBar={isWeb ? (props) => <WebNavBar {...props} unread={unread} /> : undefined}
         screenOptions={{
+          tabBarPosition: isWeb ? 'top' : 'bottom',
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textMuted,
           // No fixed height: React Navigation adds the home-indicator / gesture-bar inset itself.
@@ -359,7 +375,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           }}
         >
           {() => (
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator screenOptions={{ headerShown: false }} screenLayout={webScreenLayout}>
               <Stack.Screen name="HomeMain">
                 {({ navigation }: any) => (
                   <HomeScreen
@@ -436,7 +452,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           }}
         >
           {() => (
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator screenOptions={{ headerShown: false }} screenLayout={webScreenLayout}>
               <Stack.Screen name="CoursesMain">
                 {({ navigation }: any) => (
                   <CoursesScreen onCoursePress={(course) => navigation.navigate('CourseDetail', { courseId: course.id })} />
@@ -471,7 +487,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           }}
         >
           {() => (
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator screenOptions={{ headerShown: false }} screenLayout={webScreenLayout}>
               <Stack.Screen name="MyLearningMain">
                 {({ navigation }: any) => (
                   <MyLearningScreen
@@ -563,7 +579,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           }}
         >
           {() => (
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator screenOptions={{ headerShown: false }} screenLayout={webScreenLayout}>
               <Stack.Screen name="InboxMain">
                 {({ navigation }: any) => (
                   <NotificationsScreen
@@ -594,7 +610,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           }}
         >
           {() => (
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator screenOptions={{ headerShown: false }} screenLayout={webScreenLayout}>
               <Stack.Screen name="ProfileMain">
                 {({ navigation }: any) => (
                   <ProfileScreen
@@ -731,6 +747,7 @@ export function AppNavigator() {
 // Auth Stack: AuthHome (entry) → Sign In → Login | Create account → SignUp → ConfirmSignUp → CompleteProfile
 function AuthStack({ onLoginSuccess }: { onLoginSuccess: () => void }) {
   return (
+    <WebAuthFrame>
     <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="AuthHome">
       <Stack.Screen name="AuthHome">
         {({ navigation }) => (
@@ -818,6 +835,7 @@ function AuthStack({ onLoginSuccess }: { onLoginSuccess: () => void }) {
         }}
       </Stack.Screen>
     </Stack.Navigator>
+    </WebAuthFrame>
   );
 }
 

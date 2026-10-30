@@ -13,7 +13,9 @@ import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 import { useMyLearning, useNotifications } from '@/hooks/useLearning';
 import type { MyLearningCourse } from '@/types/learning';
-import { colors, spacing, borderRadius } from '@/theme/colors';
+import { colors, spacing, borderRadius, fonts, palette } from '@/theme/colors';
+import { useWebLayout } from '@/hooks/useWebLayout';
+import { WebHero } from '@/components/web/WebHero';
 
 interface MyLearningScreenProps {
   onCoursePress: (courseId: string) => void;
@@ -33,6 +35,8 @@ export function MyLearningScreen({
   const { data: courses = [], isLoading, error, refetch, isRefetching } = useMyLearning();
   const { data: notifications = [] } = useNotifications();
   const unread = notifications.filter((n) => !n.read_at).length;
+  const { isWeb, wide } = useWebLayout();
+  const columns = wide ? 2 : 1;
 
   const renderCourse = ({ item }: { item: MyLearningCourse }) => {
     const total = Number(item.total_recorded_lectures) || 0;
@@ -40,9 +44,13 @@ export function MyLearningScreen({
     const pct = total > 0 ? Math.round((done * 100) / total) : 0;
     const completed = item.registration_status === 'completed';
     return (
-      <TouchableOpacity style={styles.card} onPress={() => onCoursePress(item.id)} activeOpacity={0.65}>
+      <TouchableOpacity
+        style={[styles.card, isWeb && styles.webCard, columns > 1 && styles.gridCard]}
+        onPress={() => onCoursePress(item.id)}
+        activeOpacity={0.65}
+      >
         <View style={styles.cardTop}>
-          <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
+          <Text style={[styles.title, isWeb && styles.webTitle]} numberOfLines={2}>{item.title}</Text>
           {completed ? (
             <View style={styles.completedBadge}>
               <Ionicons name="ribbon" size={14} color={colors.success} />
@@ -60,12 +68,33 @@ export function MyLearningScreen({
         ) : (
           <Text style={styles.meta}>No recorded lectures yet</Text>
         )}
+        {isWeb ? (
+          <View style={styles.webCardFooter}>
+            <Text style={styles.webCardCta}>{completed ? 'Review course' : 'Continue learning'}</Text>
+            <Ionicons name="arrow-forward" size={14} color={colors.text} />
+          </View>
+        ) : null}
       </TouchableOpacity>
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      {isWeb ? (
+        <View style={styles.webHeroWrap}>
+          <WebHero
+            eyebrow="My learning"
+            title="Your enrolled courses"
+            lead="Track your progress through recorded lectures, assessments and certificates."
+            aside={
+              <View style={styles.webLinks}>
+                <WebLink icon="ribbon-outline" label="My certificates" onPress={onCertificatesPress} />
+                <WebLink icon="receipt-outline" label="Purchases & quotes" onPress={onPurchasesPress} />
+              </View>
+            }
+          />
+        </View>
+      ) : (
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
           <Text style={styles.heading}>My Learning</Text>
@@ -86,6 +115,7 @@ export function MyLearningScreen({
           ) : null}
         </TouchableOpacity>
       </View>
+      )}
 
       {isLoading ? (
         <View style={styles.center}>
@@ -100,6 +130,9 @@ export function MyLearningScreen({
         </View>
       ) : (
         <FlatList
+          key={`cols-${columns}`}
+          numColumns={columns}
+          columnWrapperStyle={columns > 1 ? styles.gridRow : undefined}
           data={courses}
           renderItem={renderCourse}
           keyExtractor={(item) => item.id}
@@ -129,7 +162,75 @@ export function MyLearningScreen({
   );
 }
 
+function WebLink({ icon, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={styles.webLink} onPress={onPress} activeOpacity={0.75}>
+      <Ionicons name={icon} size={18} color={palette.amber500} />
+      <Text style={styles.webLinkText}>{label}</Text>
+      <Ionicons name="arrow-forward" size={16} color={palette.textOnDarkBody} />
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
+  webHeroWrap: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+  webLinks: {
+    gap: spacing.md,
+  },
+  webLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    height: 52,
+    borderRadius: 10,
+    backgroundColor: palette.navy750,
+    borderWidth: 1,
+    borderColor: palette.borderDark,
+  },
+  webLinkText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+    color: palette.textOnDark,
+  },
+  webCard: {
+    borderRadius: 16,
+    padding: spacing.xxl,
+  },
+  gridRow: {
+    gap: spacing.xl,
+  },
+  gridCard: {
+    flex: 1,
+    maxWidth: 'calc((100% - 20px) / 2)' as any,
+    marginBottom: spacing.xl,
+  },
+  webTitle: {
+    fontFamily: fonts.display,
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
+  webCardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xl,
+    paddingTop: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: palette.slate150,
+  },
+  webCardCta: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,

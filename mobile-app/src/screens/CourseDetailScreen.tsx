@@ -398,9 +398,9 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
               <Text style={styles.registerBtnText}>Open course</Text>
             </TouchableOpacity>
           ) : interested ? (
-            <View style={[styles.registerBtn, styles.registeredBtn, { backgroundColor: '#dbeafe' }]}>
-              <Ionicons name="heart" size={22} color="#1d4ed8" />
-              <Text style={[styles.registeredText, { color: '#1d4ed8' }]}>Interested – we&apos;ll be in touch</Text>
+            <View style={[styles.registerBtn, styles.registeredBtn, { backgroundColor: '#d9eeeb' }]}>
+              <Ionicons name="heart" size={22} color="#016e5d" />
+              <Text style={[styles.registeredText, { color: '#016e5d' }]}>Interested – we&apos;ll be in touch</Text>
             </View>
           ) : (
             <>

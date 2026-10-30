@@ -423,10 +423,10 @@ const styles = StyleSheet.create({
     color: '#b45309',
   },
   badgeProfessional: {
-    backgroundColor: '#dbeafe',
+    backgroundColor: '#d9eeeb',
   },
   badgeProfessionalText: {
-    color: '#1d4ed8',
+    color: '#016e5d',
   },
   badgeUnspecified: {
     backgroundColor: '#e5e7eb',

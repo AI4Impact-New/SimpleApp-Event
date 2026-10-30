@@ -20,7 +20,9 @@ import { authService } from '@/services/auth';
 import type { MyLearningCourse } from '@/types/learning';
 import type { Course } from '@/types/course';
 import type { Event } from '@/types/event';
-import { colors, spacing, borderRadius } from '@/theme/colors';
+import { colors, spacing, borderRadius, fonts, palette } from '@/theme/colors';
+import { useWebLayout } from '@/hooks/useWebLayout';
+import { WebHero } from '@/components/web/WebHero';
 import { formatCompactDateTimeInIst } from '@/utils/datetime';
 import { formatPaise } from '@/utils/money';
 
@@ -87,15 +89,154 @@ export function HomeScreen({
   const continueCourse = pickContinueCourse(learning.data ?? []);
   const nextEvents = upcomingEvents(events.data ?? []);
   const discover = (courses.data ?? []).slice(0, 6) as Course[];
+  const { isWeb, wide } = useWebLayout();
+
+  const continueBlock = learning.isLoading ? (
+    <View style={[styles.card, styles.cardCenter]}>
+      <ActivityIndicator color={colors.primary} />
+    </View>
+  ) : learning.error ? (
+    <RetryCard message="Could not load your courses" onRetry={() => learning.refetch()} />
+  ) : continueCourse ? (
+    <ContinueCard course={continueCourse} onPress={() => onContinueCourse(continueCourse.id)} />
+  ) : (
+    <TouchableOpacity style={[styles.card, styles.exploreCard]} onPress={onExploreCourses} activeOpacity={0.8}>
+      <Ionicons name="compass-outline" size={32} color={colors.primary} />
+      <View style={{ flex: 1 }}>
+        <Text style={styles.cardTitle}>
+          {(learning.data ?? []).length > 0 ? 'All caught up' : 'Start your first course'}
+        </Text>
+        <Text style={styles.muted}>Explore the AI4Impact career tracks</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+    </TouchableOpacity>
+  );
+
+  const inboxBlock =
+    unread > 0 ? (
+      <TouchableOpacity style={[styles.card, styles.inboxCard]} onPress={onOpenInbox} activeOpacity={0.8}>
+        <Ionicons name="mail-unread-outline" size={24} color={colors.primaryDark} />
+        <Text style={styles.inboxText}>
+          {unread} unread {unread === 1 ? 'message' : 'messages'} in your inbox
+        </Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
+      </TouchableOpacity>
+    ) : null;
+
+  const eventsBlock = events.isLoading ? (
+    <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+  ) : events.error ? (
+    <RetryCard message="Could not load events" onRetry={() => events.refetch()} />
+  ) : nextEvents.length === 0 ? (
+    <Text style={styles.muted}>No upcoming events right now.</Text>
+  ) : (
+    nextEvents.map((event) => (
+      <TouchableOpacity key={event.id} style={[styles.card, styles.eventRow]} onPress={() => onEventPress(event)} activeOpacity={0.75}>
+        <Ionicons
+          name={event.event_type === 'online' ? 'videocam-outline' : 'location-outline'}
+          size={22}
+          color={colors.primary}
+        />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.rowTitle} numberOfLines={1}>{event.name}</Text>
+          <Text style={styles.muted} numberOfLines={1}>
+            {formatCompactDateTimeInIst(event.start_time)} IST{event.location ? ` · ${event.location}` : ''}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      </TouchableOpacity>
+    ))
+  );
+
+  const courseCards = discover.map((course) => {
+    const price = prices.data?.find((p) => p.id === course.id);
+    return (
+      <TouchableOpacity
+        key={course.id}
+        style={[styles.courseCard, wide && styles.courseCardGrid]}
+        onPress={() => onCoursePress(course.id)}
+        activeOpacity={0.8}
+      >
+        {wide ? (
+          <View style={styles.courseIcon}>
+            <Ionicons name="book-outline" size={20} color={colors.primary} />
+          </View>
+        ) : null}
+        <Text style={styles.courseTitle} numberOfLines={2}>{course.title}</Text>
+        {course.short_description ? (
+          <Text style={styles.courseDesc} numberOfLines={3}>{course.short_description}</Text>
+        ) : null}
+        <View style={{ flex: 1 }} />
+        <Text style={styles.coursePrice}>
+          {price ? formatPaise(price.total_paise) : 'View current fee'}
+        </Text>
+      </TouchableOpacity>
+    );
+  });
+
+  const coursesBlock = courses.isLoading ? (
+    <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+  ) : courses.error ? (
+    <RetryCard message="Could not load courses" onRetry={() => courses.refetch()} />
+  ) : wide ? (
+    <View style={styles.courseGrid}>{courseCards}</View>
+  ) : (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.courseStrip}>
+      {courseCards}
+    </ScrollView>
+  );
+
+  const refresh = (
+    <RefreshControl refreshing={refreshing} onRefresh={refreshAll} tintColor={colors.primary} colors={[colors.primary]} />
+  );
+
+  // Browser portal: dashboard layout with a hero, main column and sidebar.
+  if (isWeb) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.webContent} showsVerticalScrollIndicator={false} refreshControl={refresh}>
+          <WebHero
+            eyebrow="Student dashboard"
+            title={name ? `Welcome back, ${name}` : 'Welcome back'}
+            lead="Pick up where you left off, join upcoming sessions and explore new career tracks."
+            aside={wide ? continueBlock : undefined}
+          />
+
+          <View style={[styles.webColumns, wide && styles.webColumnsWide]}>
+            <View style={styles.webMain}>
+              {!wide ? (
+                <>
+                  <Text style={[styles.webSectionTitle, { marginTop: spacing.xxl }]}>Continue learning</Text>
+                  {continueBlock}
+                </>
+              ) : null}
+              <SectionHeader title="Upcoming events" action="See all" onAction={onOpenEvents} web />
+              {eventsBlock}
+            </View>
+            <View style={[styles.webSide, wide && styles.webSideWide]}>
+              <Text style={styles.webSectionTitle}>Quick actions</Text>
+              <View style={styles.webActions}>
+                <QuickAction icon="qr-code-outline" label="Scan event QR" hint="Check in to a live session" onPress={onScanPress} row />
+                <QuickAction icon="calendar-outline" label="Events" hint="Workshops and live calls" onPress={onOpenEvents} row />
+                <QuickAction icon="podium-outline" label="Leaderboard" hint="See how you rank" onPress={onLeaderboardPress} row />
+              </View>
+              {inboxBlock}
+            </View>
+          </View>
+
+          <SectionHeader title="Explore courses" action="View all" onAction={onExploreCourses} web />
+          {coursesBlock}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={refreshAll} tintColor={colors.primary} colors={[colors.primary]} />
-        }
+        refreshControl={refresh}
       >
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
@@ -114,36 +255,9 @@ export function HomeScreen({
 
         {/* Continue learning */}
         <Text style={styles.sectionTitle}>Continue learning</Text>
-        {learning.isLoading ? (
-          <View style={[styles.card, styles.cardCenter]}>
-            <ActivityIndicator color={colors.primary} />
-          </View>
-        ) : learning.error ? (
-          <RetryCard message="Could not load your courses" onRetry={() => learning.refetch()} />
-        ) : continueCourse ? (
-          <ContinueCard course={continueCourse} onPress={() => onContinueCourse(continueCourse.id)} />
-        ) : (
-          <TouchableOpacity style={[styles.card, styles.exploreCard]} onPress={onExploreCourses} activeOpacity={0.8}>
-            <Ionicons name="compass-outline" size={32} color={colors.primary} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>
-                {(learning.data ?? []).length > 0 ? 'All caught up' : 'Start your first course'}
-              </Text>
-              <Text style={styles.muted}>Explore the AI4Impact career tracks</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.primary} />
-          </TouchableOpacity>
-        )}
+        {continueBlock}
 
-        {unread > 0 ? (
-          <TouchableOpacity style={[styles.card, styles.inboxCard]} onPress={onOpenInbox} activeOpacity={0.8}>
-            <Ionicons name="mail-unread-outline" size={24} color={colors.primaryDark} />
-            <Text style={styles.inboxText}>
-              {unread} unread {unread === 1 ? 'message' : 'messages'} in your inbox
-            </Text>
-            <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
-          </TouchableOpacity>
-        ) : null}
+        {inboxBlock}
 
         {/* Quick actions */}
         <View style={styles.actions}>
@@ -154,60 +268,11 @@ export function HomeScreen({
 
         {/* Upcoming events */}
         <SectionHeader title="Upcoming events" action="See all" onAction={onOpenEvents} />
-        {events.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
-        ) : events.error ? (
-          <RetryCard message="Could not load events" onRetry={() => events.refetch()} />
-        ) : nextEvents.length === 0 ? (
-          <Text style={styles.muted}>No upcoming events right now.</Text>
-        ) : (
-          nextEvents.map((event) => (
-            <TouchableOpacity key={event.id} style={[styles.card, styles.eventRow]} onPress={() => onEventPress(event)} activeOpacity={0.75}>
-              <Ionicons
-                name={event.event_type === 'online' ? 'videocam-outline' : 'location-outline'}
-                size={22}
-                color={colors.primary}
-              />
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={styles.rowTitle} numberOfLines={1}>{event.name}</Text>
-                <Text style={styles.muted} numberOfLines={1}>
-                  {formatCompactDateTimeInIst(event.start_time)} IST{event.location ? ` · ${event.location}` : ''}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-          ))
-        )}
+        {eventsBlock}
 
         {/* Course discovery */}
         <SectionHeader title="Explore courses" action="View all" onAction={onExploreCourses} />
-        {courses.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
-        ) : courses.error ? (
-          <RetryCard message="Could not load courses" onRetry={() => courses.refetch()} />
-        ) : (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.courseStrip}>
-            {discover.map((course) => {
-              const price = prices.data?.find((p) => p.id === course.id);
-              return (
-                <TouchableOpacity
-                  key={course.id}
-                  style={styles.courseCard}
-                  onPress={() => onCoursePress(course.id)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.courseTitle} numberOfLines={2}>{course.title}</Text>
-                  {course.short_description ? (
-                    <Text style={styles.courseDesc} numberOfLines={3}>{course.short_description}</Text>
-                  ) : null}
-                  <Text style={styles.coursePrice}>
-                    {price ? formatPaise(price.total_paise) : 'View current fee'}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        )}
+        {coursesBlock}
       </ScrollView>
     </SafeAreaView>
   );
@@ -238,7 +303,34 @@ function ContinueCard({ course, onPress }: { course: MyLearningCourse; onPress: 
   );
 }
 
-function QuickAction({ icon, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }) {
+function QuickAction({
+  icon,
+  label,
+  hint,
+  onPress,
+  row,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  hint?: string;
+  onPress: () => void;
+  /** Web sidebar style: icon tile, label and hint in a row. */
+  row?: boolean;
+}) {
+  if (row) {
+    return (
+      <TouchableOpacity style={styles.actionRow} onPress={onPress} activeOpacity={0.75}>
+        <View style={styles.actionIcon}>
+          <Ionicons name={icon} size={20} color={colors.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.actionRowLabel}>{label}</Text>
+          {hint ? <Text style={styles.actionRowHint}>{hint}</Text> : null}
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+      </TouchableOpacity>
+    );
+  }
   return (
     <TouchableOpacity style={styles.action} onPress={onPress} activeOpacity={0.75}>
       <Ionicons name={icon} size={26} color={colors.primary} />
@@ -247,10 +339,10 @@ function QuickAction({ icon, label, onPress }: { icon: keyof typeof Ionicons.gly
   );
 }
 
-function SectionHeader({ title, action, onAction }: { title: string; action: string; onAction: () => void }) {
+function SectionHeader({ title, action, onAction, web }: { title: string; action: string; onAction: () => void; web?: boolean }) {
   return (
-    <View style={styles.sectionHeader}>
-      <Text style={[styles.sectionTitle, { marginTop: 0, marginBottom: 0 }]}>{title}</Text>
+    <View style={[styles.sectionHeader, web && styles.webSectionHeader]}>
+      <Text style={[web ? styles.webSectionTitle : styles.sectionTitle, { marginTop: 0, marginBottom: 0 }]}>{title}</Text>
       <TouchableOpacity onPress={onAction} hitSlop={8}>
         <Text style={styles.link}>{action}</Text>
       </TouchableOpacity>
@@ -449,6 +541,94 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  webContent: {
+    padding: spacing.lg,
+    paddingBottom: 64,
+  },
+  webColumns: {
+    gap: spacing.xxl,
+  },
+  webColumnsWide: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 32,
+  },
+  webMain: {
+    flex: 1,
+    minWidth: 0,
+  },
+  webSide: {
+    marginTop: spacing.xxl,
+  },
+  webSideWide: {
+    width: 340,
+    marginTop: 40,
+  },
+  webSectionHeader: {
+    marginTop: 40,
+  },
+  webSectionTitle: {
+    fontFamily: fonts.display,
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: -0.4,
+    color: colors.text,
+    marginBottom: spacing.md,
+  },
+  webActions: {
+    backgroundColor: colors.backgroundCard,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.slate150,
+  },
+  actionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: palette.teal50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionRowLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  actionRowHint: {
+    fontSize: 13,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  courseGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xl,
+  },
+  courseCardGrid: {
+    // Three across with the 20px gaps; RN Web passes calc() through to CSS.
+    width: 'calc((100% - 40px) / 3)' as any,
+    minHeight: 200,
+    padding: spacing.xxl,
+    borderRadius: 16,
+  },
+  courseIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: palette.teal50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
   },
   courseStrip: {
     gap: spacing.md,

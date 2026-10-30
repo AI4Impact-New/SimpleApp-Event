@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { CommonActions } from '@react-navigation/native';
+import { CommonActions, useLinkBuilder } from '@react-navigation/native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { PiLogo } from '@/components/PiLogo';
 import { useWebLayout } from '@/hooks/useWebLayout';
@@ -14,6 +14,22 @@ import { colors, fonts, layout, palette, spacing } from '@/theme/colors';
 const PRIMARY_ROUTES = ['Home', 'Courses', 'Learning'];
 
 type PressState = { pressed: boolean; hovered?: boolean };
+
+/**
+ * Nav items render as real <a href> elements (React Native Web turns `href` into an anchor), so
+ * Cmd/Ctrl/middle-click and "open in new tab" work. A plain click stays in the app without a reload.
+ */
+function linkProps(href: string | undefined, onNavigate: () => void) {
+  return {
+    href,
+    onPress: (e: any) => {
+      const modified = e?.metaKey || e?.ctrlKey || e?.shiftKey || e?.altKey || (e?.button != null && e.button !== 0);
+      if (modified && href) return;
+      e?.preventDefault?.();
+      onNavigate();
+    },
+  } as any;
+}
 
 export function WebNavBar({ state, descriptors, navigation, unread }: BottomTabBarProps & { unread: number }) {
   const { wide } = useWebLayout();
@@ -27,6 +43,8 @@ export function WebNavBar({ state, descriptors, navigation, unread }: BottomTabB
   }, []);
 
   const focusedName = state.routes[state.index]?.name;
+  const { buildHref } = useLinkBuilder();
+  const hrefFor = (routeName: string) => buildHref(routeName) ?? undefined;
 
   // Same contract as the default tab bar: emit tabPress (stacks pop to top on re-press), then navigate.
   const go = (routeName: string) => {
@@ -50,7 +68,7 @@ export function WebNavBar({ state, descriptors, navigation, unread }: BottomTabB
     return (
       <Pressable
         key={routeName}
-        onPress={() => go(routeName)}
+        {...linkProps(hrefFor(routeName), () => go(routeName))}
         accessibilityRole="tab"
         accessibilityState={{ selected: active }}
         style={(s: PressState) => [styles.link, wide ? styles.linkWide : styles.linkNarrow, active && styles.linkActive, s.hovered && !active && styles.linkHover]}
@@ -70,7 +88,7 @@ export function WebNavBar({ state, descriptors, navigation, unread }: BottomTabB
   const account = (
     <View style={styles.account}>
       <Pressable
-        onPress={() => go('Inbox')}
+        {...linkProps(hrefFor('Inbox'), () => go('Inbox'))}
         accessibilityRole="tab"
         accessibilityLabel={unread > 0 ? `Inbox, ${unread} unread` : 'Inbox'}
         accessibilityState={{ selected: focusedName === 'Inbox' }}
@@ -88,7 +106,7 @@ export function WebNavBar({ state, descriptors, navigation, unread }: BottomTabB
         ) : null}
       </Pressable>
       <Pressable
-        onPress={() => go('Profile')}
+        {...linkProps(hrefFor('Profile'), () => go('Profile'))}
         accessibilityRole="tab"
         accessibilityLabel="Profile"
         accessibilityState={{ selected: focusedName === 'Profile' }}
@@ -107,7 +125,7 @@ export function WebNavBar({ state, descriptors, navigation, unread }: BottomTabB
   );
 
   const brand = (
-    <Pressable onPress={() => go('Home')} accessibilityRole="link" accessibilityLabel="AI4Impact home" style={styles.brand}>
+    <Pressable {...linkProps(hrefFor('Home'), () => go('Home'))} accessibilityRole="link" accessibilityLabel="AI4Impact home" style={styles.brand}>
       <PiLogo size={32} />
       <Text style={styles.wordmark}>
         AI4<Text style={styles.wordmarkAccent}>Impact</Text>

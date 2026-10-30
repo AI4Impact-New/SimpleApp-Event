@@ -37,7 +37,9 @@ import { NotificationDetailScreen } from '@/screens/NotificationDetailScreen';
 import { CheckoutScreen } from '@/screens/CheckoutScreen';
 import { PurchasesScreen } from '@/screens/PurchasesScreen';
 import { VerifyCertificateScreen } from '@/screens/VerifyCertificateScreen';
-import { useNotifications } from '@/hooks/useLearning';
+import { useCourseExams, useLearningHome, useNotifications } from '@/hooks/useLearning';
+import type { Exam } from '@/types/learning';
+import { webLinking, takeReturnAction } from '@/navigation/linking';
 import {
   courseIdFromResponse,
   notificationIdFromResponse,
@@ -338,6 +340,11 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
       flushPendingNotification();
       restoreResumeTarget();
       flushPendingLink();
+      // Web: a signed-out visitor who opened a deep URL lands there after sign-in.
+      if (isWeb && navigationRef.isReady()) {
+        const action = takeReturnAction();
+        if (action && focusedRoute(navigationRef.getRootState())?.leaf === 'HomeMain') navigationRef.dispatch(action);
+      }
     }, 0);
     return () => clearTimeout(id);
   }, []);
@@ -511,19 +518,19 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                         title: lecture.title,
                       })
                     }
-                    onOpenExam={(exam) => navigation.navigate('Exam', { exam })}
+                    onOpenExam={(exam) => navigation.navigate('Exam', { courseId: exam.course_id, examId: exam.id, exam })}
                     onCertificateIssued={() => navigation.navigate('Certificates')}
                   />
                 )}
               </Stack.Screen>
               <Stack.Screen name="LecturePlayer">
                 {({ route, navigation }: any) => (
-                  <LecturePlayerScreen
+                  <LectureRoute
                     // Remount for the next lecture so the old session's final heartbeat is flushed first.
                     key={route.params?.classId}
                     classId={route.params?.classId ?? ''}
                     courseId={route.params?.courseId}
-                    title={route.params?.title ?? 'Lecture'}
+                    title={route.params?.title}
                     onBack={() => navigation.goBack()}
                     onPlayNext={(lecture) =>
                       navigation.replace('LecturePlayer', {
@@ -536,7 +543,14 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                 )}
               </Stack.Screen>
               <Stack.Screen name="Exam">
-                {({ route, navigation }: any) => <ExamScreen exam={route.params?.exam} onBack={() => navigation.goBack()} />}
+                {({ route, navigation }: any) => (
+                  <ExamRoute
+                    exam={route.params?.exam}
+                    courseId={route.params?.courseId}
+                    examId={route.params?.examId}
+                    onBack={() => navigation.goBack()}
+                  />
+                )}
               </Stack.Screen>
               <Stack.Screen name="Certificates">
                 {({ navigation }: any) => (
@@ -665,6 +679,35 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
   );
 }
 
+// ---- URL-addressable screens ------------------------------------------------------------------
+// Titles and exam objects travel in memory only; a refreshed or shared URL carries IDs, so load the rest.
+
+function LectureRoute(props: Omit<React.ComponentProps<typeof LecturePlayerScreen>, 'title'> & { title?: string }) {
+  const home = useLearningHome(props.title ? '' : props.courseId ?? '');
+  const title = props.title ?? home.data?.classes.find((c) => c.id === props.classId)?.title ?? 'Lecture';
+  return <LecturePlayerScreen {...props} title={title} />;
+}
+
+function ExamRoute({ exam, courseId, examId, onBack }: { exam?: Exam; courseId?: string; examId?: string; onBack: () => void }) {
+  const exams = useCourseExams(exam ? '' : courseId ?? '');
+  const found = exam ?? exams.data?.find((e) => e.id === examId);
+  if (found) return <ExamScreen exam={found} onBack={onBack} />;
+  return (
+    <View style={styles.center}>
+      {exams.isLoading ? (
+        <ActivityIndicator size="large" color={colors.primary} />
+      ) : (
+        <>
+          <Text style={styles.centerText}>This assessment could not be found.</Text>
+          <TouchableOpacity onPress={onBack} style={{ padding: spacing.sm }}>
+            <Text style={styles.link}>Go back</Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </View>
+  );
+}
+
 // ---- Root -------------------------------------------------------------------------------------
 
 // Auth or Main App – load auth after Amplify config so we don't trigger Amplify before it's ready
@@ -712,6 +755,8 @@ export function AppNavigator() {
 
   // Deep links: the cold-start URL once per app run, then any URL that arrives while running.
   useEffect(() => {
+    // Web routes through the URL config (webLinking); these hints are for native app links.
+    if (isWeb) return;
     if (!initialUrlHandled) {
       initialUrlHandled = true;
       Linking.getInitialURL().then((url) => openDeepLink(parseDeepLink(url))).catch(() => {});
@@ -738,7 +783,12 @@ export function AppNavigator() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef} onReady={flushPendingNotification} documentTitle={documentTitle}>
+    <NavigationContainer
+      ref={navigationRef}
+      onReady={flushPendingNotification}
+      documentTitle={documentTitle}
+      linking={isWeb ? webLinking : undefined}
+    >
       {isAuthenticated ? <SignedIn onLogout={handleLogout} /> : <AuthStack onLoginSuccess={handleLoginSuccessStable} />}
     </NavigationContainer>
   );

@@ -390,12 +390,20 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                     onOpenInbox={() => navigation.navigate('Inbox', { screen: 'InboxMain' })}
                     onOpenEvents={() => navigation.navigate('Events')}
                     onEventPress={(event) => navigation.navigate('Event', { eventId: event.id })}
-                    onScanPress={() => navigation.navigate('QRScanner')}
+                    onScanPress={isWeb ? undefined : () => navigation.navigate('QRScanner')}
                     onLeaderboardPress={() => navigation.navigate('LeaderboardHome')}
                     onExploreCourses={() => navigation.navigate('Courses', { screen: 'CoursesMain' })}
                     onCoursePress={(courseId) =>
                       navigation.navigate('Courses', { screen: 'CourseDetail', params: { courseId }, initial: false })
                     }
+                    onPlayLecture={(lecture) =>
+                      navigation.navigate('Learning', {
+                        screen: 'LecturePlayer',
+                        params: { classId: lecture.id, courseId: lecture.course_id, title: lecture.title },
+                        initial: false,
+                      })
+                    }
+                    onOpenLearning={() => navigation.navigate('Learning', { screen: 'MyLearningMain' })}
                   />
                 )}
               </Stack.Screen>
@@ -404,7 +412,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                   <EventsScreen
                     onBack={() => navigation.goBack()}
                     onEventPress={(event) => navigation.navigate('Event', { eventId: event.id })}
-                    onScanPress={() => navigation.navigate('QRScanner')}
+                    onScanPress={isWeb ? undefined : () => navigation.navigate('QRScanner')}
                     onLeaderboardPress={() => navigation.navigate('LeaderboardHome')}
                   />
                 )}
@@ -423,14 +431,17 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                   <PollScreen pollId={route.params?.pollId} onBack={() => navigation.goBack()} />
                 )}
               </Stack.Screen>
-              <Stack.Screen name="QRScanner">
-                {({ navigation }: any) => (
-                  <QRScannerScreen
-                    onScanSuccess={(eventId) => navigation.replace('Event', { eventId })}
-                    onBack={() => navigation.goBack()}
-                  />
-                )}
-              </Stack.Screen>
+              {/* Camera check-in exists only in the native app. */}
+              {!isWeb ? (
+                <Stack.Screen name="QRScanner">
+                  {({ navigation }: any) => (
+                    <QRScannerScreen
+                      onScanSuccess={(eventId) => navigation.replace('Event', { eventId })}
+                      onBack={() => navigation.goBack()}
+                    />
+                  )}
+                </Stack.Screen>
+              ) : null}
               <Stack.Screen name="LeaderboardHome">
                 {({ navigation }: any) => (
                   <LeaderboardHomeScreen

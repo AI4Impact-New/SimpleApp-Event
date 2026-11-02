@@ -439,7 +439,7 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
               </TouchableOpacity>
               {!PILOT_SELF_REGISTRATION ? (
                 <Text style={[styles.bulletDesc, { textAlign: 'center', marginTop: spacing.md }]}>
-                  The AI4Impact team enrolls learners. Tap I&apos;m Interested and we&apos;ll contact you.
+                  The AI4Impact team enrolls learners. Choose I&apos;m Interested and we&apos;ll contact you.
                 </Text>
               ) : null}
             </>

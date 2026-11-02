@@ -34,7 +34,6 @@ const config: LinkingOptions<object>['config'] = {
         Events: 'events',
         Event: 'events/:eventId',
         Poll: 'polls/:pollId',
-        QRScanner: 'scan',
         LeaderboardHome: 'leaderboards',
         LeaderboardDetail: 'leaderboards/:eventId',
       },

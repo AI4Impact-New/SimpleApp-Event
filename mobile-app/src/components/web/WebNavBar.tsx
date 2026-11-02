@@ -11,7 +11,11 @@ import { authService } from '@/services/auth';
 import { colors, fonts, layout, palette, spacing } from '@/theme/colors';
 
 // Routes shown as text links; the rest (Inbox, Profile) sit on the right as account controls.
-const PRIMARY_ROUTES = ['Home', 'Courses', 'Learning'];
+// "Events" is not a tab: it is a page inside the Home stack, linked here like the design's top nav.
+const PRIMARY_ROUTES = ['Home', 'Learning', 'Courses', 'Events'];
+const WEB_LABELS: Record<string, string> = { Learning: 'My learning', Events: 'Events' };
+// Home-stack pages that belong to the Events section (highlight "Events" instead of "Home").
+const EVENT_SCREENS = new Set(['Events', 'Event', 'Poll', 'LeaderboardHome', 'LeaderboardDetail']);
 
 type PressState = { pressed: boolean; hovered?: boolean };
 
@@ -42,12 +46,21 @@ export function WebNavBar({ state, descriptors, navigation, unread }: BottomTabB
       .catch(() => {});
   }, []);
 
-  const focusedName = state.routes[state.index]?.name;
+  const focusedTab = state.routes[state.index];
+  const nestedState = focusedTab?.state as { index?: number; routes: { name: string }[] } | undefined;
+  const nestedName = nestedState?.routes[nestedState.index ?? nestedState.routes.length - 1]?.name;
+  const inEvents = focusedTab?.name === 'Home' && !!nestedName && EVENT_SCREENS.has(nestedName);
+  const focusedName = inEvents ? 'Events' : focusedTab?.name;
   const { buildHref } = useLinkBuilder();
-  const hrefFor = (routeName: string) => buildHref(routeName) ?? undefined;
+  const hrefFor = (routeName: string) =>
+    (routeName === 'Events' ? buildHref('Home', { screen: 'Events' }) : buildHref(routeName)) ?? undefined;
 
   // Same contract as the default tab bar: emit tabPress (stacks pop to top on re-press), then navigate.
   const go = (routeName: string) => {
+    if (routeName === 'Events') {
+      if (!inEvents || nestedName !== 'Events') navigation.navigate('Home', { screen: 'Events', initial: false } as never);
+      return;
+    }
     const route = state.routes.find((r) => r.name === routeName);
     if (!route) return;
     const focused = focusedName === routeName;
@@ -58,12 +71,13 @@ export function WebNavBar({ state, descriptors, navigation, unread }: BottomTabB
   };
 
   const labelFor = (routeName: string) => {
+    if (WEB_LABELS[routeName]) return WEB_LABELS[routeName];
     const route = state.routes.find((r) => r.name === routeName);
     const label = route ? descriptors[route.key]?.options.tabBarLabel : undefined;
     return typeof label === 'string' ? label : routeName;
   };
 
-  const links = PRIMARY_ROUTES.filter((r) => state.routes.some((route) => route.name === r)).map((routeName) => {
+  const links = PRIMARY_ROUTES.filter((r) => r === 'Events' || state.routes.some((route) => route.name === r)).map((routeName) => {
     const active = focusedName === routeName;
     return (
       <Pressable
@@ -172,7 +186,7 @@ export function WebNavBar({ state, descriptors, navigation, unread }: BottomTabB
 
 const styles = StyleSheet.create({
   bar: {
-    backgroundColor: palette.slate50,
+    backgroundColor: colors.backgroundCard,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     zIndex: 10,
@@ -298,7 +312,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     backgroundColor: palette.amber500,
     borderWidth: 2,
-    borderColor: palette.slate50,
+    borderColor: colors.backgroundCard,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -326,7 +340,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 30,
     height: 30,
-    borderRadius: 15,
+    borderRadius: 8,
     backgroundColor: palette.navy800,
     alignItems: 'center',
     justifyContent: 'center',

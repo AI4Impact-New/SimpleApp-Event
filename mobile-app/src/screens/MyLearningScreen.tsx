@@ -150,7 +150,7 @@ export function MyLearningScreen({
             <View style={styles.center}>
               <Ionicons name="school-outline" size={48} color={colors.textMuted} />
               <Text style={styles.emptyTitle}>No enrolled courses</Text>
-              <Text style={styles.emptyMessage}>Courses you are enrolled in will appear here. Browse courses and tap I&apos;m Interested to be contacted.</Text>
+              <Text style={styles.emptyMessage}>Courses you are enrolled in will appear here. Browse courses and choose I&apos;m Interested to be contacted.</Text>
               <TouchableOpacity style={styles.primaryBtn} onPress={onBrowseCourses} activeOpacity={0.75}>
                 <Text style={styles.primaryBtnText}>Browse courses</Text>
               </TouchableOpacity>

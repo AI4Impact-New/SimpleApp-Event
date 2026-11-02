@@ -65,7 +65,7 @@ test('web exam confirmation sends answers and displays the server score', async 
   await page.route('https://cognito-idp.*.amazonaws.com/**', route => route.abort());
   page.on('dialog', dialog => dialog.accept());
   await page.goto('/');
-  await page.getByRole('tab', { name: /My Learning/ }).click();
+  await page.getByRole('tab', { name: /My learning/i }).click();
   await page.getByText(course.title, { exact: true }).last().click();
   await page.getByText(exam.title, { exact: true }).click();
   await page.getByText('Start / resume exam', { exact: true }).click();

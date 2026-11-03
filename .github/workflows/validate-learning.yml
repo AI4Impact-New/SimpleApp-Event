@@ -49,6 +49,7 @@ jobs:
         run: |
           npm ci
           npm audit --omit=dev
+          npm audit --audit-level=high
           npm run build
       - name: Admin browser regressions
         working-directory: admin-dashboard
@@ -58,7 +59,7 @@ jobs:
           ADMIN_QA_PID=$!
           trap 'kill "$ADMIN_QA_PID"' EXIT
           curl --retry 30 --retry-connrefused --retry-delay 1 --fail http://localhost:3100/login > /dev/null
-          npx playwright test tests/assisted-enrollment.spec.ts tests/video-analytics.spec.ts tests/embedded-login.spec.ts tests/workspace-staff.spec.ts --workers=1 --reporter=line
+          npx playwright test tests/assisted-enrollment.spec.ts tests/video-analytics.spec.ts tests/embedded-login.spec.ts tests/workspace-staff.spec.ts tests/programme.spec.ts --workers=1 --reporter=line
   landing:
     runs-on: ubuntu-latest
     steps:
@@ -74,8 +75,22 @@ jobs:
           AMPLIFY_LANDING_EXPORT: 'true'
         run: |
           npm ci
-          npm audit
+          # Runtime: block every advisory. Build tooling: report all, block high/critical.
+          npm audit --omit=dev
+          npm audit --audit-level=high
           npm run build
+
+
+      - name: Webinar campaign browser regressions
+        run: |
+          npm ci --prefix admin-dashboard
+          cd admin-dashboard
+          npx playwright install --with-deps chromium
+          python3 -m http.server 3004 --bind 127.0.0.1 --directory ../landing-page/out > /tmp/landing-webinar-server.log 2>&1 &
+          WEBINAR_QA_PID=$!
+          trap 'kill "$WEBINAR_QA_PID"' EXIT
+          curl --retry 30 --retry-connrefused --retry-delay 1 --fail http://localhost:3004 > /dev/null
+          QA_LANDING_URL=http://localhost:3004 npx playwright test tests/webinar-campaign.spec.ts --workers=1 --reporter=line
 
   student-web:
     runs-on: ubuntu-latest
@@ -106,3 +121,28 @@ jobs:
         run: |
           npx playwright install --with-deps chromium
           npm run test:browser
+
+  programme-integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: programme_test
+          POSTGRES_USER: programme
+          POSTGRES_PASSWORD: programme-test-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U programme -d programme_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PROGRAMME_TEST_DSN: host=127.0.0.1 port=5432 dbname=programme_test user=programme password=programme-test-only
+      AWS_EC2_METADATA_DISABLED: 'true'
+      AWS_DEFAULT_REGION: ap-south-1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt pytest
+      - run: python -m pytest tests/test_programme_integration.py -q

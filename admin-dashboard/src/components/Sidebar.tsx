@@ -29,6 +29,7 @@ const menuItems = [
   },
   { href: "/dashboard/polls", label: "Polls", icon: Vote },
   { href: "/dashboard/materials", label: "Materials", icon: FileText },
+  { href: '/dashboard/programme', label: 'Programme+ workspace', icon: Calendar },
   { href: "/dashboard/operations", label: "Launch readiness", icon: BarChart3 },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/dashboard/admin-users", label: "Admin Users", icon: UserCog },
@@ -38,6 +39,8 @@ const menuItems = [
 export function Sidebar() {
   const pathname = usePathname() ?? "";
   const [admin, setAdmin] = useState(false);
+  const [educator,setEducator]=useState(false);
+  useEffect(()=>{let live=true;void import('@/services/programme').then(({programme})=>programme.access()).then(r=>{if(live)setEducator(r.courses.length>0);}).catch(()=>{});return()=>{live=false;};},[]);
   useEffect(
     () =>
       setAdmin(
@@ -52,14 +55,14 @@ export function Sidebar() {
 
   const groups = [
     { title: 'Workspace', paths: ['/dashboard', '/dashboard/learning', '/dashboard/courses', '/dashboard/course-enquiries', '/dashboard/fees'] },
-    { title: 'Engagement', paths: ['/dashboard/events', '/dashboard/polls', '/dashboard/materials', '/dashboard/analytics'] },
+    { title: 'Engagement', paths: ['/dashboard/events', '/dashboard/polls', '/dashboard/materials', '/dashboard/analytics', '/dashboard/programme'] },
     { title: 'Administration', paths: ['/dashboard/admin-users', '/dashboard/users', '/dashboard/operations'] },
   ];
   return <aside className="w-16 shrink-0 border-r border-gray-200 bg-white sm:w-60">
     <div className="sticky top-[65px] max-h-[calc(100vh-65px)] overflow-y-auto px-2 py-5 sm:px-4">
       <div className="mb-6 hidden px-3 sm:block"><p className="text-xs font-semibold tracking-widest text-primary-600 uppercase">AI4Impact workspace</p><p className="mt-2 text-xs text-gray-400">Learning, people and progress</p></div>
       <nav aria-label="Main navigation" className="space-y-6">{groups.map(group => {
-        const items=group.paths.map(path=>menuItems.find(item=>item.href===path)!).filter(item=>admin||item.href==='/dashboard/course-enquiries');
+        const items=group.paths.map(path=>menuItems.find(item=>item.href===path)!).filter(item=>admin||(educator&&item.href==='/dashboard/programme')||item.href==='/dashboard/course-enquiries');
         if(!items.length)return null;
         return <div key={group.title}><p className="mb-2 hidden px-3 text-[10px] font-semibold uppercase tracking-widest text-gray-400 sm:block">{group.title}</p><ul className="space-y-1">{items.map(item=>{
           const active=pathname===item.href||(item.href!=='/dashboard'&&pathname.startsWith(item.href+'/'));

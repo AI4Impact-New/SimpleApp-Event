@@ -38,7 +38,7 @@ export const learning = {
   certificateDownload: (id: string) => request<{ url: string }>('GET', `/certificates/${id}/download`),
   attendance: (id: string) => request<{ email: string; name?: string; minutes_attended: number }[]>('GET', `/admin/classes/${id}/attendance`),
   importAttendance: (id: string, attendees: { email: string; minutes_attended: number }[]) => request<{ imported: number }>('POST', `/admin/classes/${id}/attendance/import`, { source: 'zoom_csv', attendees }),
-  announce: (course: string, title: string, body: string) => request<{ notifications_created: number }>('POST', `/admin/courses/${course}/notifications`, { title, body }),
+  announce: (course: string, title: string, body: string, requestId = crypto.randomUUID()) => request<{ notifications_created: number;queued?:boolean;campaign_id?:string }>('POST', `/admin/courses/${course}/notifications`, { title, body, request_id: requestId }),
   async uploadVideo(id: string, file: File, seconds: number, onProgress: (percentage: number) => void) {
     const result = await request<{ asset_id: string; upload: { url: string; fields: Record<string, string> } }>('POST', `/admin/classes/${id}/video-upload`, { duration_seconds: seconds, size_bytes: file.size });
     const form = new FormData();

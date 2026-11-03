@@ -22,6 +22,8 @@ export type CoursePhase = {
   summary: string;
   /** Inclusive week range within the core 12 weeks, e.g. [1, 4]. */
   weeks: [number, number];
+  /** Tools taught in this phase, shown as logos; names must be keys of `TOOL_LOGOS`. */
+  tools?: string[];
   items: CourseWeek[];
 };
 
@@ -43,7 +45,6 @@ export type CourseDetail = {
   problem: { title: string; body: string; points: string[] };
   outcomes: { value: string; label: string }[];
   builtFor: string[];
-  notFor: string[];
   prerequisites: { required: string[]; helpful?: string[]; notRequired?: string[] };
   /** Overrides the default "How you learn" section (recorded lessons with weekly live help). */
   delivery?: {
@@ -124,7 +125,6 @@ const FDE: CourseDetail = {
     "Data or ML engineers moving into client-facing solution roles",
     "Technical consultants who want to build, not only advise",
   ],
-  notFor: ["Complete beginners to programming", "Learners who only want a theory overview of AI"],
   prerequisites: {
     required: [
       "Programming fundamentals in any language",
@@ -332,7 +332,6 @@ const AIML: CourseDetail = {
     "Data scientists who want to deploy their own models",
     "Software engineers joining ML teams",
   ],
-  notFor: ["Learners without any Python", "Those looking for research-level deep learning"],
   prerequisites: {
     required: ["Python", "SQL basics", "Statistics fundamentals: mean, variance, distributions"],
     helpful: ["Git", "Linear algebra intuition"],
@@ -511,7 +510,6 @@ const GENAI: CourseDetail = {
     "ML engineers moving to LLM systems",
     "Technical founders building AI features",
   ],
-  notFor: ["Learners without Python or API experience"],
   prerequisites: {
     required: ["Python", "Working with REST APIs and JSON"],
     helpful: ["SQL", "Docker", "Git"],
@@ -690,7 +688,6 @@ const AFDE: CourseDetail = {
     "SQL, ETL and BI developers moving to Azure",
     "Testers and support engineers moving into data roles",
   ],
-  notFor: ["Experienced Azure data engineers seeking advanced platform architecture"],
   prerequisites: {
     required: ["SQL basics — covered in Week 3", "Python basics — covered in Week 3"],
   },
@@ -723,6 +720,7 @@ const AFDE: CourseDetail = {
       title: "Azure foundations",
       summary: "Store, ingest and query data on Azure",
       weeks: [1, 3],
+      tools: ["Azure", "Azure SQL", "Azure Data Factory", "Python"],
       items: [
         {
           title: "Cloud Introduction · Overview of ADE Services · Azure Data Storages",
@@ -861,6 +859,7 @@ const AFDE: CourseDetail = {
       title: "Lakehouse engineering",
       summary: "Transform at scale with Spark and Databricks",
       weeks: [4, 5],
+      tools: ["Apache Spark", "Databricks"],
       items: [
         {
           title: "Spark Introduction · Azure Databricks Introduction · Databricks Utils · RDD (PySpark)",
@@ -966,6 +965,7 @@ const AFDE: CourseDetail = {
       title: "Fabric, BI and delivery",
       summary: "Serve trusted data to the business",
       weeks: [6, 8],
+      tools: ["Microsoft Fabric", "Power BI", "Azure DevOps"],
       items: [
         {
           title: "Microsoft Fabric",
@@ -1015,35 +1015,6 @@ const AFDE: CourseDetail = {
           ],
         },
         {
-          title: "Power BI",
-          topics: [
-            "Data warehousing, OLTP vs OLAP, star and snowflake schemas",
-            "Power BI Desktop, connecting data sources and Power Query",
-            "Data modelling and DAX",
-            "Reports, visualisation types, dashboards and publishing to Power BI Service",
-          ],
-          modules: [
-            {
-              title: "Power BI",
-              topics: [
-                "Introduction to data warehousing",
-                "OLTP vs OLAP",
-                "Star schema vs snowflake schema",
-                "Overview of Power BI",
-                "Power BI Desktop",
-                "Connecting Power BI with different data sources",
-                "Power Query for data transformation",
-                "Data modelling",
-                "DAX",
-                "Reports and visualisation types",
-                "Dashboards",
-                "Publishing reports",
-                "Power BI Service",
-              ],
-            },
-          ],
-        },
-        {
           title: "Real Time Project",
           topics: [
             "Azure services, source data stores and metadata tables",
@@ -1085,13 +1056,42 @@ const AFDE: CourseDetail = {
             },
           ],
         },
+        {
+          title: "Power BI",
+          topics: [
+            "Data warehousing, OLTP vs OLAP, star and snowflake schemas",
+            "Power BI Desktop, connecting data sources and Power Query",
+            "Data modelling and DAX",
+            "Reports, visualisation types, dashboards and publishing to Power BI Service",
+          ],
+          modules: [
+            {
+              title: "Power BI",
+              topics: [
+                "Introduction to data warehousing",
+                "OLTP vs OLAP",
+                "Star schema vs snowflake schema",
+                "Overview of Power BI",
+                "Power BI Desktop",
+                "Connecting Power BI with different data sources",
+                "Power Query for data transformation",
+                "Data modelling",
+                "DAX",
+                "Reports and visualisation types",
+                "Dashboards",
+                "Publishing reports",
+                "Power BI Service",
+              ],
+            },
+          ],
+        },
       ],
     },
   ],
-  paceNote: "The course runs online over 8 weeks, with one hour of recorded lessons every weekday, ending with a week-long real-time project.",
+  paceNote: "The course runs online over 8 weeks, with one hour of recorded lessons every weekday, including a week-long real-time project.",
   projects: [],
   capstone: {
-    eyebrow: "Week 8 · Real-time project",
+    eyebrow: "Week 7 · Real-time project",
     title: "End-to-end Azure data engineering project",
     body: "Build a metadata-driven project that ingests source data with ADF pipelines, transforms it through Databricks bronze and silver frameworks and loads the gold layer into Power BI — with credentials in Key Vault and code in Azure DevOps.",
     stages: [
@@ -1140,7 +1140,6 @@ const DAPE: CourseDetail = {
     "BI developers who want to own pipelines",
     "Backend engineers supporting data and ML teams",
   ],
-  notFor: ["Learners who have never written a query", "Those looking only for dashboarding skills"],
   prerequisites: {
     required: ["Basic programming in any language", "SQL: SELECT, JOIN and GROUP BY"],
     helpful: ["Git", "Command line basics"],
@@ -1330,7 +1329,6 @@ const DSDI: CourseDetail = {
     "Business, finance and operations professionals",
     "Excel-heavy analysts ready to move to SQL and Python",
   ],
-  notFor: ["Experienced data scientists seeking advanced ML research"],
   prerequisites: {
     required: ["Basic mathematics", "Spreadsheet familiarity"],
     helpful: ["Curiosity about how businesses make money"],
@@ -1506,7 +1504,6 @@ const APAB: CourseDetail = {
     "Operations, finance and customer-support leads",
     "Founders and non-engineers who want to build with AI",
   ],
-  notFor: ["Engineers looking for deep model or infrastructure work"],
   prerequisites: {
     required: ["Basic digital fluency: docs, spreadsheets and web apps"],
     helpful: ["Experience in any business function"],
@@ -1635,8 +1632,8 @@ const APAB: CourseDetail = {
 };
 
 export const COURSE_DETAILS: Record<string, CourseDetail> = {
-  "forward-deployed-ai-engineer": FDE,
   "azure-fabric-data-engineering": AFDE,
+  "forward-deployed-ai-engineer": FDE,
   "data-ai-platform-engineer": DAPE,
   "data-science-analytics-decision-intelligence": DSDI,
   "applied-ai-machine-learning-engineer": AIML,

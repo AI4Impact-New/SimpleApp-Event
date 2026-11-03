@@ -16,6 +16,39 @@ function PhaseProgress({ weeks: [from, to], total }: { weeks: CoursePhase["weeks
   );
 }
 
+/** Logo files in `public/tools`, keyed by the tool names used in `CoursePhase.tools`. */
+const TOOL_LOGOS: Record<string, string> = {
+  Azure: "/tools/azure.svg",
+  "Azure SQL": "/tools/azure-sql.svg",
+  "Azure Data Factory": "/tools/azure-data-factory.svg",
+  "Azure DevOps": "/tools/azure-devops.svg",
+  Python: "/tools/python.svg",
+  "Apache Spark": "/tools/apache-spark.svg",
+  Databricks: "/tools/databricks.svg",
+  "Microsoft Fabric": "/tools/microsoft-fabric.svg",
+  "Power BI": "/tools/power-bi.svg",
+};
+
+/** Row of tool logos for a phase; each tile carries the tool name as its tooltip and accessible label. */
+function PhaseTools({ tools }: { tools: string[] }) {
+  const known = tools.filter((tool) => TOOL_LOGOS[tool]);
+  if (!known.length) return null;
+  return (
+    <ul aria-label="Tools in this phase" className="mt-(--space-5) flex flex-wrap gap-(--space-2)">
+      {known.map((tool) => (
+        <li
+          key={tool}
+          title={tool}
+          className="flex size-(--space-10) items-center justify-center rounded-(--radius-xl) border border-(--border-default) bg-(--surface-card)"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- static SVG logos */}
+          <img src={TOOL_LOGOS[tool]} alt={tool} width={22} height={22} className="size-[22px] object-contain" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function WeekNumber({ n }: { n: number }) {
   return (
     <span className="flex size-(--space-10) shrink-0 items-center justify-center rounded-(--radius-pill) border border-(--border-default) font-(family-name:--font-mono) text-(length:--fs-2xs) leading-none text-(--text-strong) tabular-nums">
@@ -82,6 +115,7 @@ export function CurriculumSection({ course }: { course: CourseDetail }) {
               <p className="mt-(--space-3) text-(length:--fs-xs) leading-(--lh-body) text-(--text-body)">
                 {phase.summary}
               </p>
+              {phase.tools?.length ? <PhaseTools tools={phase.tools} /> : null}
               <div className="mt-(--space-5) max-w-xs">
                 <PhaseProgress weeks={phase.weeks} total={course.coreWeeks} />
               </div>

@@ -26,8 +26,25 @@ export type Track = {
 
 export const TRACKS: Track[] = [
   {
-    id: "fde",
+    id: "az",
+    demoCheckoutEnabled: false,
     number: "01",
+    family: "Data",
+    title: "Azure/Fabric Data Engineering",
+    description: "Build Azure and Microsoft Fabric pipelines, from ADF ingestion and Databricks lakehouses to Power BI reports.",
+    level: "Beginner–Advanced",
+    duration: "8 weeks",
+    weekly: "10–15 hrs",
+    projects: "1 mini + 1 end-to-end",
+    projectCount: 2,
+    fee: "₹25,000",
+    need: "SQL and Python basics — both covered in the training",
+    roles: "Azure Data Engineer · Data Engineer · Fabric Data Engineer · Data Analyst",
+    href: "/courses/azure-fabric-data-engineering",
+  },
+  {
+    id: "fde",
+    number: "02",
     family: "Build",
     title: "Forward Deployed AI Engineer",
     badge: "Flagship",
@@ -41,23 +58,6 @@ export const TRACKS: Track[] = [
     need: "Programming fundamentals in any language",
     roles: "Forward Deployed Engineer · Applied AI Engineer · AI Solutions Engineer",
     href: "/courses/forward-deployed-ai-engineer",
-  },
-  {
-    id: "az",
-    demoCheckoutEnabled: false,
-    number: "02",
-    family: "Data",
-    title: "Azure/Fabric Data Engineering",
-    description: "Build Azure and Microsoft Fabric pipelines, from ADF ingestion and Databricks lakehouses to Power BI reports.",
-    level: "Beginner–Advanced",
-    duration: "8 weeks",
-    weekly: "10–15 hrs",
-    projects: "1 mini + 1 end-to-end",
-    projectCount: 2,
-    fee: "₹25,000",
-    need: "SQL and Python basics — both covered in the training",
-    roles: "Azure Data Engineer · Data Engineer · Fabric Data Engineer · Data Analyst",
-    href: "/courses/azure-fabric-data-engineering",
   },
   {
     id: "dp",
@@ -142,8 +142,8 @@ export const TRACKS: Track[] = [
 ];
 
 export const FINDER_OPTIONS: { label: string; trackId: Track["id"] }[] = [
-  { label: "Ship AI into real businesses", trackId: "fde" },
   { label: "Engineer data on Azure and Fabric", trackId: "az" },
+  { label: "Ship AI into real businesses", trackId: "fde" },
   { label: "Build data platforms and pipelines", trackId: "dp" },
   { label: "Turn data into decisions", trackId: "ds" },
   { label: "Train and deploy ML models", trackId: "ml" },
@@ -254,8 +254,8 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 ];
 
 export const TRACK_FAMILIES: { family: Track["family"]; eyebrow: string; title: string }[] = [
-  { family: "Build", eyebrow: "Build tracks", title: "Ship AI systems into production." },
   { family: "Data", eyebrow: "Data tracks", title: "Build the data that AI runs on." },
+  { family: "Build", eyebrow: "Build tracks", title: "Ship AI systems into production." },
   { family: "Product", eyebrow: "Product tracks", title: "Decide what gets built, and why." },
 ];
 

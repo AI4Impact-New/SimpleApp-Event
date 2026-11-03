@@ -2,11 +2,12 @@
 // Purely presentational: playback, heartbeats and session renewal stay in LecturePlayerScreen,
 // which renders this layout on web and its app layout on native.
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, Animated, Easing, type GestureResponderEvent } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, type GestureResponderEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { VideoView, type VideoPlayer } from 'expo-video';
 import { useLearningHome } from '@/hooks/useLearning';
 import { useWebLayout } from '@/hooks/useWebLayout';
+import { Spinner } from '@/components/web/Spinner';
 import type { LearningClass, LectureProgress } from '@/types/learning';
 import { colors, fonts, palette } from '@/theme/colors';
 import { formatDuration, formatLocalDateTime } from '@/utils/datetime';
@@ -425,22 +426,10 @@ function useMediaElementState(videoViewRef: React.RefObject<VideoView | null>, p
 }
 
 function StageLoader({ label }: { label: string }) {
-  const spin = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const loop = Animated.loop(Animated.timing(spin, { toValue: 1, duration: 900, easing: Easing.linear, useNativeDriver: false }));
-    loop.start();
-    return () => loop.stop();
-  }, [spin]);
-  const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  // States design, "Video buffering": a 36px ring on the dark stage, no text.
   return (
-    <View style={styles.loader} pointerEvents="none" accessibilityRole="progressbar" accessibilityLabel={label}>
-      <View style={styles.loaderBadge}>
-        <View style={styles.loaderRing}>
-          <View style={styles.loaderTrack} />
-          <Animated.View style={[styles.loaderArc, { transform: [{ rotate }] }]} />
-        </View>
-        <Text style={styles.loaderText}>{label}</Text>
-      </View>
+    <View style={styles.loader} pointerEvents="none">
+      <Spinner size={36} thickness={3} track={palette.borderDark} head={palette.teal400} label={label} />
     </View>
   );
 }
@@ -534,29 +523,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(8,19,40,0.82)',
   },
   loader: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(6,15,34,0.35)', zIndex: 2 },
-  loaderBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    paddingLeft: 14,
-    paddingRight: 18,
-    borderRadius: 999,
-    backgroundColor: 'rgba(6,15,34,0.78)',
-    borderWidth: 1,
-    borderColor: darkLine,
-  },
-  loaderRing: { width: 22, height: 22 },
-  loaderTrack: { ...StyleSheet.absoluteFillObject, borderRadius: 11, borderWidth: 2.5, borderColor: '#2a3654' },
-  loaderArc: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 11,
-    borderWidth: 2.5,
-    borderColor: 'transparent',
-    borderTopColor: palette.teal400,
-    borderRightColor: palette.teal400,
-  },
-  loaderText: { ...mono, fontSize: 12, fontWeight: '500', letterSpacing: 0.3, color: palette.textOnDarkBody },
   overlayText: { ...text, color: palette.textOnDark, fontSize: 15, textAlign: 'center', maxWidth: 460 },
   overlayBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 38, paddingHorizontal: 16, borderRadius: 8, backgroundColor: palette.textOnDark },
   overlayBtnText: { ...text, fontSize: 14, fontWeight: '600', color: ink },

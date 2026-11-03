@@ -45,10 +45,11 @@ def jobs(actor, query, for_staff=False):
             member(cur, actor["id"])
         cur.execute(
             """SELECT j.*,c.name AS company_name,c.website AS company_website FROM programme_jobs j JOIN programme_companies c ON c.id=j.company_id
-         WHERE (%s OR (j.status='published' AND j.deadline>now() AND c.active=true)) AND (j.title ILIKE %s OR j.description ILIKE %s OR c.name ILIKE %s OR j.partner ILIKE %s OR j.skills::text ILIKE %s)
+         WHERE (%s OR (j.status='published' AND j.deadline>now() AND c.active=true)) AND (j.title ILIKE %s OR j.description ILIKE %s OR c.name ILIKE %s OR j.partner ILIKE %s OR j.skills::text ILIKE %s OR j.location ILIKE %s)
          AND j.location ILIKE %s AND (%s='' OR j.work_mode=%s) AND (%s='' OR j.employment_type=%s) AND (%s::uuid IS NULL OR (j.created_at,j.id)<(SELECT created_at,id FROM programme_jobs WHERE id=%s::uuid)) ORDER BY j.created_at DESC,j.id DESC LIMIT %s""",
             (
                 for_staff,
+                "%" + search + "%",
                 "%" + search + "%",
                 "%" + search + "%",
                 "%" + search + "%",

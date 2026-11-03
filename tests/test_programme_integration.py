@@ -333,6 +333,7 @@ def create_job(d, **extra):
 
 def test_job_publish_archive_and_search(data):
     j = create_job(data)
+    assert len(career.jobs(data["student"], {"q": "Remote"})["items"]) == 1
     assert len(career.jobs(data["student"], {"q": "Engineer"})["items"]) == 1
     body = {
         **j,

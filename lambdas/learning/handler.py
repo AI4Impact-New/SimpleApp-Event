@@ -7,6 +7,7 @@ from urllib.parse import quote
 from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
+from psycopg2 import errors as db_errors
 
 from shared.auth import get_current_user, _normalize_groups
 from shared.user_repository import get_or_create_user_from_claims, IdentityConflictError
@@ -72,11 +73,20 @@ def handler(event, context):
             return _response(200,billing.catalog(None))
         if path == "/employer-enquiries" and method == "POST":
             return _response(202,enquiries.submit(_body(event),True))
+        if path.startswith('/public/webinars'):
+            from programme import api as programme_api
+            return _response(200,programme_api.public(path,method,_body(event) if method=='POST' else {},event))
+        if path=='/webhooks/resend' and method=='POST':
+            from programme import webhook
+            return _response(200,webhook.receive(event))
         actor = _actor(event)
         marketing_route=(path=="/admin/enquiries" or (len(parts)==3 and parts[:2]==['admin','enquiries']) or path=="/admin/marketing/interests" or (len(parts)>=4 and parts[:2]==["admin","enquiries"] and parts[3]=="assisted"))
         if parts[0]=="admin":
             enquiries.staff(actor) if marketing_route else service.admin(actor)
         body = _body(event) if method in ("POST","PUT","PATCH") else {}
+        if parts[0]=='programme' or parts[:2]==['admin','programme']:
+            from programme import api as programme_api
+            return _response(200,programme_api.dispatch(actor,path,method,body,event.get('queryStringParameters')))
         result, status = None, 200
         if len(parts)>=4 and parts[:2]==['admin','enquiries'] and parts[3]=='assisted':
             eid=identifier(parts[2]);suffix=parts[4] if len(parts)>4 else ''
@@ -171,6 +181,10 @@ def handler(event, context):
             elif len(parts)==4 and parts[3]=="submit" and method=="POST": result=exams.submit_attempt(actor,aid,body)
         if result is None: raise ApiError(404,"Endpoint not found")
         return _response(status,result)
+    except (db_errors.UniqueViolation, db_errors.DeadlockDetected, db_errors.SerializationFailure, db_errors.LockNotAvailable):
+        return _response(409, {'error':'This operation conflicts with another change; refresh and retry with the same request ID'})
+    except (db_errors.ForeignKeyViolation, db_errors.CheckViolation, db_errors.InvalidTextRepresentation):
+        return _response(400, {'error':'Invalid or unavailable referenced data'})
     except IdentityConflictError as error:
         return _response(409, {"error":str(error)})
     except ApiError as error:

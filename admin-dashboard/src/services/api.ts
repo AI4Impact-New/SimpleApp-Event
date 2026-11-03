@@ -169,8 +169,8 @@ class ApiService {
     return response.data;
   }
 
-  async getUsers(group = 'All') {
-    const response = await this.client.get('/users', { params: { group } });
+  async getUsers(group = 'All', nextToken?: string) {
+    const response = await this.client.get('/users', { params: { group, next_token: nextToken } });
     const raw = response.data;
     return {
       users: Array.isArray(raw?.users) ? raw.users : [],

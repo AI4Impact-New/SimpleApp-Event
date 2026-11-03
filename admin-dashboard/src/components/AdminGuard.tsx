@@ -35,6 +35,10 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       router.replace("/login");
       return;
     }
+    if(path==='/dashboard/programme'&&!isAdminFromToken(token)){
+      let live=true;void import('@/services/programme').then(({programme})=>programme.access()).then(r=>{if(live)setAllowed(r.admin||r.courses.length>0);}).catch(()=>{if(live)setAllowed(false);});
+      return ()=>{live=false;};
+    }
     const admin = isAdminFromToken(token),
       marketing = isMarketingFromToken(token);
     if (!admin && marketing && path !== "/dashboard/course-enquiries") {

@@ -48,6 +48,11 @@ function withClockOffset(response: { data: ExamAttempt; headers: Record<string, 
 }
 
 class ApiService {
+  async programmeRequest<T>(method: 'GET'|'POST'|'PATCH'|'PUT'|'DELETE', path:string, data?:unknown):Promise<T>{
+    const response=await this.client.request<T>({method,url:path,data});
+    return response.data;
+  }
+
   private client: AxiosInstance;
   // Unauthenticated routes (public verification, catalog prices): no token, no 401 handling
   private publicClient = axios.create({ baseURL: API_URL });

@@ -28,6 +28,8 @@ def _retry(cur,jobs,code):
 
 
 def handler(event,context):
+    if os.environ.get('PROGRAMME_NOTIFICATIONS_ENABLED')=='true':
+        return {'disabled':True,'reason':'Delivery owned by the Programme outbox workers'}
     submitted=0; receipts_checked=0
     project_id=os.environ.get("EXPO_PROJECT_ID", "")
     if not project_id:

@@ -14,7 +14,6 @@ const READING_ROUTES = new Set([
   'VerifyCertificate',
   'Poll',
   'InboxMain',
-  'ProfileMain',
   'Purchases',
   'Certificates',
 ]);

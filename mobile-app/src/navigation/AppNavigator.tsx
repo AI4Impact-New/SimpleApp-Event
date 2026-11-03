@@ -644,7 +644,8 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                     onPrivacyPolicy={() => navigation.navigate('PrivacyPolicy')}
                     onCertificates={() => navigation.navigate('Certificates')}
                     onPurchases={() => navigation.navigate('Purchases')}
-                    onVerifyCertificate={() => navigation.navigate('VerifyCertificate')}
+                    onVerifyCertificate={(id?: string) => navigation.navigate('VerifyCertificate', id ? { id } : undefined)}
+                    onOpenOrder={(orderId) => navigation.navigate('Checkout', { orderId })}
                   />
                 )}
               </Stack.Screen>

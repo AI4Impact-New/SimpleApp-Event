@@ -1,5 +1,5 @@
 // Certificates Screen – issued certificates; download the PDF locally and open the native share sheet
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -8,19 +8,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
-import { useQueryClient } from '@tanstack/react-query';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { api } from '@/services/api';
 import { useMyCertificates } from '@/hooks/useLearning';
-import { apiErrorMessage } from '@/services/apiErrors';
 import type { MyCertificate } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { formatLocalDate } from '@/utils/datetime';
-import { downloadAndSharePdf } from '@/utils/sharePdf';
+import { useCertificateDownload } from '@/hooks/useCertificateDownload';
 
 interface CertificatesScreenProps {
   onBack: () => void;
@@ -28,31 +24,8 @@ interface CertificatesScreenProps {
 }
 
 export function CertificatesScreen({ onBack, onVerify }: CertificatesScreenProps) {
-  const queryClient = useQueryClient();
   const { data: certificates = [], isLoading, error, refetch, isRefetching } = useMyCertificates();
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
-
-  const downloadAndShare = async (cert: MyCertificate) => {
-    setDownloadingId(cert.id);
-    try {
-      // Five-minute signed URL; fetch it right before downloading
-      const { url } = await api.getCertificateDownload(cert.id);
-      await downloadAndSharePdf({
-        url,
-        fileName: `certificate-${cert.id}.pdf`,
-        dialogTitle: cert.course_title ?? 'Certificate',
-      });
-    } catch (err: any) {
-      if (err?.response?.status === 410) {
-        Alert.alert('Certificate revoked', 'This certificate has been revoked and can no longer be downloaded.');
-        queryClient.invalidateQueries({ queryKey: ['me', 'certificates'] });
-      } else {
-        Alert.alert('Download failed', apiErrorMessage(err, 'Could not download the certificate.'));
-      }
-    } finally {
-      setDownloadingId(null);
-    }
-  };
+  const { download: downloadAndShare, downloadingId } = useCertificateDownload();
 
   const renderItem = ({ item }: { item: MyCertificate }) => {
     const revoked = !!item.revoked_at;

@@ -1,3 +1,4 @@
+import { WebinarCampaign } from "@/components/webinars/WebinarCampaign";
 import type { ReactNode } from "react";
 import { AnnouncementBar } from "@/components/navigation/AnnouncementBar";
 import { Footer } from "@/components/navigation/Footer";
@@ -11,6 +12,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
       <AnnouncementBar items={ANNOUNCEMENTS} ctaLabel="Explore tracks" ctaHref="/courses" />
       <NavBar links={NAV_LINKS} guidanceHref="#guidance" loginHref="/login" />
       <main className="flex flex-1 flex-col">{children}</main>
+      <WebinarCampaign />
       <Footer columns={FOOTER_COLUMNS} {...FOOTER_COPY} />
     </>
   );

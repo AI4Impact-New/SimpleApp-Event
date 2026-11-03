@@ -325,6 +325,9 @@ def overview(actor):
 def notify_course(actor, course_id, body):
     admin(actor)
     course(course_id)
+    if __import__('os').environ.get('PROGRAMME_NOTIFICATIONS_ENABLED')=='true':
+        from programme.messaging import announce
+        return announce(actor,course_id,body)
     title_value, body_value = text(body.get("title"),"title",200), text(body.get("body"),"body",2000)
     rows = execute_query("""INSERT INTO learner_notifications(user_id,course_id,title,body)
         SELECT user_id,course_id,%s,%s FROM course_registrations WHERE course_id=%s AND status IN ('registered','completed') RETURNING id""",(title_value,body_value,course_id),fetch="all")

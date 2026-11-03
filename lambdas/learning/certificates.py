@@ -8,13 +8,15 @@ from learning.validation import ApiError, identifier, text
 
 
 def public_verify(certificate_id):
-    row = execute_query("""SELECT c.id,c.issued_at,c.revoked_at,c.provider,c.certificate_type,coalesce(c.metadata->>'recipient_name',u.name) AS name,
+    row = execute_query("""SELECT c.id,c.issued_at,c.revoked_at,c.provider,c.certificate_type,c.certificate_url,coalesce(c.metadata->>'recipient_name',u.name) AS name,
         coalesce(c.metadata->>'course_title',co.title) AS course_title
         FROM certificates_issued c JOIN users u ON u.id=c.user_id LEFT JOIN courses co ON co.id=c.course_id
         WHERE c.id=%s""",(identifier(certificate_id),),fetch="one")
     if not row: raise ApiError(404,"Certificate not found")
     if row["revoked_at"]:
         return {"id":str(row["id"]),"valid":False,"reason":"revoked"}
+    if row["certificate_type"]=="internship" and not row.get("certificate_url"):
+        return {"id":str(row["id"]),"valid":False,"reason":"preparing"}
     return {"id":str(row["id"]),"valid":True,"recipient_name":row["name"] or "Learner",
             "course_title":row["course_title"],"provider":row["provider"],"issued_at":row["issued_at"],"certificate_type":row["certificate_type"]}
 

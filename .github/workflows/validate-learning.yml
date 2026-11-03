@@ -49,6 +49,7 @@ jobs:
         run: |
           npm ci
           npm audit --omit=dev
+          npm audit --audit-level=high
           npm run build
       - name: Admin browser regressions
         working-directory: admin-dashboard
@@ -74,7 +75,9 @@ jobs:
           AMPLIFY_LANDING_EXPORT: 'true'
         run: |
           npm ci
-          npm audit
+          # Runtime: block every advisory. Build tooling: report all, block high/critical.
+          npm audit --omit=dev
+          npm audit --audit-level=high
           npm run build
 
   student-web:

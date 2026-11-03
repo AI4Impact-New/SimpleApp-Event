@@ -48,14 +48,14 @@ const LIST_ICONS = {
   cross: { Icon: X, className: "text-(--text-body)" },
 };
 
-function IconList({ items, icon, muted = false }: { items: string[]; icon: keyof typeof LIST_ICONS; muted?: boolean }) {
+function IconList({ items, icon }: { items: string[]; icon: keyof typeof LIST_ICONS }) {
   const { Icon, className } = LIST_ICONS[icon];
   return (
     <ul className="flex flex-col gap-(--space-3)">
       {items.map((item) => (
         <li
           key={item}
-          className={`flex items-start gap-(--space-3) text-(length:--fs-sm) leading-(--lh-body) ${muted ? "text-(--text-body)" : "text-(--text-strong)"}`}
+          className="flex items-start gap-(--space-3) text-(length:--fs-sm) leading-(--lh-body) text-(--text-strong)"
         >
           <Icon size={16} aria-hidden className={`mt-[0.35em] shrink-0 ${className}`} />
           {item}
@@ -119,20 +119,12 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
             </div>
           ))}
         </CellGrid>
-        <div className="mt-(--space-6) grid gap-(--space-5) md:grid-cols-2">
-          <Card className="p-(--space-8)">
-            <h3 className="mb-(--space-5) font-(family-name:--font-display) text-(length:--fs-h5) font-semibold leading-(--lh-snug) text-(--text-strong)">
-              This track is built for
-            </h3>
-            <IconList items={course.builtFor} icon="check" />
-          </Card>
-          <div className="rounded-(--radius-3xl) border border-dashed border-(--border-strong) p-(--space-8)">
-            <h3 className="mb-(--space-5) font-(family-name:--font-display) text-(length:--fs-h5) font-semibold leading-(--lh-snug) text-(--text-strong)">
-              Probably not the right fit if you are
-            </h3>
-            <IconList items={course.notFor} icon="cross" muted />
-          </div>
-        </div>
+        <Card className="mt-(--space-6) p-(--space-8)">
+          <h3 className="mb-(--space-5) font-(family-name:--font-display) text-(length:--fs-h5) font-semibold leading-(--lh-snug) text-(--text-strong)">
+            This track is built for
+          </h3>
+          <IconList items={course.builtFor} icon="check" />
+        </Card>
       </Section>
 
       <Section id="prerequisites">

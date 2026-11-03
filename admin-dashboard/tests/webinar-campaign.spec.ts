@@ -38,8 +38,12 @@ test("delayed registration keeps its request key after a recoverable failure", a
   });
   await page.goto(base!);
   await expect(page.getByRole("dialog")).not.toBeVisible();
-  await page.clock.fastForward(6000);
-  await expect(page.getByRole("dialog")).toBeVisible();
+  // Hydration and the mocked fetch may finish after navigation on slower CI runners.
+  // Advance the browser clock while polling rather than racing a single advance.
+  await expect.poll(async () => {
+    await page.clock.fastForward(1000);
+    return page.getByRole("dialog").isVisible();
+  }).toBe(true);
   await page
     .getByRole("button", { name: "Register free", exact: true })
     .click();

@@ -856,7 +856,8 @@ def test_routine_quiet_hours_defer_without_attempt(data, monkeypatch):
 
 def test_internship_screening_mentor_certificate_and_letter(data, monkeypatch):
     from learning import media
-    monkeypatch.setenv('CERTIFICATE_VERIFY_BASE_URL','https://example.invalid')
+
+    monkeypatch.setenv("CERTIFICATE_VERIFY_BASE_URL", "https://example.invalid")
 
     uploads = []
     monkeypatch.setattr(
@@ -944,3 +945,47 @@ def test_internship_screening_mentor_certificate_and_letter(data, monkeypatch):
     assert career.letter(data["student"], iid) == letter
     with pytest.raises(ApiError):
         career.letter(data["other"], iid)
+
+
+def test_provider_calendar_payload_is_identical_on_retry(data, monkeypatch):
+    from types import SimpleNamespace
+
+    monkeypatch.setenv("TRANSACTIONAL_FROM_EMAIL", "qa@example.invalid")
+    monkeypatch.setattr(worker, "api_key", lambda: "synthetic-key")
+    s = slot(data)
+    b = scheduling.book(
+        data["student"], str(s["id"]), {"request_id": uid(), "topic": "Review"}
+    )
+    captured = []
+
+    def post(url, **kwargs):
+        captured.append(kwargs)
+        return SimpleNamespace(
+            status_code=200, json=lambda: {"id": "synthetic-provider"}
+        )
+
+    monkeypatch.setattr(worker.http, "post", post)
+    job = {
+        "id": uid(),
+        "channel": "email",
+        "target_key": "person1@example.invalid",
+        "title": "Booked",
+        "body": "Confirmed",
+        "entity_type": "session",
+        "event_key": "booking:" + str(b["id"]) + ":1:confirmed",
+        "user_id": data["student"]["id"],
+        "created_at": datetime(2026, 11, 3, tzinfo=timezone.utc),
+    }
+    monkeypatch.setattr(
+        scheduling, "utcnow", lambda: datetime(2026, 11, 3, 1, tzinfo=timezone.utc)
+    )
+    worker._provider(job)
+    monkeypatch.setattr(
+        scheduling, "utcnow", lambda: datetime(2026, 11, 3, 2, tzinfo=timezone.utc)
+    )
+    worker._provider(job)
+    assert captured[0]["json"] == captured[1]["json"]
+    assert (
+        captured[0]["headers"]["Idempotency-Key"]
+        == captured[1]["headers"]["Idempotency-Key"]
+    )

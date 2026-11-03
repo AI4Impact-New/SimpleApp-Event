@@ -3,6 +3,7 @@
 import json
 import logging
 import random
+import re
 import os
 import uuid
 from datetime import datetime, timedelta, time, timezone
@@ -369,7 +370,11 @@ def _provider(j):
                 {
                     "filename": attachment["filename"],
                     "content": base64.b64encode(
-                        attachment["content"].encode()
+                        re.sub(
+                            r"(?m)^DTSTAMP:[^\r\n]*",
+                            "DTSTAMP:" + j["created_at"].strftime("%Y%m%dT%H%M%SZ"),
+                            attachment["content"],
+                        ).encode()
                     ).decode(),
                 }
             ]
@@ -395,7 +400,7 @@ def _provider(j):
                     "BEGIN:VEVENT",
                     "UID:" + str(c["id"]) + "@ai4impact.in",
                     "SEQUENCE:" + str(c["version"]),
-                    "DTSTAMP:" + utcnow().strftime("%Y%m%dT%H%M%SZ"),
+                    "DTSTAMP:" + j["created_at"].strftime("%Y%m%dT%H%M%SZ"),
                     "DTSTART:"
                     + c["starts_at"]
                     .astimezone(timezone.utc)

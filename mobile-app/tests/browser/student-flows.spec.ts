@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import path from 'node:path';
 
 const client = '40faprqjpcc6q0pfkdkcrd8p5v';
 const cid = '00000000-0000-0000-0000-000000000001';
@@ -18,6 +19,14 @@ async function seed(page: Page) {
   }, { client, id: token({ token_use: 'id', aud: client }), access: token({ token_use: 'access', client_id: client }) });
 }
 
+/** Static hosting with SPA fallback: every page navigation gets the exported index.html (local export only). */
+async function spaFallback(page: Page) {
+  if (process.env.QA_STUDENT_URL) return;
+  const index = path.join(__dirname, '../../dist/index.html');
+  await page.route(url => url.host === '127.0.0.1:8765', route =>
+    route.request().resourceType() === 'document' ? route.fulfill({ path: index, contentType: 'text/html' }) : route.continue());
+}
+
 test('profile updates immediately on return from editing', async ({ page }) => {
   await seed(page);
   let name = 'Original learner', saves = 0;
@@ -32,13 +41,23 @@ test('profile updates immediately on return from editing', async ({ page }) => {
   });
   // Synthetic credentials never reach Cognito or a real API.
   await page.route('https://cognito-idp.*.amazonaws.com/**', route => route.abort());
+  // Desktop width: the navbar shows the first name next to the initials.
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/');
+  const navbar = page.getByRole('navigation');
+  await expect(navbar.getByText('Original', { exact: true })).toBeVisible();
+  await expect(navbar.getByText('OL', { exact: true })).toBeVisible();
   await page.getByRole('tab', { name: /Profile/ }).click();
-  await page.getByText('Edit Profile', { exact: true }).click();
+  await page.getByRole('tab', { name: /Account/ }).click();
+  await page.getByText('Edit profile', { exact: true }).click();
   await page.getByPlaceholder('Your name').fill('Updated learner');
   await page.getByText('Save Profile', { exact: true }).click();
   await expect(page.getByText('Updated learner', { exact: true }).first()).toBeVisible();
   expect(saves).toBe(1);
+  // The navbar identity follows the edit without a reload.
+  await expect(navbar.getByText('Updated', { exact: true })).toBeVisible();
+  await expect(navbar.getByText('UL', { exact: true })).toBeVisible();
+  await expect(navbar.getByText('Original', { exact: true })).toHaveCount(0);
 });
 
 test('web exam confirmation sends answers and displays the server score', async ({ page }) => {
@@ -67,6 +86,7 @@ test('web exam confirmation sends answers and displays the server score', async 
   await page.goto('/');
   await page.getByRole('tab', { name: /My learning/i }).click();
   await page.getByText(course.title, { exact: true }).last().click();
+  await page.getByRole('tab', { name: /Assessments/ }).click();
   await page.getByText(exam.title, { exact: true }).click();
   await page.getByText('Start / resume exam', { exact: true }).click();
   await page.getByText('Correct answer', { exact: true }).click();
@@ -74,3 +94,33 @@ test('web exam confirmation sends answers and displays the server score', async 
   await expect(page.getByText('Passed', { exact: true })).toBeVisible();
   expect(submissions).toBe(1);
 });
+
+for (const signedIn of [false, true]) {
+  test(`public certificate link verifies on cold load and refresh when signed ${signedIn ? 'in' : 'out'}`, async ({ page }) => {
+    const certificateId = '00000000-0000-0000-0000-000000000004';
+    let verifications = 0;
+    await spaFallback(page);
+    if (signedIn) await seed(page);
+    await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**', async route => {
+      const path = new URL(route.request().url()).pathname;
+      let json: unknown = [];
+      if (path === '/users/me') json = { id: cid, email: 'qa@example.invalid', name: 'QA learner', user_type: 'professional', designation: 'Engineer', company: 'QA' };
+      if (path === `/certificates/${certificateId}/verify`) {
+        verifications++;
+        json = { id: certificateId, valid: true, recipient_name: 'Verified Recipient', course_title: 'QA verified course' };
+      }
+      return route.fulfill({ json });
+    });
+    await page.route('https://cognito-idp.*.amazonaws.com/**', route => route.abort());
+
+    await page.goto(`/verify?id=${certificateId}`);
+    await expect(page.getByText('Valid certificate', { exact: true })).toBeVisible();
+    await expect(page.getByText('Verified Recipient', { exact: true })).toBeVisible();
+    expect(verifications).toBe(1);
+
+    await page.reload();
+    await expect(page.getByText('Valid certificate', { exact: true })).toBeVisible();
+    await expect(page.getByText('Verified Recipient', { exact: true })).toBeVisible();
+    expect(verifications).toBe(2);
+  });
+}

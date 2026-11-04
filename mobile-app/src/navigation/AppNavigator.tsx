@@ -39,7 +39,7 @@ import { PurchasesScreen } from '@/screens/PurchasesScreen';
 import { VerifyCertificateScreen } from '@/screens/VerifyCertificateScreen';
 import { useCourseExams, useLearningHome, useNotifications } from '@/hooks/useLearning';
 import type { Exam } from '@/types/learning';
-import { webLinking, takeReturnAction } from '@/navigation/linking';
+import { webLinking, takeReturnAction, setLinkingSignedIn } from '@/navigation/linking';
 import {
   courseIdFromResponse,
   notificationIdFromResponse,
@@ -786,6 +786,9 @@ export function AppNavigator() {
     setRefreshKey((prev) => prev + 1);
   }, []);
 
+  // URL parsing must target the tree about to mount (read when NavigationContainer resolves the address).
+  if (isAuthenticated !== null) setLinkingSignedIn(isAuthenticated);
+
   if (isAuthenticated === null) {
     return (
       <View style={styles.center}>
@@ -821,7 +824,13 @@ function AuthStack({ onLoginSuccess }: { onLoginSuccess: () => void }) {
         )}
       </Stack.Screen>
       <Stack.Screen name="VerifyCertificate">
-        {({ navigation }) => <VerifyCertificateScreen onBack={() => navigation.goBack()} />}
+        {({ route, navigation }) => (
+          <VerifyCertificateScreen
+            // /verify?id=<certificate-id> opened from a certificate link: check it straight away.
+            initialId={(route.params as { id?: string } | undefined)?.id}
+            onBack={() => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate('AuthHome'))}
+          />
+        )}
       </Stack.Screen>
       <Stack.Screen name="Login">
         {({ route, navigation }) => {

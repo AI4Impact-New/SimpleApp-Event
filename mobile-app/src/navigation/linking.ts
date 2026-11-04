@@ -103,11 +103,23 @@ function urlSafeState<T>(state: T): T {
   };
 }
 
+// The navigator tree differs by auth state; set by AppNavigator before NavigationContainer mounts.
+let signedIn = false;
+
+/** Tell URL parsing which navigator tree (signed in or signed out) is mounted. */
+export function setLinkingSignedIn(value: boolean) {
+  signedIn = value;
+}
+
 /** Legacy link shapes: /checkout?order=<id> (quote emails) and /course/<id>. */
 function normalizePath(path: string): string {
   const [pathname, query = ''] = path.split('?');
+  const page = pathname.replace(/\/$/, '');
   const order = new URLSearchParams(query).get('order');
-  if (pathname.replace(/\/$/, '') === '/checkout' && order) return `/checkout/${encodeURIComponent(order)}`;
+  if (page === '/checkout' && order) return `/checkout/${encodeURIComponent(order)}`;
+  // The public verification link (/verify?id=<certificate-id>, printed on certificates) only exists in the
+  // signed-out tree; signed in, open the same check under My Learning.
+  if (page === '/verify' && signedIn) return `/learning/certificates/verify${query ? `?${query}` : ''}`;
   return path.replace(/^\/course\//, '/courses/');
 }
 

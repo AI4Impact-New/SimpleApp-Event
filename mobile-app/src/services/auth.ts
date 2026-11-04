@@ -21,6 +21,10 @@ const ID_TOKEN_KEY = 'auth_id_token';
 const USER_KEY = 'user_data';
 
 type UnauthorizedCallback = () => void;
+type UserDataListener = (user: StoredUserData) => void;
+
+// Components showing the signed-in identity (e.g. the web navbar) refresh when the profile is edited.
+const userDataListeners = new Set<UserDataListener>();
 
 export type StoredUserData = {
   id: string;
@@ -407,7 +411,16 @@ class AuthService {
       ...rest,
     } as StoredUserData;
     await SecureStore.setItemAsync(USER_KEY, JSON.stringify(next));
+    userDataListeners.forEach((listener) => listener(next));
     return next;
+  }
+
+  /** Called with the stored profile after every `updateStoredUserData`. Returns an unsubscribe function. */
+  onUserDataChange(listener: UserDataListener): () => void {
+    userDataListeners.add(listener);
+    return () => {
+      userDataListeners.delete(listener);
+    };
   }
 
   /**

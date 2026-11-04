@@ -40,10 +40,19 @@ export function WebNavBar({ state, descriptors, navigation, unread }: BottomTabB
   const [name, setName] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
     authService
       .getCurrentUser()
-      .then((res) => setName(res.user?.name || res.user?.given_name || null))
+      .then((res) => {
+        if (active) setName(res.user?.name || res.user?.given_name || null);
+      })
       .catch(() => {});
+    // A profile edit saves the new name to the stored user; show it without a reload.
+    const unsubscribe = authService.onUserDataChange((user) => setName(user.name || user.given_name || null));
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   const focusedTab = state.routes[state.index];

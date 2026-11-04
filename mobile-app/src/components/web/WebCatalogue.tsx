@@ -61,7 +61,7 @@ export function WebCatalogue({ onCoursePress }: { onCoursePress: (course: Course
       </View>
 
       {isLoading ? (
-        <CatalogueSkeleton />
+        <CatalogueSkeleton wide={wide} />
       ) : error ? (
         <Blank
           icon="cloud-offline-outline"
@@ -102,6 +102,7 @@ export function WebCatalogue({ onCoursePress }: { onCoursePress: (course: Course
                 course={c}
                 index={all.indexOf(c)}
                 price={prices?.find((p) => p.id === c.id)}
+                wide={wide}
                 onPress={() => onCoursePress(c)}
               />
             ))}
@@ -112,7 +113,7 @@ export function WebCatalogue({ onCoursePress }: { onCoursePress: (course: Course
   );
 }
 
-function CourseCard({ course, index, price, onPress }: { course: Course; index: number; price?: CoursePrice; onPress: () => void }) {
+function CourseCard({ course, index, price, wide, onPress }: { course: Course; index: number; price?: CoursePrice; wide: boolean; onPress: () => void }) {
   const { buildHref } = useLinkBuilder();
   const href = buildHref('Courses', { screen: 'CourseDetail', params: { courseId: course.id } } as never) ?? undefined;
   const duration = highlight(course, /duration|length|weeks/i);
@@ -134,7 +135,7 @@ function CourseCard({ course, index, price, onPress }: { course: Course; index: 
       }}
       accessibilityRole="link"
       accessibilityLabel={`${course.title}${course.learning_access ? ', enrolled' : ''}`}
-      style={(s: PressState) => [styles.card, s.hovered && styles.cardHover]}
+      style={(s: PressState) => [styles.card, wide && styles.cardWide, s.hovered && styles.cardHover]}
     >
       {(s: PressState) => (
         <>
@@ -210,7 +211,7 @@ function Blank({ icon, title, body: text, cta, onCta }: { icon: keyof typeof Ion
   );
 }
 
-function CatalogueSkeleton() {
+function CatalogueSkeleton({ wide }: { wide: boolean }) {
   const v = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const loop = Animated.loop(
@@ -227,7 +228,7 @@ function CatalogueSkeleton() {
   return (
     <View style={styles.grid} aria-busy>
       {[0, 1, 2, 3, 4, 5].map((k) => (
-        <View key={k} style={[styles.card, { gap: 14 }]}>
+        <View key={k} style={[styles.card, wide && styles.cardWide, { gap: 14 }]}>
           {sk(24, 12)}
           {sk('75%', 20)}
           {sk('95%', 12)}
@@ -262,8 +263,6 @@ const styles = StyleSheet.create({
   card: {
     flexGrow: 1,
     flexBasis: 320,
-    maxWidth: 'calc((100% - 32px) / 3)' as any,
-    minWidth: 280,
     backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: line,
@@ -271,6 +270,8 @@ const styles = StyleSheet.create({
     padding: 28,
     gap: 14,
   },
+  // Three columns on desktop; a lone last-row card keeps its column width.
+  cardWide: { maxWidth: 'calc((100% - 32px) / 3)' as any, minWidth: 280 },
   cardHover: { borderColor: palette.slate400 },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 24 },
   idx: { ...mono, fontSize: 12, fontWeight: '500', color: muted },

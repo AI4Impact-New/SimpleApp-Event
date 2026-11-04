@@ -514,6 +514,9 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                     onNotificationsPress={() => navigation.navigate('Inbox', { screen: 'InboxMain' })}
                     onPurchasesPress={() => navigation.navigate('Purchases')}
                     onBrowseCourses={() => navigation.navigate('Courses', { screen: 'CoursesMain' })}
+                    onPlayLecture={(lecture) =>
+                      navigation.navigate('LecturePlayer', { classId: lecture.id, courseId: lecture.course_id, title: lecture.title })
+                    }
                   />
                 )}
               </Stack.Screen>

@@ -20,6 +20,8 @@ import type { Exam, ExamAnswers, ExamAttempt } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { formatDuration } from '@/utils/datetime';
 import { userStore } from '@/utils/userStorage';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebExam } from '@/components/web/WebExam';
 
 interface ExamScreenProps {
   exam: Exam;
@@ -170,6 +172,31 @@ export function ExamScreen({ exam: initialExam, onBack }: ExamScreenProps) {
   };
 
   const attemptsLeft = Math.max(0, (exam.max_attempts ?? 1) - (Number(exam.attempts_used) || 0));
+
+  // Browser portal: design's exam (one question at a time, question grid, result page) over the same attempt state.
+  if (isWeb) {
+    return (
+      <WebExam
+        exam={exam}
+        restoring={restoring}
+        attempt={attempt}
+        answers={answers}
+        remaining={remaining}
+        attemptsLeft={attemptsLeft}
+        starting={starting}
+        submitting={submit.isPending}
+        onStart={start}
+        onSelect={select}
+        onSubmit={doSubmit}
+        onTryAgain={() => {
+          autoSubmittedRef.current = false;
+          setAnswers({});
+          setAttempt(null);
+        }}
+        onBack={onBack}
+      />
+    );
+  }
 
   if (restoring) {
     return (

@@ -17,6 +17,7 @@ import { Event } from '@/types/event';
 import { colors, spacing } from '@/theme/colors';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { isWeb } from '@/hooks/useWebLayout';
+import { WebEvents } from '@/components/web/WebEvents';
 
 interface EventsScreenProps {
   onEventPress: (event: Event) => void;
@@ -26,7 +27,22 @@ interface EventsScreenProps {
   onBack?: () => void;
 }
 
-export function EventsScreen({ onEventPress, onScanPress, onLeaderboardPress, onBack }: EventsScreenProps) {
+export function EventsScreen(props: EventsScreenProps) {
+  // Browser portal: design's events page (join by code, live hero + poll, upcoming, leaderboard).
+  if (isWeb) {
+    return (
+      <WebEvents
+        onEventPress={props.onEventPress}
+        // Navigation only reads the id; after a code join we have just that.
+        onOpenEvent={(eventId) => props.onEventPress({ id: eventId } as Event)}
+        onLeaderboardPress={props.onLeaderboardPress}
+      />
+    );
+  }
+  return <NativeEvents {...props} />;
+}
+
+function NativeEvents({ onEventPress, onScanPress, onLeaderboardPress, onBack }: EventsScreenProps) {
   const {
     data: events,
     isLoading,

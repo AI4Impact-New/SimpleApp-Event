@@ -16,13 +16,23 @@ import { useMarkNotificationRead, useNotifications } from '@/hooks/useLearning';
 import type { LearnerNotification } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { formatLocalDateTime } from '@/utils/datetime';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebInbox } from '@/components/web/WebInbox';
 
 interface NotificationsScreenProps {
   onBack?: () => void;
   onOpenNotification: (notification: LearnerNotification) => void;
+  /** Web reading pane's "Open course" action. */
+  onOpenCourse?: (courseId: string) => void;
 }
 
-export function NotificationsScreen({ onBack, onOpenNotification }: NotificationsScreenProps) {
+export function NotificationsScreen(props: NotificationsScreenProps) {
+  // Browser portal: two-pane inbox (same queries and read-marking).
+  if (isWeb) return <WebInbox onOpenNotification={props.onOpenNotification} onOpenCourse={props.onOpenCourse} />;
+  return <NativeNotifications {...props} />;
+}
+
+function NativeNotifications({ onBack, onOpenNotification }: NotificationsScreenProps) {
   const { data: notifications = [], isLoading, error, refetch, isRefetching } = useNotifications();
   const markRead = useMarkNotificationRead();
 

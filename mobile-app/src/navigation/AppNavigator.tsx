@@ -609,6 +609,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                 {({ navigation }: any) => (
                   <NotificationsScreen
                     onOpenNotification={(item) => navigation.navigate('NotificationDetail', { notificationId: item.id })}
+                    onOpenCourse={(courseId) => openCourseLearning(navigation, courseId)}
                   />
                 )}
               </Stack.Screen>

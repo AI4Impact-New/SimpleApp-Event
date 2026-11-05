@@ -88,10 +88,15 @@ test('web exam confirmation sends answers and displays the server score', async 
   await page.getByText(course.title, { exact: true }).last().click();
   await page.getByRole('tab', { name: /Assessments/ }).click();
   await page.getByText(exam.title, { exact: true }).click();
-  await page.getByText('Start / resume exam', { exact: true }).click();
+  await page.getByText('Start or resume', { exact: true }).click();
   await page.getByText('Correct answer', { exact: true }).click();
-  await page.getByText('Submit (1/1 answered)', { exact: true }).click();
-  await expect(page.getByText('Passed', { exact: true })).toBeVisible();
+  // Sidebar and last-question footer both offer "Submit attempt"; either opens the inline confirmation.
+  await page.getByText('Submit attempt', { exact: true }).first().click();
+  await expect(page.getByText('Submit this attempt?', { exact: true })).toBeVisible();
+  expect(submissions).toBe(0);
+  await page.getByText('Submit answers', { exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'You passed with 100%.' })).toBeVisible();
+  await expect(page.getByText('1 / 1', { exact: true })).toBeVisible();
   expect(submissions).toBe(1);
 });
 

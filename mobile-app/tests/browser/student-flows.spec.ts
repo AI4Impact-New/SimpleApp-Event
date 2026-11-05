@@ -124,3 +124,49 @@ for (const signedIn of [false, true]) {
     expect(verifications).toBe(2);
   });
 }
+
+test('protected playback keeps the moving identity in fullscreen and renews access', async ({ page }) => {
+  await page.clock.install();
+  await seed(page);
+  await spaFallback(page);
+  let sessions = 0;
+  await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**', async route => {
+    const pathname = new URL(route.request().url()).pathname;
+    let json: unknown = [];
+    const lesson = { id: eid, course_id: cid, title: 'Protected recording', class_type: 'recorded', duration_seconds: 3, sort_order: 0, access_state: 'available', video_status: 'ready' };
+    if (pathname === '/users/me') json = { id: 'browser-qa', name: 'Original learner', email: 'qa@example.invalid', user_type: 'professional', designation: 'Engineer', company: 'QA', privacy_consent_required: false };
+    if (pathname === `/learning/courses/${cid}` || pathname === `/learning/courses/${cid}/progress`) json = { course: { id: cid, title: 'Video QA' }, classes: [lesson], completion: { progress_percentage: 0 } };
+    if (pathname === `/learning/classes/${eid}/playback`) {
+      sessions++;
+      json = { url: 'https://video.example.invalid/test.mp4', session_id: `session-${sessions}`, expires_in: sessions === 1 ? 8 : 900, duration_seconds: 3, resume_seconds: 0,
+        watermark: { company: 'AI4Impact', student_id: 'verified-student-123', move_interval_seconds: 25 } };
+    }
+    if (pathname.endsWith('/progress') && route.request().method() === 'POST') json = { watched_seconds: 0, completed: false, progress_percentage: 0, duration_seconds: 3 };
+    await route.fulfill({ json });
+  });
+  await page.route('https://video.example.invalid/test.mp4', route => route.fulfill({ path: path.join(__dirname, '../fixtures/playback.mp4'), contentType: 'video/mp4' }));
+  await page.goto(`/learning/courses/${cid}/lectures/${eid}`);
+  const mark = page.getByTestId('video-watermark');
+  await expect(mark).toContainText('AI4Impact');
+  await expect(mark).toContainText('Student ID: verified-student-123');
+  await page.waitForFunction(() => (document.querySelector('video')?.readyState ?? 0) >= 2);
+  await expect(page.locator('video')).toHaveJSProperty('disablePictureInPicture', true);
+  await page.getByRole('button', { name: 'Full screen', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Exit full screen', exact: true })).toBeVisible();
+  await expect(mark).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement?.getAttribute('data-testid'))).toBe('protected-video-stage');
+  const before = await mark.boundingBox();
+  await page.clock.fastForward(26_000);
+  await expect.poll(() => sessions).toBeGreaterThanOrEqual(2);
+  await expect.poll(async () => JSON.stringify(await mark.boundingBox())).not.toBe(JSON.stringify(before));
+  const box = (await mark.boundingBox())!;
+  const stage = (await page.getByTestId('protected-video-stage').boundingBox())!;
+  expect(box.x).toBeGreaterThanOrEqual(stage.x);
+  expect(box.y).toBeGreaterThanOrEqual(stage.y);
+  expect(box.x + box.width).toBeLessThanOrEqual(stage.x + stage.width + 1);
+  expect(box.y + box.height).toBeLessThanOrEqual(stage.y + stage.height + 1);
+  await page.getByRole('button', { name: 'Exit full screen', exact: true }).click();
+  await expect(mark).toBeVisible();
+  await page.getByRole('button', { name: 'Play', exact: true }).last().click();
+  await expect.poll(() => page.locator('video').evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
+});

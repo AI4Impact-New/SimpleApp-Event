@@ -61,13 +61,36 @@
           },
           "expires_in": {
             "type": "integer",
-            "example": 3600
+            "example": 3600,
+            "maximum": 900
           },
           "duration_seconds": {
             "type": "integer"
           },
           "resume_seconds": {
             "type": "number"
+          },
+          "watermark": {
+            "type": "object",
+            "required": [
+              "company",
+              "student_id",
+              "move_interval_seconds"
+            ],
+            "properties": {
+              "company": {
+                "type": "string"
+              },
+              "student_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "move_interval_seconds": {
+                "type": "integer",
+                "minimum": 20,
+                "maximum": 40
+              }
+            }
           }
         }
       },

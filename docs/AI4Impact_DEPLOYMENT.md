@@ -6,7 +6,7 @@ Deployed and verified on 14 October 2026.
 - Region: `ap-south-1` (Mumbai)
 - CLI profile: `jm`
 - Repository: `AI4Impact-New/SimpleApp-Event`
-- Local checkout: `/Users/siddarthayadav/Code/Piresearch/SimpleApp-Event`
+- Local checkout: `~/Coder/PayIntelli/SimpleApp-Event`
 
 ## Live backend
 

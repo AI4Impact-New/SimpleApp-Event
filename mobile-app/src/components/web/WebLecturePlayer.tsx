@@ -8,6 +8,7 @@ import { VideoView, type VideoPlayer } from 'expo-video';
 import { useLearningHome } from '@/hooks/useLearning';
 import { useWebLayout } from '@/hooks/useWebLayout';
 import { Spinner } from '@/components/web/Spinner';
+import { PlaybackSettings } from '@/components/PlaybackSettings';
 import { SeekBar } from '@/components/SeekBar';
 import { VideoWatermark } from '@/components/VideoWatermark';
 import type { PlaybackWatermark, LearningClass, LectureProgress } from '@/types/learning';
@@ -295,16 +296,7 @@ export function WebLecturePlayer(props: WebLecturePlayerProps) {
             {formatDuration(position)} / {formatDuration(shownDuration)}
           </Text>
           <View style={{ flex: 1 }} />
-          <View style={styles.speeds}>
-            {props.speeds.map((v) => {
-              const on = props.speed === v;
-              return (
-                <Pressable key={v} onPress={() => props.onSpeed(v)} style={[styles.speedBtn, on && styles.speedBtnOn]} accessibilityState={{ selected: on }}>
-                  <Text style={[styles.speedText, on && styles.speedTextOn]}>{v}×</Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <PlaybackSettings speed={props.speed} speeds={props.speeds} onSpeed={props.onSpeed} disabled={!ready} />
           <CtrlBtn
             icon="expand"
             size={16}
@@ -552,11 +544,7 @@ const styles = StyleSheet.create({
   controlRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   ctrl: { width: 32, height: 32, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
   time: { ...mono, fontSize: 12, fontWeight: '500', color: palette.textOnDarkBody, marginLeft: 8 },
-  speeds: { flexDirection: 'row', gap: 2, padding: 2, borderRadius: 7, backgroundColor: palette.navy750, borderWidth: 1, borderColor: darkLine },
-  speedBtn: { paddingVertical: 4, paddingHorizontal: 8, borderRadius: 5 },
-  speedBtnOn: { backgroundColor: palette.textOnDark },
-  speedText: { ...mono, fontSize: 12, fontWeight: '500', color: palette.textOnDarkBody },
-  speedTextOn: { color: ink },
+
 
   titleRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20 },
   h1: { ...display, fontSize: 26, lineHeight: 30, fontWeight: '700', letterSpacing: -0.5, color: ink },

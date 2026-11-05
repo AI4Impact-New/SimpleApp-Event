@@ -10,7 +10,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <AnnouncementBar items={ANNOUNCEMENTS} ctaLabel="Explore tracks" ctaHref="/courses" />
-      <NavBar links={NAV_LINKS} guidanceHref="#guidance" loginHref="/login" />
+      <NavBar links={NAV_LINKS} guidanceHref="#guidance" loginHref={`${(process.env.NEXT_PUBLIC_STUDENT_PORTAL_URL || "https://learn.ai4impact.in").replace(/\/$/, "")}/login`} />
       <main className="flex flex-1 flex-col">{children}</main>
       <WebinarCampaign />
       <Footer columns={FOOTER_COLUMNS} {...FOOTER_COPY} />

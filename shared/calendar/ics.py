@@ -44,9 +44,9 @@ def event_to_ics(event: Dict[str, Any], uid_prefix: str = "event") -> str:
     lines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
-        "PRODID:-//PiResearch//PiLearn//EN",
+        "PRODID:-//Samagyaan Data solutions//PiLearn//EN",
         "BEGIN:VEVENT",
-        f"UID:{uid_prefix}-{uid}@piresearch",
+        f"UID:{uid_prefix}-{uid}@ai4impact.in",
         f"DTSTAMP:{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}",
         f"DTSTART:{dt_start}",
         f"DTEND:{dt_end}",
@@ -85,9 +85,9 @@ def course_class_to_ics(
     lines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
-        "PRODID:-//PiResearch//PiLearn//EN",
+        "PRODID:-//Samagyaan Data solutions//PiLearn//EN",
         "BEGIN:VEVENT",
-        f"UID:{uid_prefix}-{uid}@piresearch",
+        f"UID:{uid_prefix}-{uid}@ai4impact.in",
         f"DTSTAMP:{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}",
         f"DTSTART:{dt_start}",
         f"DTEND:{dt_end}",
@@ -109,11 +109,11 @@ def course_classes_to_ics(
 ) -> str:
     """Build .ics content with one VEVENT per class."""
     if not classes:
-        return "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//PiResearch//PiLearn//EN\r\nEND:VCALENDAR"
+        return "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Samagyaan Data solutions//PiLearn//EN\r\nEND:VCALENDAR"
     lines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
-        "PRODID:-//PiResearch//PiLearn//EN",
+        "PRODID:-//Samagyaan Data solutions//PiLearn//EN",
     ]
     for c in classes:
         uid = c.get("id", "") or "unknown"
@@ -134,7 +134,7 @@ def course_classes_to_ics(
             dt_end = dt_start
         lines.extend([
             "BEGIN:VEVENT",
-            f"UID:{uid_prefix}-{course_id}-{uid}@piresearch",
+            f"UID:{uid_prefix}-{course_id}-{uid}@ai4impact.in",
             f"DTSTAMP:{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}",
             f"DTSTART:{dt_start}",
             f"DTEND:{dt_end}",

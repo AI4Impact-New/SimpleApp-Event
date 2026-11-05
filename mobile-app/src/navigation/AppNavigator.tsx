@@ -26,6 +26,7 @@ import { ProfileScreen } from '@/screens/ProfileScreen';
 import { EditProfileScreen } from '@/screens/EditProfileScreen';
 import { CoursesScreen } from '@/screens/CoursesScreen';
 import { CourseDetailScreen } from '@/screens/CourseDetailScreen';
+import { openPrivacyPolicy } from '@/utils/legal';
 import { PrivacyPolicyScreen } from '@/screens/PrivacyPolicyScreen';
 import { MyLearningScreen } from '@/screens/MyLearningScreen';
 import { CourseLearningScreen } from '@/screens/CourseLearningScreen';
@@ -641,7 +642,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                   <ProfileScreen
                     onLogout={onLogout}
                     onEditProfile={() => navigation.navigate('EditProfile')}
-                    onPrivacyPolicy={() => navigation.navigate('PrivacyPolicy')}
+                    onPrivacyPolicy={openPrivacyPolicy}
                     onCertificates={() => navigation.navigate('Certificates')}
                     onPurchases={() => navigation.navigate('Purchases')}
                     onVerifyCertificate={(id?: string) => navigation.navigate('VerifyCertificate', id ? { id } : undefined)}

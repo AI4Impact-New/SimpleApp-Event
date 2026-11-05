@@ -72,7 +72,7 @@ export function WebAuthFrame({ children }: { children: React.ReactNode }) {
             </View>
           </View>
 
-          <Text style={styles.footnote}>© {new Date().getFullYear()} AI4Impact · Powered by PiResearch Labs</Text>
+          <Text style={styles.footnote}>© {new Date().getFullYear()} AI4Impact · Powered by Samagyaan Data solutions</Text>
         </ScrollView>
       </View>
 

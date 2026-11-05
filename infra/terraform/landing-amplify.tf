@@ -21,7 +21,7 @@ resource "aws_amplify_branch" "landing_main" {
   environment_variables = {
     AMPLIFY_BACKEND_APP_ID         = aws_amplify_app.landing.id
     USER_BRANCH                    = "main"
-    NEXT_PUBLIC_STUDENT_PORTAL_URL = "https://main.${aws_amplify_app.student_portal.default_domain}"
+    NEXT_PUBLIC_STUDENT_PORTAL_URL = local.student_portal_public_url
   }
 }
 output "landing_page_url" {

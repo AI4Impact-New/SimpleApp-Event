@@ -184,3 +184,9 @@ variable "transactional_email_enabled" {
   type        = bool
   default     = false
 }
+
+variable "student_portal_custom_domain_ready" {
+  description = "Enable the canonical student hostname only after GoDaddy DNS and Amplify HTTPS verification succeed."
+  type        = bool
+  default     = false
+}

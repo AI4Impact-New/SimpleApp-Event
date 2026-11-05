@@ -1,4 +1,4 @@
-package com.piresearchlabs.mobile
+package com.samagyaan.ai4impact
 
 import android.os.Build
 import android.os.Bundle

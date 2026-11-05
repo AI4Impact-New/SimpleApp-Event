@@ -10,13 +10,13 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
-  Modal,
 } from 'react-native';
 import { SafeAreaView } from '@/components/SafeAreaView';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { PiLogo } from '@/components/PiLogo';
 import { Ionicons } from '@expo/vector-icons';
-import { POLICY_TEXT, PRIVACY_POLICY_VERSION } from '@/screens/PrivacyPolicyScreen';
+import { PRIVACY_POLICY_VERSION } from '@/utils/legal';
+import { PrivacyPolicyLink } from '@/components/PrivacyPolicyLink';
 
 export type UserType = 'student' | 'professional';
 
@@ -42,7 +42,6 @@ export function CompleteProfileScreen({ email, password, name, onComplete, onSig
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [consented, setConsented] = useState(false);
-  const [policyOpen, setPolicyOpen] = useState(false);
 
   const handleSubmit = async () => {
     if (!userType) {
@@ -262,9 +261,7 @@ export function CompleteProfileScreen({ email, password, name, onComplete, onSig
               </TouchableOpacity>
               <Text style={styles.consentText}>
                 I agree to the{' '}
-                <Text style={styles.consentLink} onPress={() => setPolicyOpen(true)}>
-                  AI4Impact Privacy Policy
-                </Text>
+                <PrivacyPolicyLink>AI4Impact Privacy Policy</PrivacyPolicyLink>
               </Text>
             </View>
           ) : null}
@@ -295,21 +292,9 @@ export function CompleteProfileScreen({ email, password, name, onComplete, onSig
             </TouchableOpacity>
           ) : null}
 
-          <Text style={styles.footer}>Powered by PiResearch Labs</Text>
+          <Text style={styles.footer}>Powered by Samagyaan Data solutions</Text>
         </ScrollView>
-        <Modal visible={policyOpen} animationType="slide" onRequestClose={() => setPolicyOpen(false)}>
-          <SafeAreaView style={styles.container}>
-            <View style={styles.policyHeader}>
-              <Text style={styles.policyTitle}>Privacy Policy</Text>
-              <TouchableOpacity onPress={() => setPolicyOpen(false)} hitSlop={8}>
-                <Ionicons name="close" size={26} color={colors.text} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView contentContainerStyle={styles.policyBody}>
-              <Text style={styles.policyText}>{POLICY_TEXT.trim()}</Text>
-            </ScrollView>
-          </SafeAreaView>
-        </Modal>
+
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

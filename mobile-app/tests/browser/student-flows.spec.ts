@@ -125,8 +125,9 @@ for (const signedIn of [false, true]) {
   });
 }
 
-test('protected playback keeps the moving identity in fullscreen and renews access', async ({ page }) => {
+for (const fallback of [false, true]) test(`protected playback keeps the moving identity and renews access (${fallback ? 'viewport fallback' : 'fullscreen'})`, async ({ page }) => {
   await page.clock.install();
+  if (fallback) await page.addInitScript(() => { Object.defineProperty(HTMLElement.prototype, 'requestFullscreen', { value: undefined }); });
   await seed(page);
   await spaFallback(page);
   let sessions = 0;
@@ -154,7 +155,8 @@ test('protected playback keeps the moving identity in fullscreen and renews acce
   await page.getByRole('button', { name: 'Full screen', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Exit full screen', exact: true })).toBeVisible();
   await expect(mark).toBeVisible();
-  await expect.poll(() => page.evaluate(() => document.fullscreenElement?.getAttribute('data-testid'))).toBe('protected-video-stage');
+  if (!fallback) await expect.poll(() => page.evaluate(() => document.fullscreenElement?.getAttribute('data-testid'))).toBe('protected-video-stage');
+  else await expect(page.getByTestId('protected-video-stage')).toHaveCSS('position', 'fixed');
   const before = await mark.boundingBox();
   await page.clock.fastForward(26_000);
   await expect.poll(() => sessions).toBeGreaterThanOrEqual(2);
@@ -169,4 +171,22 @@ test('protected playback keeps the moving identity in fullscreen and renews acce
   await expect(mark).toBeVisible();
   await page.getByRole('button', { name: 'Play', exact: true }).last().click();
   await expect.poll(() => page.locator('video').evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
+});
+
+
+test('missing server watermark prevents unmarked playback', async ({ page }) => {
+  await seed(page);
+  await spaFallback(page);
+  await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**', async route => {
+    const pathname = new URL(route.request().url()).pathname;
+    let json: unknown = [];
+    if (pathname === '/users/me') json = { id: cid, email: 'qa@example.invalid', name: 'QA learner', user_type: 'professional', designation: 'Engineer', company: 'QA' };
+    if (pathname === `/learning/courses/${cid}`) json = { course: { id: cid, title: 'QA course' }, classes: [], completion: { progress_percentage: 0 } };
+    if (pathname.endsWith('/playback')) json = { url: 'https://video.example.invalid/unmarked.mp4', session_id: aid, expires_in: 900, duration_seconds: 3 };
+    await route.fulfill({ json });
+  });
+  await page.goto(`/learning/courses/${cid}/lectures/${eid}`);
+  await expect(page.getByText('Could not load this lecture.', { exact: true })).toBeVisible();
+  await expect(page.locator('video')).not.toHaveAttribute('src', /unmarked/);
+  await expect(page.getByTestId('video-watermark')).toHaveCount(0);
 });

@@ -72,6 +72,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 1000
 
 test('live 2x watching credits content after a seek and excludes replay', async ({ page, request }) => {
   test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1440, height: 1000 });
   const qa = JSON.parse(fs.readFileSync(fixture!, 'utf8'));
   const api = 'https://ke8dywmhil.execute-api.ap-south-1.amazonaws.com';
   const headers = { Authorization: qa.outsider.token };
@@ -96,6 +97,7 @@ test('live 2x watching credits content after a seek and excludes replay', async 
   await page.mouse.click(destination.x, destination.y);
   const seekResult = await (await sought).json();
   expect(seekResult.watched_seconds).toBe(0);
+  await page.waitForFunction(() => { const v = document.querySelector('video'); return !!v && !v.seeking && v.readyState >= 2; });
   const start = await page.locator('video').evaluate((v:HTMLVideoElement) => v.currentTime);
   await page.getByRole('button', { name: 'Play', exact: true }).last().click();
   // Wait for actual decoded content time, with the real server clock and no mocked responses.
@@ -107,20 +109,37 @@ test('live 2x watching credits content after a seek and excludes replay', async 
   expect(first.watched_seconds).toBeLessThan(18);
   expect(first.completed).toBe(false);
   const replaySeek = progressResponse('seek');
-  await page.mouse.click(destination.x, destination.y);
-  expect((await (await replaySeek).json()).watched_seconds).toBeCloseTo(first.watched_seconds, 1);
+  // A click inside the HTML range thumb may only grab it. Drag its centre to an
+  // explicit point inside the watched range, rather than assuming a click moved it.
+  const slider = page.getByRole('slider', { name: 'Seek', exact: true });
+  const maximum = Number(await slider.getAttribute('max'));
+  const current = Number(await slider.inputValue());
+  const thumbX = (value:number) => bar.x + 7 + (bar.width - 14) * value / maximum;
+  await page.mouse.move(thumbX(current), destination.y);
+  await page.mouse.down();
+  await page.mouse.move(thumbX(start + 1.5), destination.y, { steps: 5 });
+  await page.mouse.up();
+  const replayBaseline = await (await replaySeek).json();
+  // The final pre-seek flush may persist the last sub-second tail of the original watching.
+  expect(replayBaseline.watched_seconds).toBeGreaterThanOrEqual(first.watched_seconds);
+  expect(replayBaseline.watched_seconds).toBeLessThan(first.watched_seconds + 2.1);
+  await page.waitForFunction(() => { const v = document.querySelector('video'); return !!v && !v.seeking && v.readyState >= 2; });
   const replayStart = await page.locator('video').evaluate((v:HTMLVideoElement) => v.currentTime);
+  expect(replayStart).toBeGreaterThan(start + 0.5);
+  expect(replayStart).toBeLessThan(start + 2.5);
   await page.getByRole('button', { name: 'Play', exact: true }).last().click();
   await expect.poll(() => page.locator('video').evaluate((v:HTMLVideoElement) => v.currentTime), { timeout: 10_000 }).toBeGreaterThan(replayStart + 4);
   const replayed = progressResponse('watch');
+  await expect(page.getByRole('button', { name: 'Pause', exact: true }).last()).toBeVisible({ timeout: 5000 });
   await page.getByRole('button', { name: 'Pause', exact: true }).last().click();
   const second = await (await replayed).json();
-  expect(second.watched_seconds).toBeCloseTo(first.watched_seconds, 1);
+  expect(second.watched_seconds).toBeCloseTo(replayBaseline.watched_seconds, 1);
   const persisted = await request.get(`${api}/learning/courses/${qa.course_id}/progress`, { headers });
   expect(persisted.ok()).toBe(true);
   const row = (await persisted.json()).classes.find((c:{id:string}) => c.id === qa.class_id);
-  expect(Number(row.watched_seconds)).toBeCloseTo(first.watched_seconds, 1);
+  expect(Number(row.watched_seconds)).toBeCloseTo(replayBaseline.watched_seconds, 1);
   await page.reload();
   const pct = Math.round(Number(row.watched_seconds) * 100 / row.duration_seconds);
   await expect(page.getByText(new RegExp(`${pct}% watched \\(`))).toBeVisible({ timeout: 30_000 });
+
 });

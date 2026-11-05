@@ -515,6 +515,9 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                     onNotificationsPress={() => navigation.navigate('Inbox', { screen: 'InboxMain' })}
                     onPurchasesPress={() => navigation.navigate('Purchases')}
                     onBrowseCourses={() => navigation.navigate('Courses', { screen: 'CoursesMain' })}
+                    onPlayLecture={(lecture) =>
+                      navigation.navigate('LecturePlayer', { classId: lecture.id, courseId: lecture.course_id, title: lecture.title })
+                    }
                   />
                 )}
               </Stack.Screen>
@@ -610,6 +613,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                 {({ navigation }: any) => (
                   <NotificationsScreen
                     onOpenNotification={(item) => navigation.navigate('NotificationDetail', { notificationId: item.id })}
+                    onOpenCourse={(courseId) => openCourseLearning(navigation, courseId)}
                   />
                 )}
               </Stack.Screen>

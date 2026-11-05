@@ -315,7 +315,8 @@ function ContinueHero({
   onPlayLecture: (lecture: LearningClass) => void;
 }) {
   const { wide } = useWebLayout();
-  const home = useLearningHome(course.id);
+  // Opening the dashboard is not an intent to start a recording access window.
+  const home = useLearningHome(course.id, false);
   const completion = home.data?.completion;
   const lecture = Array.isArray(home.data?.classes) ? nextLecture(home.data!.classes) : null;
   const pct = completion ? Math.round(completion.progress_percentage) : coursePct(course);

@@ -16,6 +16,9 @@ import type { MyLearningCourse } from '@/types/learning';
 import { colors, spacing, borderRadius, fonts, palette } from '@/theme/colors';
 import { useWebLayout } from '@/hooks/useWebLayout';
 import { WebHero } from '@/components/web/WebHero';
+import { WebMyLearning } from '@/components/web/WebMyLearning';
+import { isWeb as IS_WEB } from '@/hooks/useWebLayout';
+import type { LearningClass } from '@/types/learning';
 
 interface MyLearningScreenProps {
   onCoursePress: (courseId: string) => void;
@@ -23,9 +26,27 @@ interface MyLearningScreenProps {
   onNotificationsPress: () => void;
   onPurchasesPress: () => void;
   onBrowseCourses: () => void;
+  /** Web "Resume": open the next lecture directly. Falls back to the course page when omitted. */
+  onPlayLecture?: (lecture: LearningClass) => void;
 }
 
-export function MyLearningScreen({
+export function MyLearningScreen(props: MyLearningScreenProps) {
+  // Browser portal: design's course table (progress, next up, resume).
+  if (IS_WEB) {
+    return (
+      <WebMyLearning
+        onCoursePress={props.onCoursePress}
+        onPlayLecture={props.onPlayLecture ?? ((lecture) => props.onCoursePress(lecture.course_id))}
+        onCertificatesPress={props.onCertificatesPress}
+        onPurchasesPress={props.onPurchasesPress}
+        onBrowseCourses={props.onBrowseCourses}
+      />
+    );
+  }
+  return <NativeMyLearning {...props} />;
+}
+
+function NativeMyLearning({
   onCoursePress,
   onCertificatesPress,
   onNotificationsPress,

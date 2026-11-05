@@ -20,6 +20,8 @@ import { Course } from '@/types/course';
 import { colors, spacing, borderRadius, fonts, palette } from '@/theme/colors';
 import { useWebLayout } from '@/hooks/useWebLayout';
 import { WebHero } from '@/components/web/WebHero';
+import { WebCatalogue } from '@/components/web/WebCatalogue';
+import { isWeb as IS_WEB } from '@/hooks/useWebLayout';
 
 interface CoursesScreenProps {
   onCoursePress: (course: Course) => void;
@@ -37,7 +39,13 @@ const cardShadow = Platform.select({
   },
 });
 
-export function CoursesScreen({ onCoursePress }: CoursesScreenProps) {
+export function CoursesScreen(props: CoursesScreenProps) {
+  // Browser portal: design's catalogue (filter chips + course cards).
+  if (IS_WEB) return <WebCatalogue onCoursePress={props.onCoursePress} />;
+  return <NativeCourses {...props} />;
+}
+
+function NativeCourses({ onCoursePress }: CoursesScreenProps) {
   const { data: courses, isLoading, error, refetch, isRefetching } = useCourses();
   const list = Array.isArray(courses) ? courses : [];
   // Prices are optional decoration on the list; the detail page shows a retry if the catalog fails.

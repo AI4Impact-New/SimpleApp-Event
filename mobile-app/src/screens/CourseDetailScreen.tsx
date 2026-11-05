@@ -24,6 +24,9 @@ import type { CoursePhase, CourseClass } from '@/types/course';
 import { PILOT_SELF_REGISTRATION } from '@/config/features';
 import { shareTextFile } from '@/utils/sharePdf';
 import { formatLocalTimeRange } from '@/utils/datetime';
+import { openCourseLanding } from '@/utils/courseLanding';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebCourseDetail } from '@/components/web/WebCourseDetail';
 
 const cardShadow = Platform.select({
   ios: {
@@ -123,6 +126,34 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
     }
   };
 
+  // Browser portal: design's course page over the same data and actions.
+  if (isWeb) {
+    return (
+      <WebCourseDetail
+        course={course}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => refetch()}
+        onBack={onBack}
+        price={price}
+        priceError={priceError}
+        priceFetching={priceFetching}
+        onRetryPrice={() => refetchPrice()}
+        hasAccess={!!course?.learning_access || registerCourse.isSuccess}
+        interested={interested}
+        canSelfRegister={PILOT_SELF_REGISTRATION}
+        onOpenLearning={() => onOpenLearning(courseId)}
+        onRegister={handleRegister}
+        registerPending={registerCourse.isPending}
+        onInterest={handleInterest}
+        interestPending={markInterest.isPending}
+        onCheckout={handleDemoCheckout}
+        checkoutPending={createOrder.isPending}
+        onAddToCalendar={handleAddToCalendar}
+      />
+    );
+  }
+
   // Check the error first: a failed load has no data, and would otherwise spin forever.
   if (error && !course) {
     const status = (error as any)?.response?.status;
@@ -209,6 +240,17 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
             ) : null}
           </View>
         )}
+
+        <TouchableOpacity
+          style={[styles.registerBtn, { backgroundColor: colors.border, marginBottom: spacing.lg }]}
+          onPress={() => openCourseLanding(course)}
+          activeOpacity={0.75}
+          accessibilityRole="link"
+          accessibilityLabel="View all details on ai4impact.in"
+        >
+          <Ionicons name="open-outline" size={20} color={colors.text} />
+          <Text style={[styles.registerBtnText, { color: colors.text }]}>View all details</Text>
+        </TouchableOpacity>
 
         {highlights.length > 0 && (
           <View style={styles.section}>

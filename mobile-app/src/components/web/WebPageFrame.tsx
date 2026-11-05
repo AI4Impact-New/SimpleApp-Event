@@ -9,11 +9,9 @@ const READING_ROUTES = new Set([
   'EditProfile',
   'PrivacyPolicy',
   'Checkout',
-  'Exam',
   'NotificationDetail',
   'VerifyCertificate',
   'Poll',
-  'InboxMain',
   'Purchases',
   'Certificates',
 ]);

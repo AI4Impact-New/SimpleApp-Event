@@ -89,10 +89,15 @@ test('web exam confirmation sends answers and displays the server score', async 
   await page.getByText(course.title, { exact: true }).last().click();
   await page.getByRole('tab', { name: /Assessments/ }).click();
   await page.getByText(exam.title, { exact: true }).click();
-  await page.getByText('Start / resume exam', { exact: true }).click();
+  await page.getByText('Start or resume', { exact: true }).click();
   await page.getByText('Correct answer', { exact: true }).click();
-  await page.getByText('Submit (1/1 answered)', { exact: true }).click();
-  await expect(page.getByText('Passed', { exact: true })).toBeVisible();
+  // Sidebar and last-question footer both offer "Submit attempt"; either opens the inline confirmation.
+  await page.getByText('Submit attempt', { exact: true }).first().click();
+  await expect(page.getByText('Submit this attempt?', { exact: true })).toBeVisible();
+  expect(submissions).toBe(0);
+  await page.getByText('Submit answers', { exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'You passed with 100%.' })).toBeVisible();
+  await expect(page.getByText('1 / 1', { exact: true })).toBeVisible();
   expect(submissions).toBe(1);
 });
 
@@ -356,4 +361,59 @@ test('login shows company attribution and opens the canonical policy without los
   await expect(popup).toHaveURL('https://www.ai4impact.in/privacy/');
   await popup.close();
   await expect(page.getByPlaceholder('your@email.com')).toHaveValue('qa@example.invalid');
+});
+
+test('Home and My learning previews do not initialize course access windows', async ({ page }) => {
+  await seed(page); await spaFallback(page);
+  const ids = [cid, eid]; const opened: string[] = [];
+  await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**', async route => {
+    const pathname = new URL(route.request().url()).pathname;
+    let json: unknown = [];
+    if (pathname === '/users/me') json = { id: cid, email: 'qa@example.invalid', name: 'QA learner', user_type: 'professional', designation: 'Engineer', company: 'QA' };
+    if (pathname === '/me/learning') json = ids.map((id,i) => ({id,title:`Unopened course ${i+1}`,registration_status:'registered',total_recorded_lectures:1,completed_lectures:0}));
+    if (ids.some(id => pathname === `/learning/courses/${id}`)) {
+      const id=pathname.split('/').at(-1)!; opened.push(id);
+      json={course:{id,title:'Unopened'},classes:[],completion:{progress_percentage:0,recorded_total:1,recorded_completed:0}};
+    }
+    await route.fulfill({json});
+  });
+  await page.goto('/');
+  await expect(page.getByText('Open course', { exact: true }).first()).toBeVisible();
+  expect(opened).toEqual([]);
+  await page.goto('/learning');
+  await expect(page.getByText('Unopened course 2',{exact:true}).last()).toBeVisible();
+  await expect(page.getByText('Open course to see available lessons', { exact: true })).toHaveCount(2);
+  expect(opened).toEqual([]);
+  // Explicitly opening a course still loads its current server-authoritative detail.
+  await page.getByRole('button', { name: 'Open course: Unopened course 1', exact: true }).click();
+  await expect.poll(() => opened.includes(cid)).toBe(true);
+  expect(opened).not.toContain(eid);
+});
+
+test('a replacement live poll accepts a new answer after the previous poll was answered', async ({ page }) => {
+  await page.clock.install(); await seed(page); await spaFallback(page);
+  let active=1; let votes=0; const votedPolls:string[]=[];
+  const poll=(n:number) => ({id:n===1?cid:aid,event_id:eid,question:n===1?'First question':'Second question',status:'active',created_at:new Date().toISOString(),options:[{id:`answer-${n}`,poll_id:n===1?cid:aid,option_text:n===1?'First answer':'Second answer'}]});
+  await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**',async route => {
+    const pathname=new URL(route.request().url()).pathname;
+    let json:unknown=[];
+    if(pathname==='/users/me')json={id:cid,email:'qa@example.invalid',name:'QA learner',user_type:'professional',designation:'Engineer',company:'QA'};
+    if(pathname==='/events')json=[{id:eid,name:'Live QA',status:'ongoing',visibility:'global',event_type:'online',start_time:new Date(Date.now()-600000).toISOString(),end_time:new Date(Date.now()+3600000).toISOString()}];
+    if(pathname==='/attendance')json=[{event_id:eid}];
+    if(pathname===`/events/${eid}/analytics`)json={event_id:eid,attendance_count:1,top_students:[],materials:{total:0},polls:{total_polls:2,total_votes:votes,participation_rate:50}};
+    if(pathname==='/polls')json=[poll(active)];
+    if(pathname.endsWith('/results'))json={results:[{option_id:'answer-1',option:'First answer',votes}]};
+    if(pathname.endsWith('/vote')){votes++;votedPolls.push(pathname.split('/')[2]);json={success:true};}
+    await route.fulfill({json});
+  });
+  await page.goto('/events');
+  await page.getByRole('button',{name:'First answer',exact:true}).click();
+  await expect(page.getByText(/you answered/)).toBeVisible();
+  active=2;
+  await page.clock.fastForward(61_000);
+  await page.evaluate(() => window.dispatchEvent(new Event('visibilitychange')));
+  await expect(page.getByText('Second question',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:/Second answer/})).toBeEnabled();
+  await page.getByRole('button',{name:/Second answer/}).click();
+  await expect.poll(() => votedPolls).toEqual([cid,aid]);
 });

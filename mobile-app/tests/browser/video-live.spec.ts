@@ -87,7 +87,9 @@ test('live 2x watching credits content after a seek and excludes replay', async 
   await page.getByText('QA — Video Watermark Demo', { exact: true }).last().click();
   await page.getByText('London Diaries — Protected Video Test', { exact: true }).last().click();
   await page.waitForFunction(() => (document.querySelector('video')?.readyState ?? 0) >= 2);
-  await page.getByText('2×', { exact: true }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('menuitem', { name: /Playback speed/ }).click();
+  await page.getByRole('menuitemradio', { name: '2×', exact: true }).click();
   await expect(page.locator('video')).toHaveJSProperty('playbackRate', 2);
   const bar = (await page.getByRole('slider', { name: 'Seek', exact: true }).boundingBox())!;
   const destination = { x: bar.x + bar.width * 0.3, y: bar.y + bar.height / 2 };

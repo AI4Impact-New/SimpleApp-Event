@@ -13,23 +13,23 @@
 		BAC80D668204D0D5B23006B4 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A4919D1E0D53B81DA03F58E /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		F4BB931A4AC18ED23CB94987 /* libPods-PiResearchLabs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D65C315CC24B8FED3904F49 /* libPods-PiResearchLabs.a */; };
+		F4BB931A4AC18ED23CB94987 /* libPods-AI4Impact.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D65C315CC24B8FED3904F49 /* libPods-AI4Impact.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		13B07F961A680F5B00A75B9A /* PiResearchLabs.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PiResearchLabs.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = PiResearchLabs/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = PiResearchLabs/Info.plist; sourceTree = "<group>"; };
-		165D8D93AFD89D1913218103 /* Pods-PiResearchLabs.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PiResearchLabs.debug.xcconfig"; path = "Target Support Files/Pods-PiResearchLabs/Pods-PiResearchLabs.debug.xcconfig"; sourceTree = "<group>"; };
-		1A4919D1E0D53B81DA03F58E /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-PiResearchLabs/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		6D65C315CC24B8FED3904F49 /* libPods-PiResearchLabs.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-PiResearchLabs.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		93019A6BE3661EC1532A208A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = PiResearchLabs/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = PiResearchLabs/SplashScreen.storyboard; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* AI4Impact.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AI4Impact.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = AI4Impact/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = AI4Impact/Info.plist; sourceTree = "<group>"; };
+		165D8D93AFD89D1913218103 /* Pods-AI4Impact.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AI4Impact.debug.xcconfig"; path = "Target Support Files/Pods-AI4Impact/Pods-AI4Impact.debug.xcconfig"; sourceTree = "<group>"; };
+		1A4919D1E0D53B81DA03F58E /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-AI4Impact/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		6D65C315CC24B8FED3904F49 /* libPods-AI4Impact.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AI4Impact.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		93019A6BE3661EC1532A208A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = AI4Impact/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = AI4Impact/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = PiResearchLabs/AppDelegate.swift; sourceTree = "<group>"; };
-		F11748442D0722820044C1D9 /* PiResearchLabs-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "PiResearchLabs-Bridging-Header.h"; path = "PiResearchLabs/PiResearchLabs-Bridging-Header.h"; sourceTree = "<group>"; };
-		FA44DF61B2DDC5731C8DA262 /* Pods-PiResearchLabs.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PiResearchLabs.release.xcconfig"; path = "Target Support Files/Pods-PiResearchLabs/Pods-PiResearchLabs.release.xcconfig"; sourceTree = "<group>"; };
+		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = AI4Impact/AppDelegate.swift; sourceTree = "<group>"; };
+		F11748442D0722820044C1D9 /* AI4Impact-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "AI4Impact-Bridging-Header.h"; path = "AI4Impact/AI4Impact-Bridging-Header.h"; sourceTree = "<group>"; };
+		FA44DF61B2DDC5731C8DA262 /* Pods-AI4Impact.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AI4Impact.release.xcconfig"; path = "Target Support Files/Pods-AI4Impact/Pods-AI4Impact.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,32 +37,32 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F4BB931A4AC18ED23CB94987 /* libPods-PiResearchLabs.a in Frameworks */,
+				F4BB931A4AC18ED23CB94987 /* libPods-AI4Impact.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		13B07FAE1A68108700A75B9A /* PiResearchLabs */ = {
+		13B07FAE1A68108700A75B9A /* AI4Impact */ = {
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				F11748442D0722820044C1D9 /* PiResearchLabs-Bridging-Header.h */,
+				F11748442D0722820044C1D9 /* AI4Impact-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
 				93019A6BE3661EC1532A208A /* PrivacyInfo.xcprivacy */,
 			);
-			name = PiResearchLabs;
+			name = AI4Impact;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				6D65C315CC24B8FED3904F49 /* libPods-PiResearchLabs.a */,
+				6D65C315CC24B8FED3904F49 /* libPods-AI4Impact.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -70,7 +70,7 @@
 		648D4A18E098489F68689DEB /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				95CEF35CFFA8E3C87F3A0C89 /* PiResearchLabs */,
+				95CEF35CFFA8E3C87F3A0C89 /* AI4Impact */,
 			);
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
@@ -85,7 +85,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				13B07FAE1A68108700A75B9A /* PiResearchLabs */,
+				13B07FAE1A68108700A75B9A /* AI4Impact */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
@@ -100,24 +100,24 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* PiResearchLabs.app */,
+				13B07F961A680F5B00A75B9A /* AI4Impact.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		95CEF35CFFA8E3C87F3A0C89 /* PiResearchLabs */ = {
+		95CEF35CFFA8E3C87F3A0C89 /* AI4Impact */ = {
 			isa = PBXGroup;
 			children = (
 				1A4919D1E0D53B81DA03F58E /* ExpoModulesProvider.swift */,
 			);
-			name = PiResearchLabs;
+			name = AI4Impact;
 			sourceTree = "<group>";
 		};
 		ADCA665D1C380DB9FF3E5E8F /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				165D8D93AFD89D1913218103 /* Pods-PiResearchLabs.debug.xcconfig */,
-				FA44DF61B2DDC5731C8DA262 /* Pods-PiResearchLabs.release.xcconfig */,
+				165D8D93AFD89D1913218103 /* Pods-AI4Impact.debug.xcconfig */,
+				FA44DF61B2DDC5731C8DA262 /* Pods-AI4Impact.release.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
@@ -129,15 +129,15 @@
 				BB2F792C24A3F905000567C9 /* Expo.plist */,
 			);
 			name = Supporting;
-			path = PiResearchLabs/Supporting;
+			path = AI4Impact/Supporting;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* PiResearchLabs */ = {
+		13B07F861A680F5B00A75B9A /* AI4Impact */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "PiResearchLabs" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "AI4Impact" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
 				C79D2B00A60A463BA6514A43 /* [Expo] Configure project */,
@@ -152,9 +152,9 @@
 			);
 			dependencies = (
 			);
-			name = PiResearchLabs;
-			productName = PiResearchLabs;
-			productReference = 13B07F961A680F5B00A75B9A /* PiResearchLabs.app */;
+			name = AI4Impact;
+			productName = AI4Impact;
+			productReference = 13B07F961A680F5B00A75B9A /* AI4Impact.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -170,7 +170,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "PiResearchLabs" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "AI4Impact" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -183,7 +183,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* PiResearchLabs */,
+				13B07F861A680F5B00A75B9A /* AI4Impact */,
 			);
 		};
 /* End PBXProject section */
@@ -235,7 +235,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-PiResearchLabs-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-AI4Impact-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -248,7 +248,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-PiResearchLabs/Pods-PiResearchLabs-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-AI4Impact/Pods-AI4Impact-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
@@ -269,7 +269,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-PiResearchLabs/Pods-PiResearchLabs-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AI4Impact/Pods-AI4Impact-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		C79D2B00A60A463BA6514A43 /* [Expo] Configure project */ = {
@@ -283,18 +283,18 @@
 			inputPaths = (
 				"$(SRCROOT)/.xcode.env",
 				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/PiResearchLabs/PiResearchLabs.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-PiResearchLabs/expo-configure-project.sh",
+				"$(SRCROOT)/AI4Impact/AI4Impact.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-AI4Impact/expo-configure-project.sh",
 			);
 			name = "[Expo] Configure project";
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-PiResearchLabs/ExpoModulesProvider.swift",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-AI4Impact/ExpoModulesProvider.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-PiResearchLabs/expo-configure-project.sh\"\n";
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-AI4Impact/expo-configure-project.sh\"\n";
 		};
 		F091A3D3B3E3C77AC3B9A9A9 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -302,7 +302,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-PiResearchLabs/Pods-PiResearchLabs-frameworks.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-AI4Impact/Pods-AI4Impact-frameworks.sh",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
@@ -315,7 +315,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-PiResearchLabs/Pods-PiResearchLabs-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AI4Impact/Pods-AI4Impact-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -335,18 +335,18 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 165D8D93AFD89D1913218103 /* Pods-PiResearchLabs.debug.xcconfig */;
+			baseConfigurationReference = 165D8D93AFD89D1913218103 /* Pods-AI4Impact.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = PiResearchLabs/PiResearchLabs.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AI4Impact/AI4Impact.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
-				INFOPLIST_FILE = PiResearchLabs/Info.plist;
+				INFOPLIST_FILE = AI4Impact/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -359,9 +359,9 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.piresearchlabs.mobile;
-				PRODUCT_NAME = PiResearchLabs;
-				SWIFT_OBJC_BRIDGING_HEADER = "PiResearchLabs/PiResearchLabs-Bridging-Header.h";
+				PRODUCT_BUNDLE_IDENTIFIER = com.samagyaan.ai4impact;
+				PRODUCT_NAME = AI4Impact;
+				SWIFT_OBJC_BRIDGING_HEADER = "AI4Impact/AI4Impact-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -371,13 +371,13 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FA44DF61B2DDC5731C8DA262 /* Pods-PiResearchLabs.release.xcconfig */;
+			baseConfigurationReference = FA44DF61B2DDC5731C8DA262 /* Pods-AI4Impact.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = PiResearchLabs/PiResearchLabs.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AI4Impact/AI4Impact.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				INFOPLIST_FILE = PiResearchLabs/Info.plist;
+				INFOPLIST_FILE = AI4Impact/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -390,9 +390,9 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.piresearchlabs.mobile;
-				PRODUCT_NAME = PiResearchLabs;
-				SWIFT_OBJC_BRIDGING_HEADER = "PiResearchLabs/PiResearchLabs-Bridging-Header.h";
+				PRODUCT_BUNDLE_IDENTIFIER = com.samagyaan.ai4impact;
+				PRODUCT_NAME = AI4Impact;
+				SWIFT_OBJC_BRIDGING_HEADER = "AI4Impact/AI4Impact-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -520,7 +520,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "PiResearchLabs" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "AI4Impact" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -529,7 +529,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "PiResearchLabs" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "AI4Impact" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,

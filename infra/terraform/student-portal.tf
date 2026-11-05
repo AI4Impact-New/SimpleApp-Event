@@ -30,8 +30,26 @@ resource "aws_amplify_branch" "student_portal_main" {
   enable_auto_build = false
 }
 output "student_portal_url" {
-  value = "https://main.${aws_amplify_app.student_portal.default_domain}"
+  value = "https://learn.ai4impact.in"
 }
 output "student_portal_amplify_app_id" {
   value = aws_amplify_app.student_portal.id
+}
+
+# DNS is managed at GoDaddy. Existing association is imported using app-id/domain-name.
+resource "aws_amplify_domain_association" "student" {
+  app_id                 = aws_amplify_app.student_portal.id
+  domain_name            = "learn.ai4impact.in"
+  enable_auto_sub_domain = false
+  wait_for_verification  = false
+  sub_domain {
+    branch_name = "main"
+    prefix      = ""
+  }
+}
+output "student_domain_dns" {
+  value = {
+    certificate = aws_amplify_domain_association.student.certificate_verification_dns_record
+    routing     = aws_amplify_domain_association.student.sub_domain
+  }
 }

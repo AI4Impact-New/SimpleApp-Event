@@ -17,7 +17,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.piresearchlabs.mobile",
+      "bundleIdentifier": "com.samagyaan.ai4impact",
       "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -28,7 +28,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#081328"
       },
-      "package": "com.piresearchlabs.mobile",
+      "package": "com.samagyaan.ai4impact",
       "permissions": [
         "CAMERA"
       ],

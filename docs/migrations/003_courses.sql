@@ -1,4 +1,4 @@
--- Migration: courses and related tables (Pi Research Labs courses feature)
+-- Migration: courses and related tables (Samagyaan Data solutions courses feature)
 -- Run once on existing RDS. Requires uuid-ossp extension (already in schema).
 
 -- ============================================
@@ -125,7 +125,7 @@ CREATE INDEX IF NOT EXISTS idx_course_registrations_course_id ON course_registra
 CREATE INDEX IF NOT EXISTS idx_course_registrations_user_id ON course_registrations(user_id);
 
 -- ============================================
--- SEED DATA (4 courses from Pi Research Labs)
+-- SEED DATA (4 courses from Samagyaan Data solutions)
 -- ============================================
 
 DO $$
@@ -190,7 +190,7 @@ BEGIN
     (c_id, 'Deep AI Expertise', 'Master generative AI, LLMs, and agentic systems', 3);
 
   INSERT INTO course_certificate (course_id, title, provider, description) VALUES
-    (c_id, 'Generative AI & Agentic Systems', 'Pi Research Labs', 'Industry-recognized certification. Verify your skills. Enhance your professional profile.');
+    (c_id, 'Generative AI & Agentic Systems', 'Samagyaan Data solutions', 'Industry-recognized certification. Verify your skills. Enhance your professional profile.');
 END $$;
 
 DO $$
@@ -272,7 +272,7 @@ BEGIN
     (c_id, 'Blockchain Developer', 5);
 
   INSERT INTO course_certificate (course_id, title, provider, description) VALUES
-    (c_id, 'MicroMasters in Applied FinTech & Agentic AI Systems', 'Pi Research Labs', 'Upon successful completion, you will receive an industry-recognized certificate, showcasing your expertise to potential employers worldwide.');
+    (c_id, 'MicroMasters in Applied FinTech & Agentic AI Systems', 'Samagyaan Data solutions', 'Upon successful completion, you will receive an industry-recognized certificate, showcasing your expertise to potential employers worldwide.');
 END $$;
 
 DO $$
@@ -339,7 +339,7 @@ BEGIN
     (c_id, 'FinTech Consultant', 7);
 
   INSERT INTO course_certificate (course_id, title, provider, description) VALUES
-    (c_id, 'Global FinTech & AI-Driven Finance', 'Pi Research Labs', 'Upon successful completion of the program, participants will be awarded a certificate from Pi Research Labs. Industry-recognized, skill-based, globally recognized.');
+    (c_id, 'Global FinTech & AI-Driven Finance', 'Samagyaan Data solutions', 'Upon successful completion of the program, participants will be awarded a certificate from Samagyaan Data solutions. Industry-recognized, skill-based, globally recognized.');
 END $$;
 
 DO $$
@@ -416,5 +416,5 @@ BEGIN
     (c_id, 'Unlock new career opportunities', 'Position yourself for high-demand roles in FinTech, from analysts to product managers.', 5);
 
   INSERT INTO course_certificate (course_id, title, provider, description) VALUES
-    (c_id, 'Applied FinTech & Payments Engineering', 'Pi Research Labs', 'Post Graduate Program, Verified by NASSCOM. Industry Recognized, Skills Verified, Global Recognition.');
+    (c_id, 'Applied FinTech & Payments Engineering', 'Samagyaan Data solutions', 'Post Graduate Program, Verified by NASSCOM. Industry Recognized, Skills Verified, Global Recognition.');
 END $$;

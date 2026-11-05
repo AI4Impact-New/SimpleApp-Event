@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>ai4impact</string>
-          <string>com.piresearchlabs.mobile</string>
+          <string>com.samagyaan.ai4impact</string>
         </array>
       </dict>
     </array>

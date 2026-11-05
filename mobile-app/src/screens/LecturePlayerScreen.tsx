@@ -17,6 +17,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { api } from '@/services/api';
 import { apiErrorMessage } from '@/services/apiErrors';
+import { PlaybackSettings } from '@/components/PlaybackSettings';
 import { SeekBar } from '@/components/SeekBar';
 import { VideoWatermark } from '@/components/VideoWatermark';
 import type { PlaybackWatermark, LearningClass, LectureProgress } from '@/types/learning';
@@ -507,6 +508,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
               <Ionicons name="play-forward" size={22} color={colors.white} />
             </TouchableOpacity>
           </View>
+          <PlaybackSettings speed={speed} speeds={SPEEDS} onSpeed={changeSpeed} disabled={!ready} />
           <TouchableOpacity
             onPress={() => setFullscreen(value => !value)}
             disabled={!ready}
@@ -532,19 +534,6 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
       ) : nativePlayer}
 
       <View style={styles.body}>
-        <Text style={styles.label}>Playback speed</Text>
-        <View style={styles.speedRow}>
-          {SPEEDS.map((s) => (
-            <TouchableOpacity
-              key={s}
-              style={[styles.speedChip, speed === s && styles.speedChipActive]}
-              onPress={() => changeSpeed(s)}
-              activeOpacity={0.75}
-            >
-              <Text style={[styles.speedText, speed === s && styles.speedTextActive]}>{s}×</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
 
         <View style={styles.progressCard}>
           {progress?.completed ? (

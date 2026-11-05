@@ -26,7 +26,10 @@ resource "aws_cognito_user_pool" "main" {
 
   # Email configuration
   email_configuration {
-    email_sending_account = "COGNITO_DEFAULT"
+    email_sending_account = "DEVELOPER"
+    source_arn            = aws_sesv2_email_identity.transactional.arn
+    from_email_address    = "AI4Impact <noreply@ai4impact.in>"
+    configuration_set     = aws_sesv2_configuration_set.auth.configuration_set_name
   }
 
   # Post-confirmation: add new sign-ups to the Terraform-managed Students group.

@@ -315,7 +315,9 @@ class AuthService {
       else if (name === 'LimitExceededException' || /limit|too many/i.test(msg)) {
         message = 'Too many attempts. Please wait a few minutes before trying again.';
       } else if (name === 'InvalidParameterException') {
-        message = 'This account has no verified email. Please contact support.';
+        message = /no registered\/verified|no verified email|verified.*(?:email|phone)/i.test(msg)
+          ? 'Password recovery needs a verified email. If you can sign in, open Profile and verify your email. Otherwise, contact support.'
+          : 'Could not start password recovery. Check your email address or contact support.';
       } else if (msg) message = msg;
       return { success: false, error: message };
     }

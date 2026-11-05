@@ -27,7 +27,7 @@ aws --profile jm --region ap-south-1 amplify update-domain-association \
 
 Then verify DNS, Amplify AVAILABLE status, HTTPS with a valid certificate, `/login`, direct lecture URLs, and static assets. The route must serve the student portal, not the marketing site.
 
-Only after HTTPS succeeds, set `NEXT_PUBLIC_STUDENT_PORTAL_URL=https://learn.ai4impact.in` on the landing and admin Amplify main branches and rebuild both apps. Terraform contains that desired configuration. Until DNS/certificate verification is complete, retain the working origin value in the deployed environment so Student login goes directly to its working `/login` page.
+Only after HTTPS succeeds, set `student_portal_custom_domain_ready=true` in the private production Terraform variables, review/apply the landing/admin branch environment changes, and rebuild both apps. This sets `NEXT_PUBLIC_STUDENT_PORTAL_URL=https://learn.ai4impact.in`. The flag defaults to false, keeping the working origin active during DNS setup. Until DNS/certificate verification is complete, retain the working origin value in the deployed environment so Student login goes directly to its working `/login` page.
 
 ## Branding and app configuration
 

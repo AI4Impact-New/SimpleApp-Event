@@ -29,8 +29,11 @@ resource "aws_amplify_branch" "student_portal_main" {
   stage             = "PRODUCTION"
   enable_auto_build = false
 }
+locals {
+  student_portal_public_url = var.student_portal_custom_domain_ready ? "https://learn.ai4impact.in" : "https://main.${aws_amplify_app.student_portal.default_domain}"
+}
 output "student_portal_url" {
-  value = "https://learn.ai4impact.in"
+  value = local.student_portal_public_url
 }
 output "student_portal_amplify_app_id" {
   value = aws_amplify_app.student_portal.id

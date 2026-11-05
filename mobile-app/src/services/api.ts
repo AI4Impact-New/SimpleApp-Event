@@ -258,10 +258,11 @@ class ApiService {
     return response.data;
   }
 
-  async sendLectureProgress(classId: string, sessionId: string, positionSeconds: number): Promise<LectureProgress> {
+  async sendLectureProgress(classId: string, sessionId: string, positionSeconds: number, event: 'watch' | 'seek' = 'watch'): Promise<LectureProgress> {
     const response = await this.client.post(`/learning/classes/${classId}/progress`, {
       session_id: sessionId,
       position_seconds: positionSeconds,
+      event,
     });
     return response.data;
   }

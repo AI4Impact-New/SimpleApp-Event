@@ -8,8 +8,6 @@ import {
   ActivityIndicator,
   AppState,
   Modal,
-  Pressable,
-  type GestureResponderEvent,
 } from 'react-native';
 import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +17,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { api } from '@/services/api';
 import { apiErrorMessage } from '@/services/apiErrors';
+import { SeekBar } from '@/components/SeekBar';
 import { VideoWatermark } from '@/components/VideoWatermark';
 import type { PlaybackWatermark, LearningClass, LectureProgress } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
@@ -34,9 +33,9 @@ interface LecturePlayerScreenProps {
   onPlayNext?: (lecture: LearningClass) => void;
 }
 
-// Backend credits at most elapsed × 1.5 + 2s per heartbeat, so faster speeds would lose credit.
-const SPEEDS = [0.75, 1, 1.25, 1.5];
-const MAX_SPEED = 1.5;
+// Backend credits at most elapsed × 2 + 2s per heartbeat, so faster speeds would lose credit.
+const SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
+const MAX_SPEED = 2;
 const HEARTBEAT_MS = 20_000;
 // Renew the signed URL/session this long before its expiry.
 const RENEW_BEFORE_EXPIRY_MS = 2 * 60_000;
@@ -75,6 +74,8 @@ function findNextRecorded(classes: LearningClass[], classId: string): LearningCl
 
 export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNext }: LecturePlayerScreenProps) {
   const queryClient = useQueryClient();
+  const activeClassRef = useRef(classId);
+  activeClassRef.current = classId;
   const [watermark, setWatermark] = useState<PlaybackWatermark | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const [loadState, setLoadState] = useState<LoadState>({ kind: 'loading' });
@@ -87,7 +88,6 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
   // Mirrors of player state for the app's own control bar (native controls differ per platform and hide on web)
   const [isPlaying, setIsPlaying] = useState(false);
   const [position, setPosition] = useState(0);
-  const [barWidth, setBarWidth] = useState(0);
   const videoViewRef = useRef<VideoView>(null);
 
   const player = useVideoPlayer(null, (p) => {
@@ -115,10 +115,19 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
     [player]
   );
 
-  // Heartbeats are serialized: one request in flight, and only the newest queued position is sent next,
-  // so an older position can never arrive after a newer one.
-  const inFlightRef = useRef(false);
-  const queuedRef = useRef<number | null>(null);
+  // Preserve watch/seek boundaries in order. Coalesce only adjacent events of the same kind.
+  type ProgressEvent = { position: number; event: 'watch' | 'seek' };
+  const inFlightRef = useRef<Promise<void> | null>(null);
+  const queuedRef = useRef<ProgressEvent[]>([]);
+  const beforeRenewRef = useRef<() => Promise<void>>(async () => {});
+  const enqueue = (position: number, event: ProgressEvent['event'] = 'watch') => {
+    const queue = queuedRef.current;
+    if (queue.length >= 32) {
+      // Excessive input: drop pending credit safely and establish only the newest baseline.
+      queuedRef.current = [{ position, event: 'seek' }];
+    } else if (queue.at(-1)?.event === event) queue[queue.length - 1] = { position, event };
+    else queue.push({ position, event });
+  };
   // Set when a heartbeat fails without a response; heartbeats pause until progress can be re-read.
   const offlineRef = useRef(false);
   const reconnectingRef = useRef(false);
@@ -146,7 +155,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
       if (renewTimerRef.current) clearTimeout(renewTimerRef.current);
       try {
         const playback = await api.getPlayback(classId);
-        if (!mountedRef.current) return;
+        if (!mountedRef.current || activeClassRef.current !== classId) return;
         // Fail closed rather than play unmarked content against an outdated/malformed API.
         if (!playback.watermark?.student_id || !playback.watermark.company) {
           throw new Error('Playback protection is unavailable. Please try again.');
@@ -159,6 +168,14 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
         creditDurationRef.current = duration;
         pendingSeekRef.current = duration > 0 && start >= duration - 2 ? 0 : start;
         positionRef.current = pendingSeekRef.current;
+        // Reconnect/renewal may resume ahead of the last persisted heartbeat. Establish that
+        // position without crediting the intervening gap before allowing further watching.
+        if (Math.abs(positionRef.current - (playback.resume_seconds || 0)) > 0.01) {
+          await api.sendLectureProgress(classId, playback.session_id, positionRef.current, 'seek');
+        }
+        const watched = Number(playback.watched_seconds) || 0;
+        setProgress({ class_id: classId, watched_seconds: watched, duration_seconds: duration,
+          completed: !!playback.completed, progress_percentage: duration ? watched * 100 / duration : 0 });
         await player.replaceAsync({ uri: playback.url });
         player.playbackRate = speedRef.current;
         if (autoplay) player.play();
@@ -168,7 +185,12 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
         // expires_in may be shortened by the lecture's access window; renew ahead of it either way.
         const ttlMs = playback.expires_in * 1000;
         renewTimerRef.current = setTimeout(
-          () => openSession(positionRef.current, playingRef.current),
+          async () => {
+            await beforeRenewRef.current();
+            if (mountedRef.current && sessionRef.current && !offlineRef.current) {
+              await openSession(positionRef.current, playingRef.current);
+            }
+          },
           Math.max(5_000, ttlMs - Math.min(RENEW_BEFORE_EXPIRY_MS, ttlMs / 4))
         );
       } catch (err: any) {
@@ -184,44 +206,44 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
   );
 
   const flushHeartbeats = useCallback(async () => {
-    if (inFlightRef.current) return;
-    inFlightRef.current = true;
-    try {
-      while (queuedRef.current != null && sessionRef.current && !offlineRef.current) {
-        const position = queuedRef.current;
-        queuedRef.current = null;
+    if (inFlightRef.current) return inFlightRef.current;
+    const drain = async () => {
+      while (activeClassRef.current === classId && queuedRef.current.length && sessionRef.current && !offlineRef.current) {
+        const item = queuedRef.current.shift()!;
         try {
-          const result = await api.sendLectureProgress(classId, sessionRef.current, position);
-          if (mountedRef.current) setProgress(result);
+          const result = await api.sendLectureProgress(classId, sessionRef.current, item.position, item.event);
+          if (mountedRef.current && activeClassRef.current === classId) setProgress(result);
         } catch (err: any) {
+          if (activeClassRef.current !== classId) return;
           const status = err?.response?.status;
           const blocked = blockedState(err);
           if (blocked) enterBlocked(blocked);
-          else if (status === 409) {
-            // Session expired or replaced: start a fresh one at the current position, then re-read progress.
-            if (mountedRef.current) {
-              await openSession(positionRef.current, playingRef.current);
-              refreshProgress().catch(() => {});
-            }
+          else if (status === 409 && mountedRef.current) {
+            await openSession(positionRef.current, playingRef.current);
+            refreshProgress().catch(() => {});
           } else if (!err?.response) {
-            // Offline: stop sending until progress can be re-read.
             offlineRef.current = true;
             player.pause();
             if (mountedRef.current) setLoadState({ kind: 'error', message: 'Connection lost. Playback is paused while we reconnect.' });
           }
-          // Never replay a backlog of heartbeats.
-          queuedRef.current = null;
+          // Never replay stale watch credit after errors/reconnects.
+          queuedRef.current = [];
           break;
         }
       }
-    } finally {
-      inFlightRef.current = false;
-    }
+    };
+    inFlightRef.current = drain();
+    try { await inFlightRef.current; }
+    finally { inFlightRef.current = null; }
   }, [classId, openSession, enterBlocked, refreshProgress, player]);
+  beforeRenewRef.current = async () => {
+    enqueue(positionRef.current);
+    await flushHeartbeats();
+  };
 
   const heartbeat = useCallback(() => {
     if (!sessionRef.current || offlineRef.current) return;
-    queuedRef.current = positionRef.current;
+    enqueue(positionRef.current);
     flushHeartbeats();
   }, [flushHeartbeats]);
 
@@ -229,13 +251,13 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
   useEffect(() => {
     mountedRef.current = true;
     offlineRef.current = false;
-    queuedRef.current = null;
+    queuedRef.current = [];
     setWatermark(null);
     openSession();
     return () => {
       mountedRef.current = false;
       if (renewTimerRef.current) clearTimeout(renewTimerRef.current);
-      queuedRef.current = positionRef.current;
+      enqueue(positionRef.current);
       // Refresh course progress once the final heartbeat has landed, not before.
       flushHeartbeats().finally(() => {
         queryClient.invalidateQueries({ queryKey: ['learning'] });
@@ -358,15 +380,15 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
   const seekTo = (seconds: number) => {
     if (!ready) return;
     const target = Math.max(0, videoDuration > 0 ? Math.min(seconds, videoDuration - 0.5) : seconds);
+    if (sessionRef.current && !offlineRef.current) {
+      // Save genuine watching before a jump, then move the server baseline without credit.
+      enqueue(positionRef.current);
+      enqueue(target, 'seek');
+      flushHeartbeats();
+    }
     player.currentTime = target;
     positionRef.current = target;
     setPosition(target);
-  };
-
-  const seekFromBar = (event: GestureResponderEvent) => {
-    if (barWidth <= 0 || videoDuration <= 0) return;
-    const ratio = Math.min(1, Math.max(0, event.nativeEvent.locationX / barWidth));
-    seekTo(ratio * videoDuration);
   };
 
   const retry = () => {
@@ -398,8 +420,6 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
         completionThreshold={90}
         onToggle={togglePlay}
         onSeek={seekTo}
-        onSeekBar={seekFromBar}
-        onBarLayout={setBarWidth}
         onSpeed={changeSpeed}
         onRetry={retry}
         onBack={onBack}
@@ -453,24 +473,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
       </View>
 
       <View style={[styles.controls, !ready && styles.controlsDisabled]}>
-        <Pressable
-          style={styles.seekBar}
-          onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
-          onPress={seekFromBar}
-          disabled={!ready}
-          accessibilityRole="adjustable"
-          accessibilityLabel="Seek"
-          accessibilityValue={{ min: 0, max: Math.round(videoDuration), now: Math.round(position) }}
-        >
-          <View style={styles.seekTrack}>
-            <View
-              style={[
-                styles.seekFill,
-                { width: `${videoDuration > 0 ? Math.min(100, (position / videoDuration) * 100) : 0}%` },
-              ]}
-            />
-          </View>
-        </Pressable>
+        <SeekBar position={position} duration={videoDuration} onSeek={seekTo} disabled={!ready} />
         <View style={styles.controlRow}>
           <Text style={styles.timeText}>
             {formatDuration(position)} / {formatDuration(videoDuration)}
@@ -550,14 +553,14 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
               <Text style={styles.completedText}>Lecture completed</Text>
             </View>
           ) : (
-            <Text style={styles.progressTitle}>Watch at least 90% of the lecture to complete it.</Text>
+            <Text style={styles.progressTitle}>Watch at least 90% of unique video content to complete this lecture.</Text>
           )}
           {progress && duration > 0 ? (
             <Text style={styles.muted}>
               {formatDuration(progress.watched_seconds)} of {formatDuration(duration)} watched ({watchedPct}%)
             </Text>
           ) : null}
-          <Text style={styles.muted}>Skipped or repeated sections don't count toward completion.</Text>
+          <Text style={styles.muted}>The timeline shows playback position. Watched progress counts unique sections played; skipped sections don't count.</Text>
         </View>
 
         {completed && onPlayNext && (nextLoading || nextLecture) ? (
@@ -648,19 +651,6 @@ const styles = StyleSheet.create({
   controlsDisabled: {
     opacity: 0.5,
   },
-  seekBar: {
-    paddingVertical: spacing.sm,
-  },
-  seekTrack: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    overflow: 'hidden',
-  },
-  seekFill: {
-    height: 4,
-    backgroundColor: colors.primary,
-  },
   controlRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -695,6 +685,7 @@ const styles = StyleSheet.create({
   },
   speedRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   speedChip: {

@@ -93,7 +93,7 @@ export function WebCourseWorkspace(props: WebCourseWorkspaceProps) {
       <View style={[styles.headerSide, !wide && { width: '100%' }]}>
         <View style={[styles.overall, !wide && { flex: 1, width: undefined }]}>
           <View style={styles.overallRow}>
-            <Text style={styles.overallLabel}>Overall progress</Text>
+            <Text style={styles.overallLabel}>Lectures completed</Text>
             <Text style={styles.overallPct}>{pct}%</Text>
           </View>
           <View style={styles.trackLg}>
@@ -267,7 +267,7 @@ function Stats({ completion, recorded, live, wide }: { completion: Completion; r
 
   const stats = [
     {
-      label: 'Lectures watched',
+      label: 'Lectures completed',
       value: completion.recorded_completed,
       of: completion.recorded_total,
       note: expiringSoon ? `${expiringSoon} expire this week` : left > 0 ? `${left} to go` : 'All watched',

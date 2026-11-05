@@ -20,3 +20,11 @@ Private S3 encryption, public-access blocking and CloudFront origin access contr
 - Backend coverage: verified watermark identity, 15-minute cap, shorter access-window expiry, denied enrollment before signing.
 - Browser coverage: real MP4 decoding, watermark containment/movement, full-stage fullscreen, URL/session renewal and playback controls. Existing profile/exam/public certificate regressions remain enabled.
 - A separate gated live test uses synthetic Cognito accounts and the user-supplied London Diaries MP4. Credentials are kept in a local permission-restricted file, never committed.
+
+## Scrubbing, speeds and watch credit
+
+Web uses an accessible HTML range slider supporting mouse dragging, touch scrubbing and keyboard seeking (arrows ±10 seconds, Page Up/Down ±30, Home/End). Native has an adjustable touch responder. Dragging previews locally and commits once at release; the ±10-second controls remain. Speeds are 0.75×, 1×, 1.25×, 1.5×, 1.75× and 2×.
+
+The client serializes a final `watch` event at the old position, then a `seek` event at the target. The server resets its baseline for seek events without awarding credit; legitimate watching is bounded by elapsed server time × 2 plus a two-second tolerance, with a 60-second gap cap. Played content ranges are merged, so replayed sections count once. Session renewal flushes pending watching and reconnect/resume establishes a no-credit baseline if needed. Old clients that omit the event continue to use the watch path. No schema migration is required.
+
+Playback position, unique watched content, and completed lectures are distinct. For a 22:39 video, 4% watched is about 54 seconds of unique content, even if the learner seeks to 11:54. A lecture still completes after 90% is watched. Course completion remains based on completed lectures; the UI labels it explicitly. Existing learner progress is retained.

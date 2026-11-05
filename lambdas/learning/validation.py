@@ -65,11 +65,11 @@ def merge_ranges(ranges, start, end):
     return merged
 
 
-def watched_update(ranges, previous, position, elapsed, duration):
+def watched_update(ranges, previous, position, elapsed, duration, seeking=False):
     position = number(position, 0, duration, "position_seconds")
     advance = position - previous
     # Seeking does not earn watch credit. Overlapping replays are counted once.
-    if advance > 0 and advance <= max(0, elapsed) * 1.5 + 2:
+    if not seeking and advance > 0 and advance <= max(0, elapsed) * 2 + 2:
         ranges = merge_ranges(ranges, previous, position)
     watched = min(duration, sum(b - a for a, b in ranges))
     return ranges, watched, watched >= duration * 0.9

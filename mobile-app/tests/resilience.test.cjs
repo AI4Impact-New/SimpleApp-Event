@@ -59,3 +59,13 @@ test('exam requests calculate server clock offset and tolerate a missing Date he
  assert.equal((await api.startExamAttempt('exam')).clock_offset_ms,-3600000);
  headers={};assert.equal((await api.getExamAttempt('attempt')).clock_offset_ms,0);
 });
+
+test('password recovery distinguishes missing verification from other invalid parameters',async()=>{
+ let message='Cannot reset password for the user as there is no registered/verified email or phone_number';
+ const {authService}=load('services/auth.ts',{'aws-amplify/auth':{resetPassword:async()=>{throw Object.assign(new Error(message),{name:'InvalidParameterException'})}},'@/utils/secureStorage':{}});
+ assert.match((await authService.requestPasswordReset('qa@example.invalid')).error,/open Profile and verify your email/);
+ message='Invalid username format';
+ const other=await authService.requestPasswordReset('bad');
+ assert.equal(other.success,false);
+ assert.doesNotMatch(other.error,/needs a verified email/);
+});

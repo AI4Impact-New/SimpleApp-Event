@@ -124,3 +124,27 @@ for (const signedIn of [false, true]) {
     expect(verifications).toBe(2);
   });
 }
+
+
+for (const verified of [true, false]) test(`password recovery gives accurate guidance (${verified ? 'accepted request' : 'unverified email'})`, async ({ page }) => {
+  await spaFallback(page);
+  await page.route('https://cognito-idp.ap-south-1.amazonaws.com/**', async route => {
+    if (!route.request().headers()['x-amz-target']?.endsWith('.ForgotPassword')) return route.continue();
+    await route.fulfill(verified ? {
+      status: 200, json: { CodeDeliveryDetails: { Destination: 'q***@e***.invalid', DeliveryMedium: 'EMAIL', AttributeName: 'email' } },
+    } : {
+      status: 400, headers: { 'x-amzn-errortype': 'InvalidParameterException' }, json: { __type: 'InvalidParameterException', message: 'Cannot reset password for the user as there is no registered/verified email or phone_number' },
+    });
+  });
+  await page.goto('/forgot-password');
+  await page.getByPlaceholder('your@email.com').fill('qa@example.invalid');
+  await page.getByText('Send code', { exact: true }).click();
+  if (verified) {
+    await expect(page.getByText(/If this account is eligible for password recovery/)).toBeVisible();
+    await expect(page.getByText(/Newly invited users must first sign in with their temporary password/)).toBeVisible();
+    await expect(page.getByPlaceholder('123456')).toBeVisible();
+  } else {
+    await expect(page.getByText(/If you can sign in, open Profile and verify your email/)).toBeVisible();
+    await expect(page.getByPlaceholder('123456')).toHaveCount(0);
+  }
+});

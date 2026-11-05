@@ -7,7 +7,10 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query';
 import { AppNavigator } from '@/navigation/AppNavigator';
+import { setupWebDocument } from '@/utils/webDocument';
 import { shouldRetry } from '@/services/apiErrors';
+
+setupWebDocument();
 
 // Treat app foreground as "window focus" so active queries refetch when the user returns to the app
 if (Platform.OS !== 'web') {

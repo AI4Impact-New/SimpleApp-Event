@@ -21,6 +21,9 @@ import { apiErrorMessage } from '@/services/apiErrors';
 import type { AccessState, Completion, Exam, LearningClass } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { formatLocalDate, formatLocalDateTime, formatLocalTimeRange, formatDuration } from '@/utils/datetime';
+import { lectureAccess, REQUIREMENT_LABELS } from '@/utils/learning';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebCourseWorkspace, WebCourseWorkspaceError, WebCourseWorkspaceSkeleton } from '@/components/web/WebCourseWorkspace';
 
 interface CourseLearningScreenProps {
   courseId: string;
@@ -29,13 +32,6 @@ interface CourseLearningScreenProps {
   onOpenExam: (exam: Exam) => void;
   onCertificateIssued: () => void;
 }
-
-const REQUIREMENT_LABELS: Record<string, string> = {
-  recorded_lectures: 'Complete all recorded lectures',
-  live_attendance: 'Attend the required live classes',
-  exam: 'Pass all assessments',
-  configured_learning_activities: 'This course has no learning activities configured yet',
-};
 
 export function CourseLearningScreen({
   courseId,
@@ -88,7 +84,54 @@ export function CourseLearningScreen({
     }
   };
 
+  const joinClass = (lecture: LearningClass) => {
+    Linking.openURL(lecture.zoom_link!).catch(() => Alert.alert('Error', 'Could not open the class link.'));
+  };
+
   const status = (home.error as any)?.response?.status;
+  const loadErrorText =
+    status === 403
+      ? 'Register for this course to access its learning content.'
+      : status === 404
+        ? 'This course is unavailable.'
+        : 'Failed to load course.';
+
+  // Browser portal: course workspace layout (same data and actions as the app layout below).
+  if (isWeb) {
+    if (home.isLoading) return <WebCourseWorkspaceSkeleton />;
+    if (home.error || !home.data) {
+      return (
+        <WebCourseWorkspaceError
+          message={loadErrorText}
+          onRetry={status !== 403 && status !== 404 ? () => refetchHome() : undefined}
+          onBack={onBack}
+        />
+      );
+    }
+    return (
+      <WebCourseWorkspace
+        course={home.data.course}
+        classes={home.data.classes}
+        completion={home.data.completion}
+        exams={{
+          list: exams.data ?? [],
+          loading: exams.isLoading,
+          error: exams.isError ? apiErrorMessage(exams.error, 'Could not load assessments.') : null,
+          retry: () => refetchExams(),
+        }}
+        hasCertificate={hasCertificate}
+        issuing={issueCertificate.isPending}
+        onIssue={handleIssue}
+        onViewCertificate={onCertificateIssued}
+        onPlayLecture={onPlayLecture}
+        onOpenExam={onOpenExam}
+        onAddToCalendar={handleAddToCalendar}
+        onJoin={joinClass}
+        onBack={onBack}
+      />
+    );
+  }
+
   if (home.isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -105,13 +148,7 @@ export function CourseLearningScreen({
         <ScreenHeader title="Course" onBack={onBack} />
         <View style={styles.center}>
           <Ionicons name="lock-closed-outline" size={40} color={colors.textMuted} />
-          <Text style={styles.errorText}>
-            {status === 403
-              ? 'Register for this course to access its learning content.'
-              : status === 404
-                ? 'This course is unavailable.'
-                : 'Failed to load course.'}
-          </Text>
+          <Text style={styles.errorText}>{loadErrorText}</Text>
           {status !== 403 && status !== 404 ? (
             <TouchableOpacity style={styles.primaryBtn} onPress={() => refetchHome()}>
               <Text style={styles.primaryBtnText}>Retry</Text>
@@ -302,12 +339,6 @@ const ACCESS_ICONS: Record<AccessState, keyof typeof Ionicons.glyphMap> = {
   expired: 'hourglass-outline',
   not_ready: 'time-outline',
 };
-
-/** Combine recording readiness with the server's seven-day access window. */
-function lectureAccess(lecture: LearningClass): AccessState {
-  if (lecture.video_status !== 'ready') return 'not_ready';
-  return lecture.access_state ?? 'available';
-}
 
 function RecordedRow({ lecture, onPress }: { lecture: LearningClass; onPress: () => void }) {
   const access = lectureAccess(lecture);

@@ -21,6 +21,8 @@ import { apiErrorMessage } from '@/services/apiErrors';
 import type { LearningClass, LectureProgress } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { formatDuration } from '@/utils/datetime';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebLecturePlayer } from '@/components/web/WebLecturePlayer';
 
 interface LecturePlayerScreenProps {
   classId: string;
@@ -335,7 +337,8 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
 
   const togglePlay = () => {
     if (!ready) return;
-    if (player.playing) player.pause();
+    // expo-video web leaves `player.playing` true after replace() even when paused; trust the media events there.
+    if (isWeb ? isPlaying : player.playing) player.pause();
     else player.play();
   };
 
@@ -361,6 +364,36 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
 
   const duration = progress?.duration_seconds ?? 0;
   const watchedPct = progress ? Math.min(100, Math.round(Number(progress.progress_percentage) || 0)) : null;
+
+  // Browser portal: course-content rail, custom video controls and lecture details (same playback logic).
+  if (isWeb) {
+    return (
+      <WebLecturePlayer
+        classId={classId}
+        courseId={courseId}
+        title={title}
+        player={player}
+        videoViewRef={videoViewRef}
+        loadState={loadState}
+        isPlaying={isPlaying}
+        position={position}
+        videoDuration={videoDuration}
+        progress={progress}
+        speed={speed}
+        speeds={SPEEDS}
+        skipSeconds={SKIP_SECONDS}
+        completionThreshold={90}
+        onToggle={togglePlay}
+        onSeek={seekTo}
+        onSeekBar={seekFromBar}
+        onBarLayout={setBarWidth}
+        onSpeed={changeSpeed}
+        onRetry={retry}
+        onBack={onBack}
+        onPlayLecture={onPlayNext}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>

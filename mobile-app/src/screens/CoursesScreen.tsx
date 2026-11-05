@@ -17,7 +17,9 @@ import { useBillingCatalog } from '@/hooks/useBilling';
 import { apiErrorMessage } from '@/services/apiErrors';
 import { formatPaise } from '@/utils/money';
 import { Course } from '@/types/course';
-import { colors, spacing, borderRadius } from '@/theme/colors';
+import { colors, spacing, borderRadius, fonts, palette } from '@/theme/colors';
+import { useWebLayout } from '@/hooks/useWebLayout';
+import { WebHero } from '@/components/web/WebHero';
 
 interface CoursesScreenProps {
   onCoursePress: (course: Course) => void;
@@ -40,8 +42,10 @@ export function CoursesScreen({ onCoursePress }: CoursesScreenProps) {
   const list = Array.isArray(courses) ? courses : [];
   // Prices are optional decoration on the list; the detail page shows a retry if the catalog fails.
   const { data: prices } = useBillingCatalog();
+  const { isWeb, wide } = useWebLayout();
+  const columns = wide ? 3 : 1;
 
-  const renderCourse = ({ item }: { item: Course }) => (
+  const renderCourse = ({ item }: { item: Course }) => (wide ? renderGridCourse(item) : (
     <TouchableOpacity
       style={styles.card}
       onPress={() => onCoursePress(item)}
@@ -81,14 +85,70 @@ export function CoursesScreen({ onCoursePress }: CoursesScreenProps) {
         <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
       </View>
     </TouchableOpacity>
+  ));
+
+  // Desktop browsers: catalog cards in a three-column grid.
+  const renderGridCourse = (item: Course) => {
+    const price = prices?.find((p) => p.id === item.id);
+    return (
+      <TouchableOpacity style={styles.gridCard} onPress={() => onCoursePress(item)} activeOpacity={0.8}>
+        <View style={styles.gridTop}>
+          <View style={styles.cardIconSmall}>
+            <Ionicons name="book-outline" size={20} color={colors.primary} />
+          </View>
+          {item.learning_access ? (
+            <View style={[styles.enrolledBadge, { marginTop: 0 }]}>
+              <Ionicons name="checkmark-circle" size={14} color={colors.success} />
+              <Text style={styles.enrolledText}>Enrolled</Text>
+            </View>
+          ) : null}
+        </View>
+        <Text style={styles.gridTitle} numberOfLines={2}>{item.title}</Text>
+        {item.short_description ? (
+          <Text style={styles.description} numberOfLines={3}>{item.short_description}</Text>
+        ) : null}
+        <View style={{ flex: 1 }} />
+        <View style={styles.gridFooter}>
+          {price && price.marked_price_paise > 0 ? (
+            <View style={[styles.priceRow, { marginTop: 0, flex: 1 }]}>
+              <Text style={styles.priceTotal}>{formatPaise(price.total_paise)}</Text>
+              {price.discount_paise > 0 ? (
+                <Text style={styles.priceMarked}>{formatPaise(price.marked_price_paise)}</Text>
+              ) : null}
+            </View>
+          ) : (
+            <View style={{ flex: 1 }} />
+          )}
+          <View style={styles.gridCta}>
+            <Text style={styles.gridCtaText}>View course</Text>
+            <Ionicons name="arrow-forward" size={14} color={colors.text} />
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const webHero = (inList: boolean) => (
+    <View style={[styles.webHeroWrap, inList && styles.webHeroInList]}>
+      <WebHero
+        eyebrow="Course catalog"
+        title="Career tracks built for industry"
+        lead="Browse AI4Impact programs, compare fees and enrol in the track that fits your goals."
+      />
+    </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.greeting}>Courses</Text>
-        <Text style={styles.subtitle}>Browse AI4Impact programs</Text>
-      </View>
+      {isWeb ? (
+        // The hero scrolls with the list once courses load.
+        isLoading || error || list.length === 0 ? webHero(false) : null
+      ) : (
+        <View style={styles.header}>
+          <Text style={styles.greeting}>Courses</Text>
+          <Text style={styles.subtitle}>Browse AI4Impact programs</Text>
+        </View>
+      )}
 
       {isLoading ? (
         <View style={styles.loadingContainer}>
@@ -113,9 +173,14 @@ export function CoursesScreen({ onCoursePress }: CoursesScreenProps) {
         </View>
       ) : (
         <FlatList
+          // numColumns cannot change on a mounted list; remount when the window crosses the breakpoint.
+          key={`cols-${columns}`}
           data={list}
           renderItem={renderCourse}
           keyExtractor={(item) => item.id}
+          numColumns={columns}
+          columnWrapperStyle={columns > 1 ? styles.gridRow : undefined}
+          ListHeaderComponent={isWeb ? webHero(true) : null}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -294,6 +359,71 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: colors.success,
+  },
+  webHeroWrap: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: 32,
+  },
+  // The list content already carries the side padding.
+  webHeroInList: {
+    paddingHorizontal: 0,
+    paddingTop: spacing.sm,
+  },
+  gridRow: {
+    gap: spacing.xl,
+    marginBottom: spacing.xl,
+  },
+  gridCard: {
+    flex: 1,
+    // Keep a lone last-row card at one-third width.
+    maxWidth: 'calc((100% - 40px) / 3)' as any,
+    minHeight: 240,
+    backgroundColor: colors.backgroundCard,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.xxl,
+  },
+  gridTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+  },
+  cardIconSmall: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: palette.teal50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gridTitle: {
+    fontFamily: fonts.display,
+    fontSize: 19,
+    lineHeight: 24,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+    color: colors.text,
+  },
+  gridFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.xl,
+    paddingTop: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: palette.slate150,
+  },
+  gridCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  gridCtaText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
   },
   chevronWrap: {
     padding: spacing.sm,

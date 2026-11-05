@@ -21,6 +21,8 @@ import { authService, StoredUserData } from '@/services/auth';
 import { VerifyEmailNotice } from '@/components/VerifyEmailNotice';
 import { api } from '@/services/api';
 import { isPushOptedOut, setPushOptOut } from '@/services/push';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebProfile, WebProfileSkeleton } from '@/components/web/WebProfile';
 
 interface ProfileScreenProps {
   onBack?: () => void;
@@ -29,7 +31,9 @@ interface ProfileScreenProps {
   onPrivacyPolicy?: () => void;
   onCertificates?: () => void;
   onPurchases?: () => void;
-  onVerifyCertificate?: () => void;
+  onVerifyCertificate?: (certificateId?: string) => void;
+  /** Web profile: open a purchase from the Purchases tab. */
+  onOpenOrder?: (orderId: string) => void;
 }
 
 // Same contact as the landing page (landing-page/src/content/legal.ts)
@@ -54,6 +58,7 @@ export function ProfileScreen({
   onCertificates,
   onPurchases,
   onVerifyCertificate,
+  onOpenOrder,
 }: ProfileScreenProps) {
   const [user, setUser] = useState<StoredUserData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,6 +115,24 @@ export function ProfileScreen({
   useFocusEffect(React.useCallback(() => {
     loadProfile();
   }, [loadProfile]));
+
+  // Browser portal: sidebar profile with certificates, purchases and account (same data and actions).
+  if (isWeb) {
+    if (loading) return <WebProfileSkeleton />;
+    return (
+      <WebProfile
+        user={user}
+        version={Constants.expoConfig?.version ?? '—'}
+        onLogout={onLogout}
+        onEditProfile={onEditProfile}
+        onVerifyCertificate={onVerifyCertificate}
+        onOpenOrder={onOpenOrder}
+        onPrivacyPolicy={onPrivacyPolicy}
+        onAccessHelp={showAccessHelp}
+        onSupport={showSupport}
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -239,7 +262,7 @@ export function ProfileScreen({
             {onCertificates ? <MenuRow icon="ribbon-outline" label="My certificates" onPress={onCertificates} /> : null}
             {onPurchases ? <MenuRow icon="receipt-outline" label="Purchase history (demo)" onPress={onPurchases} /> : null}
             {onVerifyCertificate ? (
-              <MenuRow icon="shield-checkmark-outline" label="Verify a certificate" onPress={onVerifyCertificate} />
+              <MenuRow icon="shield-checkmark-outline" label="Verify a certificate" onPress={() => onVerifyCertificate()} />
             ) : null}
           </View>
         </View>
@@ -423,10 +446,10 @@ const styles = StyleSheet.create({
     color: '#b45309',
   },
   badgeProfessional: {
-    backgroundColor: '#dbeafe',
+    backgroundColor: '#d9eeeb',
   },
   badgeProfessionalText: {
-    color: '#1d4ed8',
+    color: '#016e5d',
   },
   badgeUnspecified: {
     backgroundColor: '#e5e7eb',

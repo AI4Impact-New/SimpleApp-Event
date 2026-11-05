@@ -78,7 +78,14 @@ export interface CourseProgress {
   completion: Completion;
 }
 
+export interface PlaybackWatermark {
+  company: string;
+  student_id: string;
+  move_interval_seconds: number;
+}
+
 export interface Playback {
+  watermark: PlaybackWatermark;
   url: string;
   session_id: string;
   expires_in: number;

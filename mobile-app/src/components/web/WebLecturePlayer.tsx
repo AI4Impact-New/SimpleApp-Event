@@ -2,12 +2,13 @@
 // Purely presentational: playback, heartbeats and session renewal stay in LecturePlayerScreen,
 // which renders this layout on web and its app layout on native.
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, type GestureResponderEvent } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { VideoView, type VideoPlayer } from 'expo-video';
 import { useLearningHome } from '@/hooks/useLearning';
 import { useWebLayout } from '@/hooks/useWebLayout';
 import { Spinner } from '@/components/web/Spinner';
+import { SeekBar } from '@/components/SeekBar';
 import { VideoWatermark } from '@/components/VideoWatermark';
 import type { PlaybackWatermark, LearningClass, LectureProgress } from '@/types/learning';
 import { colors, fonts, palette } from '@/theme/colors';
@@ -40,8 +41,6 @@ export interface WebLecturePlayerProps {
   completionThreshold: number;
   onToggle: () => void;
   onSeek: (seconds: number) => void;
-  onSeekBar: (event: GestureResponderEvent) => void;
-  onBarLayout: (width: number) => void;
   onSpeed: (value: number) => void;
   onRetry: () => void;
   onBack: () => void;
@@ -150,7 +149,6 @@ export function WebLecturePlayer(props: WebLecturePlayerProps) {
 
   const watchedPct = progress ? Math.min(100, Math.round(Number(progress.progress_percentage) || 0)) : 0;
   const completed = !!progress?.completed;
-  const posPct = shownDuration > 0 ? Math.min(100, (position / shownDuration) * 100) : 0;
   const coursePct = Math.round(Number(home.data?.completion?.progress_percentage) || 0);
 
   const meta = [
@@ -202,7 +200,7 @@ export function WebLecturePlayer(props: WebLecturePlayerProps) {
           <View style={[styles.trackLight, { flex: 1 }]}>
             <View style={[styles.fillPrimary, { width: `${coursePct}%` }]} />
           </View>
-          <Text style={styles.railPct}>{coursePct}%</Text>
+          <Text style={styles.railPct} accessibilityLabel={`${coursePct}% of lectures completed`}>{coursePct}% complete</Text>
         </View>
       </View>
       <ScrollView style={wide ? styles.railList : undefined}>
@@ -288,19 +286,7 @@ export function WebLecturePlayer(props: WebLecturePlayerProps) {
       </View>
 
       <View style={[styles.controls, !ready && { opacity: 0.5 }]}>
-        <Pressable
-          style={styles.seek}
-          onLayout={(e) => props.onBarLayout(e.nativeEvent.layout.width)}
-          onPress={props.onSeekBar}
-          disabled={!ready}
-          accessibilityRole="adjustable"
-          accessibilityLabel="Seek"
-          accessibilityValue={{ min: 0, max: Math.round(shownDuration), now: Math.round(position) }}
-        >
-          <View style={styles.seekTrack} />
-          <View style={[styles.seekFill, { width: `${posPct}%` }]} />
-          <View style={[styles.seekKnob, { left: `${posPct}%` }]} />
-        </Pressable>
+        <SeekBar position={position} duration={shownDuration} onSeek={props.onSeek} disabled={!ready} />
         <View style={styles.controlRow}>
           <CtrlBtn icon={isPlaying ? 'pause' : 'play'} size={18} label={isPlaying ? 'Pause' : 'Play'} onPress={toggle} disabled={!ready} />
           <CtrlBtn icon="refresh" flip size={16} label={`Back ${props.skipSeconds} seconds`} onPress={() => props.onSeek(position - props.skipSeconds)} disabled={!ready} />
@@ -373,7 +359,7 @@ export function WebLecturePlayer(props: WebLecturePlayerProps) {
         <Text style={styles.creditText}>
           {completed
             ? 'This lecture counts as complete.'
-            : `Watch ${props.completionThreshold}% to complete this lecture. Skipped or repeated sections don't count; speed is capped at ${Math.max(...props.speeds)}×.`}
+            : `${watchedPct}% watched${progress ? ` (${formatDuration(progress.watched_seconds)} of ${formatDuration(progress.duration_seconds)} unique content)` : ''}. Watch ${props.completionThreshold}% to complete. The timeline shows playback position; skipped sections don't count. Up to ${Math.max(...props.speeds)}× playback is supported.`}
         </Text>
         {progress ? (
           <Text style={styles.creditPct}>
@@ -563,15 +549,11 @@ const styles = StyleSheet.create({
   overlayBtnText: { ...text, fontSize: 14, fontWeight: '600', color: ink },
 
   controls: { paddingTop: 10, paddingHorizontal: 16, paddingBottom: 14, backgroundColor: palette.navy850, gap: 10 },
-  seek: { height: 16, justifyContent: 'center', cursor: 'pointer' } as any,
-  seekTrack: { position: 'absolute', left: 0, right: 0, height: 4, borderRadius: 2, backgroundColor: '#2a3654' },
-  seekFill: { position: 'absolute', left: 0, height: 4, borderRadius: 2, backgroundColor: palette.teal400 },
-  seekKnob: { position: 'absolute', width: 12, height: 12, marginLeft: -6, borderRadius: 6, backgroundColor: palette.textOnDark },
   controlRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   ctrl: { width: 32, height: 32, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
   time: { ...mono, fontSize: 12, fontWeight: '500', color: palette.textOnDarkBody, marginLeft: 8 },
   speeds: { flexDirection: 'row', gap: 2, padding: 2, borderRadius: 7, backgroundColor: palette.navy750, borderWidth: 1, borderColor: darkLine },
-  speedBtn: { paddingVertical: 4, paddingHorizontal: 9, borderRadius: 5 },
+  speedBtn: { paddingVertical: 4, paddingHorizontal: 8, borderRadius: 5 },
   speedBtnOn: { backgroundColor: palette.textOnDark },
   speedText: { ...mono, fontSize: 12, fontWeight: '500', color: palette.textOnDarkBody },
   speedTextOn: { color: ink },

@@ -45,6 +45,15 @@
           "position_seconds": {
             "type": "number",
             "minimum": 0
+          },
+          "event": {
+            "type": "string",
+            "enum": [
+              "watch",
+              "seek"
+            ],
+            "default": "watch",
+            "description": "Seek resets the playback baseline without awarding watch credit. Send a final watch heartbeat before the seek."
           }
         }
       },
@@ -91,6 +100,12 @@
                 "maximum": 40
               }
             }
+          },
+          "watched_seconds": {
+            "type": "number"
+          },
+          "completed": {
+            "type": "boolean"
           }
         }
       },

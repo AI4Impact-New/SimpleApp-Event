@@ -85,6 +85,8 @@ export interface PlaybackWatermark {
 }
 
 export interface Playback {
+  watched_seconds?: number;
+  completed?: boolean;
   watermark: PlaybackWatermark;
   url: string;
   session_id: string;

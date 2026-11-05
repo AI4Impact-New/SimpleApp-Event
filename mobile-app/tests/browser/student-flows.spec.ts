@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import path from 'node:path';
+import fs from 'node:fs';
 
 const client = '40faprqjpcc6q0pfkdkcrd8p5v';
 const cid = '00000000-0000-0000-0000-000000000001';
@@ -213,4 +214,90 @@ for (const verified of [true, false]) test(`password recovery gives accurate gui
     await expect(page.getByText(/If you can sign in, open Profile and verify your email/)).toBeVisible();
     await expect(page.getByPlaceholder('123456')).toHaveCount(0);
   }
+});
+
+async function protectedScrubPlayer(page: Page, posts: Array<{event:string;position_seconds:number}>) {
+  await seed(page);
+  await spaFallback(page);
+  await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**', async route => {
+    const pathname = new URL(route.request().url()).pathname;
+    let json: unknown = [];
+    const lesson = { id: eid, course_id: cid, title: 'Scrubbing QA', class_type: 'recorded', duration_seconds: 120,
+      sort_order: 0, access_state: 'available', video_status: 'ready', watched_seconds: 4.8 };
+    if (pathname === '/users/me') json = { id: cid, email: 'qa@example.invalid', name: 'QA learner', user_type: 'professional', designation: 'Engineer', company: 'QA' };
+    if (pathname === `/learning/courses/${cid}` || pathname === `/learning/courses/${cid}/progress`) json = {
+      course: { id: cid, title: 'QA course' }, classes: [lesson], completion: { progress_percentage: 0 } };
+    if (pathname.endsWith('/playback')) json = { url: 'https://video.example.invalid/scrubbing.mp4', session_id: aid,
+      expires_in: 900, duration_seconds: 120, resume_seconds: 2, watched_seconds: 4.8, completed: false,
+      watermark: { company: 'AI4Impact', student_id: cid, move_interval_seconds: 25 } };
+    if (pathname.endsWith('/progress') && route.request().method() === 'POST') {
+      posts.push(route.request().postDataJSON());
+      json = { class_id: eid, watched_seconds: 4.8, duration_seconds: 120, progress_percentage: 4, completed: false };
+    }
+    await route.fulfill({ json });
+  });
+  const clip = fs.readFileSync(path.join(__dirname, '../fixtures/scrubbing.mp4'));
+  await page.route('https://video.example.invalid/scrubbing.mp4', route => {
+    const range = /^bytes=(\d+)-(\d*)$/.exec(route.request().headers()['range'] || '');
+    const start = range ? Number(range[1]) : 0;
+    const end = range?.[2] ? Math.min(Number(range[2]), clip.length - 1) : clip.length - 1;
+    return route.fulfill({ status: range ? 206 : 200, body: clip.subarray(start, end + 1), contentType: 'video/mp4',
+      headers: { 'Accept-Ranges': 'bytes', ...(range ? { 'Content-Range': `bytes ${start}-${end}/${clip.length}` } : {}) } });
+  });
+  await page.goto(`/learning/courses/${cid}/lectures/${eid}`);
+  await page.waitForFunction(() => (document.querySelector('video')?.readyState ?? 0) >= 2);
+  await expect(page.getByText(/4% watched \(/)).toBeVisible();
+}
+
+test('mouse drag, keyboard seek, skip buttons and 2x preserve unique watched progress', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const posts: Array<{event:string;position_seconds:number}> = [];
+  await protectedScrubPlayer(page, posts);
+  const slider = page.getByRole('slider', { name: 'Seek', exact: true });
+  const bounds = (await slider.boundingBox())!;
+  const seeks = () => posts.filter(p => p.event === 'seek').length;
+  const before = seeks();
+  await page.mouse.move(bounds.x + bounds.width * 0.2, bounds.y + bounds.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(bounds.x + bounds.width * 0.7, bounds.y + bounds.height / 2, { steps: 12 });
+  expect(seeks()).toBe(before);
+  await page.mouse.up();
+  await expect.poll(seeks).toBe(before + 1);
+  const seekIndex = posts.findIndex(p => p.event === 'seek');
+  expect(posts[seekIndex - 1].event).toBe('watch');
+  expect(posts[seekIndex - 1].position_seconds).toBeLessThan(5);
+  expect(posts[seekIndex].position_seconds).toBeGreaterThan(78);
+  expect(posts[seekIndex].position_seconds).toBeLessThan(90);
+  await expect(page.getByText(/4% watched \(/)).toBeVisible();
+  await page.getByText('2×', { exact: true }).click();
+  await expect(page.locator('video')).toHaveJSProperty('playbackRate', 2);
+  await slider.focus();
+  await page.keyboard.press('Home');
+  await expect.poll(() => page.locator('video').evaluate((v:HTMLVideoElement) => v.currentTime)).toBeLessThan(1);
+  await page.keyboard.press('End');
+  await expect.poll(() => page.locator('video').evaluate((v:HTMLVideoElement) => v.currentTime)).toBeGreaterThan(118);
+  await page.getByRole('button', { name: 'Back 10 seconds', exact: true }).click();
+  await expect.poll(() => page.locator('video').evaluate((v:HTMLVideoElement) => v.currentTime)).toBeLessThan(111);
+  await page.getByRole('button', { name: 'Forward 10 seconds', exact: true }).click();
+  await expect.poll(() => page.locator('video').evaluate((v:HTMLVideoElement) => v.currentTime)).toBeGreaterThan(118);
+  await expect(page.getByText(/4% watched \(/)).toBeVisible();
+});
+
+test.describe('touch scrubbing', () => {
+  test.use({ hasTouch: true });
+  test('commits one seek at touch release and leaves watch credit unchanged', async ({ page }) => {
+    const posts: Array<{event:string;position_seconds:number}> = [];
+    await protectedScrubPlayer(page, posts);
+    const bounds = (await page.getByRole('slider', { name: 'Seek', exact: true }).boundingBox())!;
+    const cdp = await page.context().newCDPSession(page);
+    const point = (ratio:number) => ({ x: bounds.x + bounds.width * ratio, y: bounds.y + bounds.height / 2 });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [point(0.2)] });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [point(0.8)] });
+    expect(posts.filter(p => p.event === 'seek')).toHaveLength(0);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await expect.poll(() => posts.filter(p => p.event === 'seek').length).toBe(1);
+    await expect.poll(() => page.locator('video').evaluate((v:HTMLVideoElement) => v.currentTime)).toBeGreaterThan(88);
+    await expect(page.getByText(/4% watched \(/)).toBeVisible();
+    await cdp.detach();
+  });
 });

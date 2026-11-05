@@ -990,3 +990,24 @@ def test_provider_calendar_payload_is_identical_on_retry(data, monkeypatch):
         captured[0]["headers"]["Idempotency-Key"]
         == captured[1]["headers"]["Idempotency-Key"]
     )
+
+
+def test_real_lecture_2x_watch_seek_and_replay_credit(data):
+    from learning import service as learning
+    actor=data['student'];cid=data['course'];lesson=uid();asset=uid();session=uid()
+    with db.get_db_cursor() as cur:
+        cur.execute("INSERT INTO course_classes(id,course_id,title,class_type,sort_order) VALUES(%s,%s,'Video QA','recorded',0)",(lesson,cid))
+        cur.execute("INSERT INTO video_assets(id,class_id,course_id,object_key,duration_seconds,size_bytes,status,published_at) VALUES(%s,%s,%s,'qa.mp4',1000,1,'ready',now())",(asset,lesson,cid))
+        cur.execute("INSERT INTO playback_sessions(id,user_id,asset_id,last_position,last_seen_at,expires_at) VALUES(%s,%s,%s,0,now()-interval '10 seconds',now()+interval '1 hour')",(session,actor['id'],asset))
+    def beat(position,event='watch'):
+        return learning.progress_heartbeat(actor,lesson,{'session_id':session,'position_seconds':position,'event':event})
+    assert beat(20)['watched_seconds']==20 # 10 seconds of real time at 2x
+    assert beat(500,'seek')['watched_seconds']==20
+    with db.get_db_cursor() as cur:
+        cur.execute("UPDATE playback_sessions SET last_seen_at=now()-interval '10 seconds' WHERE id=%s",(session,))
+    assert beat(520)['watched_seconds']==40
+    assert beat(490,'seek')['watched_seconds']==40
+    with db.get_db_cursor() as cur:
+        cur.execute("UPDATE playback_sessions SET last_seen_at=now()-interval '10 seconds' WHERE id=%s",(session,))
+    assert beat(510)['watched_seconds']==50 # replay of 500..510 is counted only once
+    assert not beat(1000,'seek')['completed']

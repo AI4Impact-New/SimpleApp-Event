@@ -143,18 +143,21 @@ def playback(actor, class_id):
         # Serialize session renewal per learner and asset; one active session prevents parallel credit.
         cur.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))", (actor["id"] + str(asset["id"]),))
         cur.execute("UPDATE playback_sessions SET expires_at=now() WHERE user_id=%s AND asset_id=%s AND expires_at>now()", (actor["id"],asset["id"]))
-        cur.execute("SELECT position_seconds FROM lecture_progress WHERE user_id=%s AND asset_id=%s", (actor["id"],asset["id"]))
+        cur.execute("SELECT position_seconds,watched_seconds,completed FROM lecture_progress WHERE user_id=%s AND asset_id=%s", (actor["id"],asset["id"]))
         progress = cur.fetchone()
         resume = float(progress["position_seconds"]) if progress else 0
         sid = str(uuid.uuid4())
         cur.execute("INSERT INTO playback_sessions(id,user_id,asset_id,last_position,expires_at) VALUES (%s,%s,%s,%s,%s)", (sid,actor["id"],asset["id"],resume,min(deadline,datetime.now(timezone.utc)+timedelta(hours=4)) if deadline else datetime.now(timezone.utc)+timedelta(hours=4)))
-    return {"watermark": {"company": "AI4Impact", "student_id": actor["id"], "move_interval_seconds": 25}, "url": url, "session_id": sid, "expires_in": seconds, "access_expires_at": deadline, "duration_seconds": asset["duration_seconds"], "resume_seconds": resume}
+    return {"watched_seconds": float(progress["watched_seconds"]) if progress else 0, "completed": bool(progress["completed"]) if progress else False, "watermark": {"company": "AI4Impact", "student_id": actor["id"], "move_interval_seconds": 25}, "url": url, "session_id": sid, "expires_in": seconds, "access_expires_at": deadline, "duration_seconds": asset["duration_seconds"], "resume_seconds": resume}
 
 
 def progress_heartbeat(actor, class_id, body):
     lecture = class_row(class_id)
     access(actor, str(lecture["course_id"]))
     sid = identifier(body.get("session_id"))
+    event = body.get("event", "watch")
+    if event not in ("watch", "seek"):
+        raise ApiError(400, "event must be watch or seek")
     with get_db_cursor() as cur:
         from learning.access_windows import require_window
         require_window(actor,str(lecture['course_id']),class_id,cur)
@@ -169,7 +172,7 @@ def progress_heartbeat(actor, class_id, body):
         saved = cur.fetchone()
         elapsed = (session["server_now"] - session["last_seen_at"]).total_seconds()
         # Long gaps represent a paused/disconnected player, not hours of watched content.
-        ranges, watched, completed = watched_update(saved["watched_ranges"],float(session["last_position"]),body.get("position_seconds"),min(elapsed,60),session["duration_seconds"])
+        ranges, watched, completed = watched_update(saved["watched_ranges"],float(session["last_position"]),body.get("position_seconds"),min(elapsed,60),session["duration_seconds"],seeking=event=="seek")
         position = float(body["position_seconds"])
         cur.execute("UPDATE playback_sessions SET last_position=%s,last_seen_at=now() WHERE id=%s", (position,sid))
         cur.execute("UPDATE lecture_progress SET watched_ranges=%s::jsonb,watched_seconds=%s,position_seconds=%s,completed=%s,completed_at=CASE WHEN %s THEN coalesce(completed_at,now()) ELSE completed_at END,updated_at=now() WHERE user_id=%s AND asset_id=%s",

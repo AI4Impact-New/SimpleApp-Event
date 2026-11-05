@@ -69,3 +69,58 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 1000
 
  });
 }
+
+test('live 2x watching credits content after a seek and excludes replay', async ({ page, request }) => {
+  test.setTimeout(120_000);
+  const qa = JSON.parse(fs.readFileSync(fixture!, 'utf8'));
+  const api = 'https://ke8dywmhil.execute-api.ap-south-1.amazonaws.com';
+  const headers = { Authorization: qa.outsider.token };
+  expect((await request.post(`${api}/courses/${qa.course_id}/register`, { headers, data: { source: 'scrubbing-qa' } })).ok()).toBe(true);
+  expect((await request.put(`${api}/users/me`, { headers, data: { user_type: 'professional', designation: 'QA Reviewer', company: 'AI4Impact QA' } })).ok()).toBe(true);
+  await page.goto('/login');
+  await page.getByPlaceholder('your@email.com').fill(qa.outsider.email);
+  await page.getByPlaceholder('••••••••').fill(qa.outsider.password);
+  await page.getByText('Sign In', { exact: true }).click();
+  await expect(page.getByRole('tab', { name: /My learning/i })).toBeVisible({ timeout: 30_000 });
+  await page.getByRole('tab', { name: /My learning/i }).click();
+  await page.getByText('QA — Video Watermark Demo', { exact: true }).last().click();
+  await page.getByText('London Diaries — Protected Video Test', { exact: true }).last().click();
+  await page.waitForFunction(() => (document.querySelector('video')?.readyState ?? 0) >= 2);
+  await page.getByText('2×', { exact: true }).click();
+  await expect(page.locator('video')).toHaveJSProperty('playbackRate', 2);
+  const bar = (await page.getByRole('slider', { name: 'Seek', exact: true }).boundingBox())!;
+  const destination = { x: bar.x + bar.width * 0.3, y: bar.y + bar.height / 2 };
+  const progressResponse = (event:string) => page.waitForResponse(r => r.url().endsWith(`/learning/classes/${qa.class_id}/progress`)
+    && r.request().postDataJSON()?.event === event && r.status() === 200);
+  const sought = progressResponse('seek');
+  await page.mouse.click(destination.x, destination.y);
+  const seekResult = await (await sought).json();
+  expect(seekResult.watched_seconds).toBe(0);
+  const start = await page.locator('video').evaluate((v:HTMLVideoElement) => v.currentTime);
+  await page.getByRole('button', { name: 'Play', exact: true }).last().click();
+  // Wait for actual decoded content time, with the real server clock and no mocked responses.
+  await expect.poll(() => page.locator('video').evaluate((v:HTMLVideoElement) => v.currentTime), { timeout: 15_000 }).toBeGreaterThan(start + 10);
+  const watched = progressResponse('watch');
+  await page.getByRole('button', { name: 'Pause', exact: true }).last().click();
+  const first = await (await watched).json();
+  expect(first.watched_seconds).toBeGreaterThan(8);
+  expect(first.watched_seconds).toBeLessThan(18);
+  expect(first.completed).toBe(false);
+  const replaySeek = progressResponse('seek');
+  await page.mouse.click(destination.x, destination.y);
+  expect((await (await replaySeek).json()).watched_seconds).toBeCloseTo(first.watched_seconds, 1);
+  const replayStart = await page.locator('video').evaluate((v:HTMLVideoElement) => v.currentTime);
+  await page.getByRole('button', { name: 'Play', exact: true }).last().click();
+  await expect.poll(() => page.locator('video').evaluate((v:HTMLVideoElement) => v.currentTime), { timeout: 10_000 }).toBeGreaterThan(replayStart + 4);
+  const replayed = progressResponse('watch');
+  await page.getByRole('button', { name: 'Pause', exact: true }).last().click();
+  const second = await (await replayed).json();
+  expect(second.watched_seconds).toBeCloseTo(first.watched_seconds, 1);
+  const persisted = await request.get(`${api}/learning/courses/${qa.course_id}/progress`, { headers });
+  expect(persisted.ok()).toBe(true);
+  const row = (await persisted.json()).classes.find((c:{id:string}) => c.id === qa.class_id);
+  expect(Number(row.watched_seconds)).toBeCloseTo(first.watched_seconds, 1);
+  await page.reload();
+  const pct = Math.round(Number(row.watched_seconds) * 100 / row.duration_seconds);
+  await expect(page.getByText(new RegExp(`${pct}% watched \\(`))).toBeVisible({ timeout: 30_000 });
+});

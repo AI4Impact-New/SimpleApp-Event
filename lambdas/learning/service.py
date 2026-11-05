@@ -136,7 +136,7 @@ def playback(actor, class_id):
     from learning.media import playback_url
     from learning.access_windows import require_window
     deadline=require_window(actor,str(lecture['course_id']),class_id)
-    seconds=min(3600,int((deadline-datetime.now(timezone.utc)).total_seconds())) if deadline else 3600
+    seconds=min(900,int((deadline-datetime.now(timezone.utc)).total_seconds())) if deadline else 900
     if seconds<1: raise ApiError(410,"The video access window expired")
     url = playback_url(asset["object_key"],seconds)
     with get_db_cursor() as cur:
@@ -148,7 +148,7 @@ def playback(actor, class_id):
         resume = float(progress["position_seconds"]) if progress else 0
         sid = str(uuid.uuid4())
         cur.execute("INSERT INTO playback_sessions(id,user_id,asset_id,last_position,expires_at) VALUES (%s,%s,%s,%s,%s)", (sid,actor["id"],asset["id"],resume,min(deadline,datetime.now(timezone.utc)+timedelta(hours=4)) if deadline else datetime.now(timezone.utc)+timedelta(hours=4)))
-    return {"url": url, "session_id": sid, "expires_in": seconds, "access_expires_at": deadline, "duration_seconds": asset["duration_seconds"], "resume_seconds": resume}
+    return {"watermark": {"company": "AI4Impact", "student_id": actor["id"], "move_interval_seconds": 25}, "url": url, "session_id": sid, "expires_in": seconds, "access_expires_at": deadline, "duration_seconds": asset["duration_seconds"], "resume_seconds": resume}
 
 
 def progress_heartbeat(actor, class_id, body):

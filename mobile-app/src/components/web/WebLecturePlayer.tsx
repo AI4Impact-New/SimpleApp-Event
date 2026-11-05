@@ -8,7 +8,8 @@ import { VideoView, type VideoPlayer } from 'expo-video';
 import { useLearningHome } from '@/hooks/useLearning';
 import { useWebLayout } from '@/hooks/useWebLayout';
 import { Spinner } from '@/components/web/Spinner';
-import type { LearningClass, LectureProgress } from '@/types/learning';
+import { VideoWatermark } from '@/components/VideoWatermark';
+import type { PlaybackWatermark, LearningClass, LectureProgress } from '@/types/learning';
 import { colors, fonts, palette } from '@/theme/colors';
 import { formatDuration, formatLocalDateTime } from '@/utils/datetime';
 
@@ -22,6 +23,7 @@ export type WebLoadState =
   | { kind: 'error'; message: string };
 
 export interface WebLecturePlayerProps {
+  watermark: PlaybackWatermark | null;
   classId: string;
   courseId?: string;
   title: string;
@@ -96,6 +98,29 @@ const RAIL_ICON: Record<RailKind, { name: keyof typeof Ionicons.glyphMap; bg: st
 export function WebLecturePlayer(props: WebLecturePlayerProps) {
   const { classId, courseId, title, player, videoViewRef, loadState, position, videoDuration, progress } = props;
   const { wide } = useWebLayout();
+  const cardRef = useRef<View>(null);
+  const [expanded, setExpanded] = useState(false);
+  // Fullscreen the whole stage and its controls, never the bare video (which drops the watermark).
+  const toggleFullscreen = async () => {
+    const element = cardRef.current as unknown as HTMLElement | null;
+    if (expanded) {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      setExpanded(false);
+    } else {
+      setExpanded(true);
+      // Safari/iPhone without element fullscreen uses a viewport-filling stage instead.
+      try { await element?.requestFullscreen?.(); } catch { /* Keep the viewport fallback. */ }
+    }
+  };
+  const fullscreenRef = useRef(toggleFullscreen);
+  fullscreenRef.current = toggleFullscreen;
+  useEffect(() => {
+    const changed = () => { if (!document.fullscreenElement) setExpanded(false); };
+    const escape = (e: KeyboardEvent) => { if (e.key === 'Escape') setExpanded(false); };
+    document.addEventListener('fullscreenchange', changed);
+    window.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('fullscreenchange', changed); window.removeEventListener('keydown', escape); };
+  }, []);
   const home = useLearningHome(courseId ?? '');
   const ready = loadState.kind === 'ready';
 
@@ -153,7 +178,7 @@ export function WebLecturePlayer(props: WebLecturePlayerProps) {
         toggleRef.current();
       } else if (e.key === 'ArrowLeft') h.onSeek(h.position - h.skipSeconds);
       else if (e.key === 'ArrowRight') h.onSeek(h.position + h.skipSeconds);
-      else if (e.key === 'f') h.videoViewRef.current?.enterFullscreen().catch(() => {});
+      else if (e.key === 'f') { e.preventDefault(); fullscreenRef.current().catch(() => {}); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -215,8 +240,8 @@ export function WebLecturePlayer(props: WebLecturePlayerProps) {
   );
 
   const video = (
-    <View style={styles.videoCard}>
-      <View style={styles.videoStage}>
+    <View ref={cardRef} testID="protected-video-stage" style={[styles.videoCard, expanded && styles.expandedCard]}>
+      <View style={[styles.videoStage, expanded && styles.expandedStage]}>
         <VideoView
           ref={videoViewRef as React.RefObject<VideoView>}
           player={player}
@@ -224,10 +249,10 @@ export function WebLecturePlayer(props: WebLecturePlayerProps) {
           style={styles.videoEl}
           nativeControls={false}
           contentFit="contain"
-          // expo-video web's enterFullscreen() is a no-op unless allowsFullscreen is set; our own button calls it.
-          allowsFullscreen
-          fullscreenOptions={{ enable: true }}
+          allowsPictureInPicture={false}
+          fullscreenOptions={{ enable: false }}
         />
+        {props.watermark && ready ? <VideoWatermark identity={props.watermark} /> : null}
         {showLoader ? <StageLoader label={!ready ? 'Loading lecture…' : media.hasFrame ? 'Buffering…' : 'Loading video…'} /> : null}
         {ready ? (
           <Pressable onPress={toggle} style={styles.stageHit} accessibilityLabel={isPlaying ? 'Pause' : 'Play'}>
@@ -297,8 +322,8 @@ export function WebLecturePlayer(props: WebLecturePlayerProps) {
           <CtrlBtn
             icon="expand"
             size={16}
-            label="Full screen"
-            onPress={() => videoViewRef.current?.enterFullscreen().catch(() => {})}
+            label={expanded ? 'Exit full screen' : 'Full screen'}
+            onPress={() => { toggleFullscreen().catch(() => {}); }}
             disabled={!ready}
           />
         </View>
@@ -416,11 +441,19 @@ function useMediaElementState(videoViewRef: React.RefObject<VideoView | null>, p
       // Waiting for data: a source is set but the next frame isn't available (initial load, stall or seek).
       setBuffering(!!video.currentSrc && !video.error && (video.seeking || video.readyState < 3) && !video.ended);
     };
+    video.disablePictureInPicture = true;
+    video.disableRemotePlayback = true;
+    video.setAttribute('controlsList', 'nodownload noremoteplayback nofullscreen');
+    const preventMenu = (e: Event) => e.preventDefault();
+    video.addEventListener('contextmenu', preventMenu);
     setElement(video);
     const events = ['play', 'pause', 'loadstart', 'loadedmetadata', 'durationchange', 'loadeddata', 'canplay', 'canplaythrough', 'playing', 'waiting', 'stalled', 'seeking', 'seeked', 'progress', 'emptied', 'error', 'ended'];
     events.forEach((e) => video.addEventListener(e, sync));
     sync();
-    return () => events.forEach((e) => video.removeEventListener(e, sync));
+    return () => {
+      events.forEach((e) => video.removeEventListener(e, sync));
+      video.removeEventListener('contextmenu', preventMenu);
+    };
   }, [videoViewRef, player, ready]);
   return { buffering, duration, hasFrame, paused, element };
 }
@@ -467,6 +500,8 @@ const display = { fontFamily: fonts.display };
 const mono = { fontFamily: fonts.mono };
 
 const styles = StyleSheet.create({
+  expandedCard: { position: 'fixed' as any, top: 0, right: 0, bottom: 0, left: 0, zIndex: 1000, borderRadius: 0, backgroundColor: '#000', display: 'flex', flexDirection: 'column' },
+  expandedStage: { flex: 1, aspectRatio: undefined },
   page: { flex: 1, backgroundColor: colors.background },
   content: { padding: 16, paddingBottom: 72, gap: 24 },
   contentWide: { flexDirection: 'row', alignItems: 'flex-start', gap: 32, paddingTop: 24, paddingBottom: 96 },

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   AppState,
+  Modal,
   Pressable,
   type GestureResponderEvent,
 } from 'react-native';
@@ -18,7 +19,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { api } from '@/services/api';
 import { apiErrorMessage } from '@/services/apiErrors';
-import type { LearningClass, LectureProgress } from '@/types/learning';
+import { VideoWatermark } from '@/components/VideoWatermark';
+import type { PlaybackWatermark, LearningClass, LectureProgress } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
 import { formatDuration } from '@/utils/datetime';
 import { isWeb } from '@/hooks/useWebLayout';
@@ -73,6 +75,8 @@ function findNextRecorded(classes: LearningClass[], classId: string): LearningCl
 
 export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNext }: LecturePlayerScreenProps) {
   const queryClient = useQueryClient();
+  const [watermark, setWatermark] = useState<PlaybackWatermark | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
   const [loadState, setLoadState] = useState<LoadState>({ kind: 'loading' });
   const [progress, setProgress] = useState<LectureProgress | null>(null);
   // Next lecture as reported by the server after this one completes; null = none / not fetched.
@@ -88,6 +92,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
 
   const player = useVideoPlayer(null, (p) => {
     p.timeUpdateEventInterval = 1;
+    p.allowsExternalPlayback = false;
   });
 
   const sessionRef = useRef<string | null>(null);
@@ -142,6 +147,11 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
       try {
         const playback = await api.getPlayback(classId);
         if (!mountedRef.current) return;
+        // Fail closed rather than play unmarked content against an outdated/malformed API.
+        if (!playback.watermark?.student_id || !playback.watermark.company) {
+          throw new Error('Playback protection is unavailable. Please try again.');
+        }
+        setWatermark(playback.watermark);
         sessionRef.current = playback.session_id;
         const start = seekTo ?? playback.resume_seconds ?? 0;
         // Restart from the beginning when resuming at the very end.
@@ -163,6 +173,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
         );
       } catch (err: any) {
         if (!mountedRef.current) return;
+        player.pause();
         const blocked = blockedState(err);
         if (blocked) enterBlocked(blocked);
         else if (err?.response?.status === 409) setLoadState({ kind: 'unavailable' });
@@ -219,6 +230,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
     mountedRef.current = true;
     offlineRef.current = false;
     queuedRef.current = null;
+    setWatermark(null);
     openSession();
     return () => {
       mountedRef.current = false;
@@ -374,6 +386,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
         title={title}
         player={player}
         videoViewRef={videoViewRef}
+        watermark={watermark}
         loadState={loadState}
         isPlaying={isPlaying}
         position={position}
@@ -395,20 +408,19 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
     );
   }
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <ScreenHeader title={title} onBack={onBack} />
-
-      <View style={styles.videoWrap}>
+  const nativePlayer = (<>
+      <View style={fullscreen ? styles.fullscreenVideo : styles.videoWrap}>
         <VideoView
           ref={videoViewRef}
           player={player}
           style={styles.video}
-          nativeControls
+          nativeControls={false}
+          allowsPictureInPicture={false}
           contentFit="contain"
-          // App is portrait-locked; fullscreen rotates to landscape and exits when rotated back.
-          fullscreenOptions={{ enable: true, orientation: 'landscape', autoExitOnRotate: true }}
+          fullscreenOptions={{ enable: false }}
+          surfaceType="textureView"
         />
+        {watermark && ready ? <VideoWatermark identity={watermark} /> : null}
         {loadState.kind !== 'ready' ? (
           <View style={styles.overlay}>
             {loadState.kind === 'loading' ? (
@@ -493,16 +505,28 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
             </TouchableOpacity>
           </View>
           <TouchableOpacity
-            onPress={() => videoViewRef.current?.enterFullscreen().catch(() => {})}
+            onPress={() => setFullscreen(value => !value)}
             disabled={!ready}
             style={styles.controlBtn}
             accessibilityRole="button"
-            accessibilityLabel="Full screen"
+            accessibilityLabel={fullscreen ? 'Exit full screen' : 'Full screen'}
           >
             <Ionicons name="expand" size={20} color={colors.white} />
           </TouchableOpacity>
         </View>
       </View>
+
+  </>);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScreenHeader title={title} onBack={onBack} />
+
+      {fullscreen ? (
+        <Modal visible presentationStyle="fullScreen" supportedOrientations={['portrait', 'landscape']} onRequestClose={() => setFullscreen(false)}>
+          <SafeAreaView style={styles.fullscreen}>{nativePlayer}</SafeAreaView>
+        </Modal>
+      ) : nativePlayer}
 
       <View style={styles.body}>
         <Text style={styles.label}>Playback speed</Text>
@@ -579,6 +603,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  fullscreen: { flex: 1, backgroundColor: colors.black },
+  fullscreenVideo: { flex: 1, backgroundColor: colors.black },
   videoWrap: {
     width: '100%',
     aspectRatio: 16 / 9,

@@ -22,3 +22,15 @@ Terraform formatting and validation pass. Before applying, inspect the plan for 
 The old missing-mail event's final SMTP outcome cannot be reconstructed from the available default-sender records. Do not claim a confirmed bounce, spam filtering or a Resend failure without delivery evidence. SES delivery means acceptance by the recipient mail server, not guaranteed inbox placement.
 
 References: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-email.html and https://docs.aws.amazon.com/cognito/latest/developerguide/how-to-recover-a-user-account.html.
+
+## Live deployment and follow-up
+
+The change was applied on 5 November: 2 SES resources added, 1 user pool updated in place, 0 destroyed. A targeted follow-up plan reports no changes. The deployed pool has `EmailSendingAccount=DEVELOPER`, the verified ai4impact.in source ARN and the pilearn-auth configuration set. One authorized CEO ForgotPassword call was accepted; no claim of inbox receipt is made.
+
+A direct live call for Siddartha reproduced `InvalidParameterException: Cannot reset password for the user as there is no registered/verified email or phone_number`. Successful password login does not verify the email attribute.
+
+AWS's troubleshooting guide explicitly identifies FORCE_CHANGE_PASSWORD as a cause of missing recovery codes. This applies to the CEO account: complete the temporary-password / NEW_PASSWORD_REQUIRED invitation flow first. If the temporary password is unavailable or expired, reissue the invitation through the existing admin flow, rather than repeatedly request recovery codes. No CEO password was changed or invitation reissued during this investigation.
+
+A disposable verified test account using the AWS SES success mailbox simulator returned CodeDeliveryDetails in both FORCE_CHANGE_PASSWORD and CONFIRMED states. This demonstrates why an accepted response must not be treated as proof of delivery. The synthetic account was deleted; no real user was modified. With PreventUserExistenceErrors enabled, Cognito can deliberately return simulated delivery details for ineligible recovery requests. The frontend should describe requests conditionally rather than guarantee delivery solely from API success.
+
+Reference: https://docs.aws.amazon.com/cognito/latest/developerguide/troubleshooting.html#troubleshooting-password-reset and https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-managing-errors.html.

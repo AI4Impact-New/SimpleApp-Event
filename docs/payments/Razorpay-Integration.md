@@ -42,9 +42,17 @@ Keep Razorpay automatic capture enabled. If a payment remains authorized, the ap
 - Before production: complete a real test-mode checkout, close-before-callback recovery, Razorpay-delivered webhook and refund tests. Check records in admin and access in My learning.
 - Live activation additionally needs live keys, approved course fees/tax treatment, business support details, refund/terms URLs and invoice/GST requirements. Receipts here are explicitly not GST tax invoices.
 
-## Current integration limitation
+## Test rollout status (6 November 2026)
 
-The locally saved test key pair returned HTTP 401 from Razorpay during credential validation. Reconfigure the matching test Key ID and Key Secret locally before provider-backed tests or activation. Local code/tests cannot validate an actual payment while authentication is rejected.
+The corrected test credentials authenticate successfully. Migration 022 is applied, the learning/courses functions are updated, and the webhook route, reconciliation schedule, secret permissions and backlog alarm are provisioned. Test checkout remains explicitly restricted to the allowlisted owner/QA accounts; live keys are not configured.
+
+Actual Standard Checkout was exercised with an official Razorpay test card and its mock bank page: failure left the order pending and access denied (403); the successful retry produced a captured payment, verified enrollment and a course in My learning. Duplicate verification, another user's access (404), unallowlisted test checkout (403), invalid signatures (400), paid-registration bypass (402), signed webhook replay and worker processing were checked against the deployed backend. Phone/desktop UI and all four CI jobs passed before rollout.
+
+Dashboard-delivered webhooks still require the owner to save the Test Mode webhook configuration above. Signed synthetic endpoint requests validate our receiver but do not prove Razorpay Dashboard delivery. Reconciliation provides recovery while this is pending.
+
+Direct test refund requests using the documented API returned HTTP 400 (`invalid request sent`) even for the full INR 1 captured payment. Provider-side refunds remain unverified; transactional partial/full refund handling and protection of manual grants are covered by PostgreSQL regressions. Check this with Razorpay before live activation. This release does not expose a refund-initiation button.
+
+Synthetic test payment records are retained as test-mode audit evidence; temporary Cognito credentials are removed. The owner's existing account, enrollment and watch progress are preserved. App-generated email receipts await the separately pending Resend sender activation.
 
 ## Official references reviewed
 

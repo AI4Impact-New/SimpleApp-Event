@@ -94,7 +94,7 @@ export const billing = {
       url = URL.createObjectURL(blob),
       a = document.createElement("a");
     a.href = url;
-    a.download = `AI4Impact-demo-invoice-${id}.pdf`;
+    a.download = `AI4Impact-order-receipt-${id}.pdf`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   },

@@ -123,7 +123,7 @@ def handler(event, context):
             elif len(parts)==4 and parts[3]=='demo-checkout' and method=='POST':result=billing.finish(actor,parts[2],body)
             elif len(parts)==4 and parts[3]=='invoice' and method=='GET':
                 contents=billing.invoice_pdf(actor,parts[2])
-                return {'statusCode':200,'isBase64Encoded':True,'headers':{'Content-Type':'application/pdf','Cache-Control':'no-store','Content-Disposition':'attachment; filename="AI4Impact-demo-invoice.pdf"'},'body':base64.b64encode(contents).decode()}
+                return {'statusCode':200,'isBase64Encoded':True,'headers':{'Content-Type':'application/pdf','Cache-Control':'no-store','Content-Disposition':'attachment; filename="AI4Impact-order-receipt.pdf"'},'body':base64.b64encode(contents).decode()}
         elif len(parts)==4 and parts[:2]==['admin','classes'] and parts[3]=='access-reset' and method=='POST': result=access_windows.reset(actor,parts[2],body)
         elif path=="/admin/enquiries" and method=="GET": result=enquiries.listing(actor,event.get("queryStringParameters") or {})
         elif len(parts)==3 and parts[:2]==["admin","enquiries"] and method=="PATCH": result=enquiries.update(actor,parts[2],body)

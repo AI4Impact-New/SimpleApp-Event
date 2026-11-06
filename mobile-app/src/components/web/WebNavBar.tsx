@@ -15,7 +15,7 @@ import { colors, fonts, layout, palette, spacing } from '@/theme/colors';
 const PRIMARY_ROUTES = ['Home', 'Learning', 'Courses', 'Events'];
 const WEB_LABELS: Record<string, string> = { Learning: 'My learning', Events: 'Events' };
 // Home-stack pages that belong to the Events section (highlight "Events" instead of "Home").
-const EVENT_SCREENS = new Set(['Events', 'Event', 'Poll', 'LeaderboardHome', 'LeaderboardDetail']);
+const EVENT_SCREENS = new Set(['Events', 'Event', 'EventMaterials', 'Poll', 'LeaderboardHome', 'LeaderboardDetail']);
 
 type PressState = { pressed: boolean; hovered?: boolean };
 

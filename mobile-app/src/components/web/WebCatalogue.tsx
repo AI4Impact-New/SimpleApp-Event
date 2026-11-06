@@ -1,13 +1,13 @@
 // Browser-only course catalogue (design: "Catalogue.dc.html"): title, filter chips and a grid of course cards.
 // Courses carry no category field, so filters come from the title and enrolment; chips with no courses are hidden.
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Animated, Easing } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { EmptyState, ErrorState, Skeleton, useShimmer } from '@/components/web/states';
 import { useLinkBuilder } from '@react-navigation/native';
 import { useCourses } from '@/hooks/useCourses';
 import { useBillingCatalog } from '@/hooks/useBilling';
 import { useWebLayout } from '@/hooks/useWebLayout';
-import { apiErrorMessage } from '@/services/apiErrors';
 import type { Course } from '@/types/course';
 import type { CoursePrice } from '@/types/billing';
 import { colors, fonts, palette } from '@/theme/colors';
@@ -63,15 +63,9 @@ export function WebCatalogue({ onCoursePress }: { onCoursePress: (course: Course
       {isLoading ? (
         <CatalogueSkeleton wide={wide} />
       ) : error ? (
-        <Blank
-          icon="cloud-offline-outline"
-          title="Could not load courses"
-          body={apiErrorMessage(error, 'Check your connection and try again.')}
-          cta={isFetching ? 'Retrying…' : 'Try again'}
-          onCta={() => refetch()}
-        />
+        <ErrorState title="Could not load courses" error={error} onRetry={() => refetch()} retrying={isFetching} />
       ) : all.length === 0 ? (
-        <Blank icon="book-outline" title="No courses yet" body="Published career tracks will appear here." />
+        <EmptyState icon="book-outline" title="No courses yet" body="Published career tracks will appear here." />
       ) : (
         <>
           <View style={styles.filterRow}>
@@ -194,37 +188,9 @@ function CourseCard({ course, index, price, wide, onPress }: { course: Course; i
   );
 }
 
-function Blank({ icon, title, body: text, cta, onCta }: { icon: keyof typeof Ionicons.glyphMap; title: string; body: string; cta?: string; onCta?: () => void }) {
-  return (
-    <View style={styles.blank}>
-      <View style={styles.blankIcon}>
-        <Ionicons name={icon} size={18} color={body} />
-      </View>
-      <Text style={styles.blankTitle}>{title}</Text>
-      <Text style={styles.blankBody}>{text}</Text>
-      {cta && onCta ? (
-        <Pressable onPress={onCta} style={(s: PressState) => [styles.btnPrimary, s.hovered && { backgroundColor: palette.navy700 }]}>
-          <Text style={styles.btnPrimaryText}>{cta}</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
 function CatalogueSkeleton({ wide }: { wide: boolean }) {
-  const v = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(v, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-        Animated.timing(v, { toValue: 0, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [v]);
-  const color = v.interpolate({ inputRange: [0, 1], outputRange: [palette.slate150, '#eef1f5'] });
-  const sk = (w: number | `${number}%`, h: number) => <Animated.View style={{ width: w, height: h, borderRadius: 4, backgroundColor: color }} />;
+  const color = useShimmer();
+  const sk = (w: number | `${number}%`, h: number) => <Skeleton w={w} h={h} color={color} />;
   return (
     <View style={styles.grid} aria-busy>
       {[0, 1, 2, 3, 4, 5].map((k) => (
@@ -288,10 +254,4 @@ const styles = StyleSheet.create({
   arrow: { width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: line, alignItems: 'center', justifyContent: 'center' },
   arrowHover: { backgroundColor: palette.navy800, borderColor: palette.navy800 },
 
-  blank: { backgroundColor: '#ffffff', borderWidth: 1, borderColor: line, borderRadius: 20, paddingVertical: 40, paddingHorizontal: 28, alignItems: 'flex-start', gap: 12 },
-  blankIcon: { width: 40, height: 40, borderRadius: 10, borderWidth: 1, borderColor: line, alignItems: 'center', justifyContent: 'center' },
-  blankTitle: { ...display, marginTop: 4, fontSize: 17, fontWeight: '600', color: ink },
-  blankBody: { ...text, fontSize: 14, lineHeight: 22, color: body },
-  btnPrimary: { height: 36, paddingHorizontal: 14, borderRadius: 8, justifyContent: 'center', backgroundColor: palette.navy800 },
-  btnPrimaryText: { ...text, fontSize: 14, fontWeight: '600', color: '#ffffff' },
 });

@@ -11,6 +11,8 @@ import {
   Linking,
   RefreshControl,
 } from 'react-native';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebEventMaterials } from '@/components/web/WebEventMaterials';
 import { SafeAreaView } from '@/components/SafeAreaView';
 import { useMaterials } from '@/hooks/useMaterials';
 import { MaterialItem } from '@/components/MaterialItem';
@@ -21,9 +23,16 @@ import { colors, spacing } from '@/theme/colors';
 interface MaterialsScreenProps {
   eventId: string;
   onBack: () => void;
+  /** Browser only: go to the event page (to join it). */
+  onOpenEvent?: () => void;
 }
 
-export function MaterialsScreen({ eventId, onBack }: MaterialsScreenProps) {
+// Browser gets its own layout; native keeps the app screen. `isWeb` is fixed per build, so hooks stay stable.
+export function MaterialsScreen(props: MaterialsScreenProps) {
+  return isWeb ? <WebEventMaterials eventId={props.eventId} onBack={props.onOpenEvent ?? props.onBack} onOpenEvent={() => (props.onOpenEvent ?? props.onBack)()} /> : <NativeMaterialsScreen {...props} />;
+}
+
+function NativeMaterialsScreen({ eventId, onBack }: MaterialsScreenProps) {
   const { data: materialsData, isLoading, refetch, isRefetching } = useMaterials(eventId);
   const [downloading, setDownloading] = React.useState<string | null>(null);
 

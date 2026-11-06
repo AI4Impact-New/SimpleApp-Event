@@ -1,9 +1,9 @@
 // Browser-only events page (design: "Community.dc.html"): join by code, a live-event hero with its active poll,
 // upcoming events and the live event's leaderboard. Presentational over the same queries as the native screens;
 // the server decides attendance, poll eligibility and scores.
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, ScrollView, Pressable, StyleSheet, Animated, Easing } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { View, Text, TextInput, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { EmptyState, ErrorState, useShimmer, Skeleton } from '@/components/web/states';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useWebLayout } from '@/hooks/useWebLayout';
 import { useEventAnalytics, useEvents, useJoinEvent } from '@/hooks/useEvents';
@@ -14,15 +14,14 @@ import { apiErrorMessage } from '@/services/apiErrors';
 import type { Event } from '@/types/event';
 import type { Poll } from '@/types/poll';
 import { colors, fonts, palette } from '@/theme/colors';
+import { TILES, initials, startOf, when, where } from '@/components/web/eventParts';
 
 type PressState = { pressed: boolean; hovered?: boolean };
 
 const ink = palette.navy850;
 const muted = palette.slate500;
-const body = palette.slate600;
 const line = palette.slate200;
 const lineSoft = palette.slate150;
-const TILES = [palette.navy800, '#2a3654', palette.teal600, palette.slate600, palette.slate700, palette.navy700];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Event code box accepts the event ID or a join link, the same payloads the QR scanner understands. */
@@ -36,30 +35,6 @@ export function eventIdFromCode(input: string): string | null {
 }
 
 const monthFmt = new Intl.DateTimeFormat(undefined, { month: 'short' });
-const timeFmt = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
-const dayFmt = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
-
-function where(e: Event) {
-  if (e.event_type === 'online') return 'Online';
-  if (e.event_type === 'hybrid') return e.location ? `${e.location} and online` : 'In person and online';
-  return e.location || 'In person';
-}
-
-function when(e: Event, withDay = false) {
-  if (!e.start_time) return 'Time to be announced';
-  const s = new Date(e.start_time);
-  if (Number.isNaN(s.getTime())) return 'Time to be announced';
-  const en = e.end_time ? new Date(e.end_time) : null;
-  const range = en && !Number.isNaN(en.getTime()) ? `${timeFmt.format(s)} – ${timeFmt.format(en)}` : timeFmt.format(s);
-  return withDay ? `${dayFmt.format(s)} · ${range}` : range;
-}
-
-function initials(name: string) {
-  const p = name.split(/\s+/).filter(Boolean);
-  return (p.length >= 2 ? p[0][0] + p[p.length - 1][0] : (p[0] ?? '?').slice(0, 2)).toUpperCase();
-}
-
-const startOf = (e: Event) => (e.start_time ? new Date(e.start_time).getTime() : Number.POSITIVE_INFINITY);
 
 export interface WebEventsProps {
   onEventPress: (event: Event) => void;
@@ -93,12 +68,7 @@ export function WebEvents({ onEventPress, onOpenEvent, onLeaderboardPress }: Web
       {isLoading ? (
         <EventsSkeleton wide={wide} />
       ) : error ? (
-        <Blank
-          title="Could not load events"
-          body={apiErrorMessage(error, 'Check your connection and try again.')}
-          cta={isFetching ? 'Retrying…' : 'Try again'}
-          onCta={() => refetch()}
-        />
+        <ErrorState title="Could not load events" error={error} onRetry={() => refetch()} retrying={isFetching} />
       ) : (
         <>
           {live ? <LiveHero event={live} wide={wide} onOpen={() => onEventPress(live)} /> : null}
@@ -108,7 +78,7 @@ export function WebEvents({ onEventPress, onOpenEvent, onLeaderboardPress }: Web
                 Upcoming
               </Text>
               {upcoming.length === 0 ? (
-                <Blank title="No upcoming events" body="New meetups, panels and live sessions will be listed here." />
+                <EmptyState icon="calendar-outline" title="No upcoming events" body="New meetups, panels and live sessions will be listed here." />
               ) : (
                 <View style={styles.card}>
                   {upcoming.map((e, i) => (
@@ -353,47 +323,15 @@ function Leaderboard({ event, onAll }: { event: Event | null; onAll?: () => void
             );
           })
         )}
-        {top.length > 0 ? <Text style={styles.boardNote}>Points come from attendance and poll answers at this event.</Text> : null}
+        {top.length > 0 ? <Text style={styles.boardNote}>Points come from joining, poll answers and material downloads at this event.</Text> : null}
       </View>
     </>
   );
 }
 
-function Blank({ title, body: text, cta, onCta }: { title: string; body: string; cta?: string; onCta?: () => void }) {
-  return (
-    <View style={styles.blank}>
-      <View style={styles.blankIcon}>
-        <Ionicons name="calendar-outline" size={18} color={body} />
-      </View>
-      <Text style={styles.blankTitle}>{title}</Text>
-      <Text style={styles.blankBody}>{text}</Text>
-      {cta && onCta ? (
-        <Pressable onPress={onCta} style={(s: PressState) => [styles.btnPrimary, { height: 36 }, s.hovered && styles.btnPrimaryHover]}>
-          <Text style={styles.btnPrimaryText}>{cta}</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
-function useShimmer() {
-  const v = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(v, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-        Animated.timing(v, { toValue: 0, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [v]);
-  return v.interpolate({ inputRange: [0, 1], outputRange: [palette.slate150, '#eef1f5'] });
-}
-
 function EventsSkeleton({ wide }: { wide: boolean }) {
   const color = useShimmer();
-  const sk = (w: number | `${number}%`, h: number) => <Animated.View style={{ width: w, height: h, borderRadius: 4, backgroundColor: color }} />;
+  const sk = (w: number | `${number}%`, h: number) => <Skeleton w={w} h={h} color={color} />;
   return (
     <View style={[styles.columns, wide && styles.columnsWide]} aria-busy>
       <View style={[styles.section, wide && { flex: 1.4 }]}>
@@ -515,10 +453,6 @@ const styles = StyleSheet.create({
   pts: { ...display, fontSize: 14, fontWeight: '600', color: ink },
   boardNote: { ...text, paddingVertical: 14, paddingHorizontal: 20, fontSize: 12, lineHeight: 18, color: muted },
 
-  blank: { backgroundColor: '#ffffff', borderWidth: 1, borderColor: line, borderRadius: 20, paddingVertical: 40, paddingHorizontal: 28, alignItems: 'flex-start', gap: 12 },
-  blankIcon: { width: 40, height: 40, borderRadius: 10, borderWidth: 1, borderColor: line, alignItems: 'center', justifyContent: 'center' },
-  blankTitle: { ...display, marginTop: 4, fontSize: 17, fontWeight: '600', color: ink },
-  blankBody: { ...text, fontSize: 14, lineHeight: 22, color: body },
 
   btnPrimary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 40, paddingHorizontal: 16, borderRadius: 8, backgroundColor: palette.navy800 },
   btnPrimaryHover: { backgroundColor: palette.navy700 },

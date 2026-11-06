@@ -1,0 +1,203 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DiscoverBackend",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:ListFunctions",
+        "lambda:ListEventSourceMappings",
+        "cognito-idp:ListUserPools",
+        "events:ListRules",
+        "sqs:ListQueues",
+        "sns:ListTopics",
+        "secretsmanager:ListSecrets",
+        "rds:Describe*",
+        "ec2:Describe*",
+        "logs:DescribeLogGroups",
+        "cloudwatch:Get*",
+        "cloudwatch:List*",
+        "cloudwatch:Describe*",
+        "lambda:GetAccountSettings",
+        "lambda:ListLayers",
+        "lambda:ListCodeSigningConfigs"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "ap-south-1"
+        }
+      }
+    },
+    {
+      "Sid": "ProjectLambdaDeployment",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:Get*",
+        "lambda:List*",
+        "lambda:CreateFunction",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:PublishVersion",
+        "lambda:CreateAlias",
+        "lambda:UpdateAlias",
+        "lambda:InvokeFunction",
+        "lambda:PutFunctionConcurrency",
+        "lambda:PutFunctionEventInvokeConfig",
+        "lambda:UpdateFunctionEventInvokeConfig",
+        "lambda:PutRuntimeManagementConfig",
+        "lambda:TagResource"
+      ],
+      "Resource": [
+        "arn:aws:lambda:ap-south-1:767491588787:function:pilearn-*"
+      ]
+    },
+    {
+      "Sid": "ProjectLambdaServiceIntegration",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:AddPermission"
+      ],
+      "Resource": [
+        "arn:aws:lambda:ap-south-1:767491588787:function:pilearn-*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "lambda:Principal": [
+            "apigateway.amazonaws.com",
+            "events.amazonaws.com",
+            "s3.amazonaws.com",
+            "sns.amazonaws.com"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "CreateProjectQueueConsumers",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateEventSourceMapping"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "ArnLike": {
+          "lambda:FunctionArn": "arn:aws:lambda:ap-south-1:767491588787:function:pilearn-*"
+        }
+      }
+    },
+    {
+      "Sid": "UpdateProjectQueueConsumers",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:UpdateEventSourceMapping",
+        "lambda:GetEventSourceMapping"
+      ],
+      "Resource": [
+        "arn:aws:lambda:ap-south-1:767491588787:event-source-mapping:*"
+      ],
+      "Condition": {
+        "ArnLike": {
+          "lambda:FunctionArn": "arn:aws:lambda:ap-south-1:767491588787:function:pilearn-*"
+        }
+      }
+    },
+    {
+      "Sid": "ProjectApiRoutes",
+      "Effect": "Allow",
+      "Action": [
+        "apigateway:GET",
+        "apigateway:POST",
+        "apigateway:PATCH",
+        "apigateway:PUT"
+      ],
+      "Resource": [
+        "arn:aws:apigateway:ap-south-1::/apis/ke8dywmhil",
+        "arn:aws:apigateway:ap-south-1::/apis/ke8dywmhil/*"
+      ]
+    },
+    {
+      "Sid": "DiscoverApi",
+      "Effect": "Allow",
+      "Action": [
+        "apigateway:GET"
+      ],
+      "Resource": [
+        "arn:aws:apigateway:ap-south-1::/apis"
+      ]
+    },
+    {
+      "Sid": "PassOnlyExistingProjectLambdaRoles",
+      "Effect": "Allow",
+      "Action": [
+        "iam:PassRole"
+      ],
+      "Resource": [
+        "arn:aws:iam::767491588787:role/pilearn-lambda-role",
+        "arn:aws:iam::767491588787:role/pilearn-learning-role",
+        "arn:aws:iam::767491588787:role/pilearn-notifications-role",
+        "arn:aws:iam::767491588787:role/pilearn-programme-worker"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "lambda.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "InspectProjectExecutionRoles",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies"
+      ],
+      "Resource": [
+        "arn:aws:iam::767491588787:role/pilearn-lambda-role",
+        "arn:aws:iam::767491588787:role/pilearn-learning-role",
+        "arn:aws:iam::767491588787:role/pilearn-notifications-role",
+        "arn:aws:iam::767491588787:role/pilearn-programme-worker"
+      ]
+    },
+    {
+      "Sid": "DiscoverExecutionRoles",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListRoles",
+        "iam:ListPolicies"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "InspectExecutionPolicies",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetPolicy",
+        "iam:GetPolicyVersion"
+      ],
+      "Resource": [
+        "arn:aws:iam::767491588787:policy/pilearn-*",
+        "arn:aws:iam::aws:policy/service-role/AWSLambda*"
+      ]
+    },
+    {
+      "Sid": "ProjectLambdaLayers",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:GetLayerVersion",
+        "lambda:GetLayerVersionPolicy",
+        "lambda:ListLayerVersions",
+        "lambda:PublishLayerVersion"
+      ],
+      "Resource": [
+        "arn:aws:lambda:ap-south-1:767491588787:layer:pilearn-*"
+      ]
+    }
+  ]
+}

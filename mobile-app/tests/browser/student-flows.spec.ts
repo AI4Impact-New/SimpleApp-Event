@@ -140,18 +140,18 @@ for (const fallback of [false, true]) test(`protected playback keeps the moving 
   await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**', async route => {
     const pathname = new URL(route.request().url()).pathname;
     let json: unknown = [];
-    const lesson = { id: eid, course_id: cid, title: 'Protected recording', class_type: 'recorded', duration_seconds: 3, sort_order: 0, access_state: 'available', video_status: 'ready' };
+    const lesson = { id: eid, course_id: cid, title: 'Protected recording', class_type: 'recorded', duration_seconds: 120, sort_order: 0, access_state: 'available', video_status: 'ready' };
     if (pathname === '/users/me') json = { id: 'browser-qa', name: 'Original learner', email: 'qa@example.invalid', user_type: 'professional', designation: 'Engineer', company: 'QA', privacy_consent_required: false };
     if (pathname === `/learning/courses/${cid}` || pathname === `/learning/courses/${cid}/progress`) json = { course: { id: cid, title: 'Video QA' }, classes: [lesson], completion: { progress_percentage: 0 } };
     if (pathname === `/learning/classes/${eid}/playback`) {
       sessions++;
-      json = { url: 'https://video.example.invalid/test.mp4', session_id: `session-${sessions}`, expires_in: sessions === 1 ? 8 : 900, duration_seconds: 3, resume_seconds: 0,
+      json = { url: 'https://video.example.invalid/test.mp4', session_id: `session-${sessions}`, expires_in: sessions === 1 ? 8 : 900, duration_seconds: 120, resume_seconds: 0,
         watermark: { company: 'AI4Impact', student_id: 'verified-student-123', move_interval_seconds: 25 } };
     }
-    if (pathname.endsWith('/progress') && route.request().method() === 'POST') json = { watched_seconds: 0, completed: false, progress_percentage: 0, duration_seconds: 3 };
+    if (pathname.endsWith('/progress') && route.request().method() === 'POST') json = { watched_seconds: 0, completed: false, progress_percentage: 0, duration_seconds: 120 };
     await route.fulfill({ json });
   });
-  await page.route('https://video.example.invalid/test.mp4', route => route.fulfill({ path: path.join(__dirname, '../fixtures/playback.mp4'), contentType: 'video/mp4' }));
+  await page.route('https://video.example.invalid/test.mp4', route => route.fulfill({ path: path.join(__dirname, '../fixtures/scrubbing.mp4'), contentType: 'video/mp4' }));
   await page.goto(`/learning/courses/${cid}/lectures/${eid}`);
   const mark = page.getByTestId('video-watermark');
   await expect(mark).toContainText('AI4Impact');
@@ -175,6 +175,8 @@ for (const fallback of [false, true]) test(`protected playback keeps the moving 
   expect(box.y + box.height).toBeLessThanOrEqual(stage.y + stage.height + 1);
   await page.getByRole('button', { name: 'Exit full screen', exact: true }).click();
   await expect(mark).toBeVisible();
+  // Renewal may reload the media; wait for its new source to be playable.
+  await page.waitForFunction(() => (document.querySelector('video')?.readyState ?? 0) >= 2);
   await page.getByRole('button', { name: 'Play', exact: true }).last().click();
   await expect.poll(() => page.locator('video').evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
 });

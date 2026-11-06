@@ -99,7 +99,7 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
           { text: 'Cancel', style: 'cancel', onPress: () => (orderRequestIdRef.current = null) },
         ]);
       } else {
-        orderRequestIdRef.current = null;
+        if (err.response.status < 500 && err.response.status !== 429) orderRequestIdRef.current = null;
         Alert.alert('Checkout unavailable', apiErrorMessage(err, 'Could not start checkout.'));
       }
     }
@@ -389,7 +389,7 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
                 ) : null}
               </View>
               <Text style={[styles.bulletDesc, { marginTop: 6 }]}>
-                Demo checkout only. No money is collected and it does not grant course access.
+                Pay securely with Razorpay. Test checkout is currently restricted to authorized QA accounts.
               </Text>
               <TouchableOpacity
                 style={[styles.registerBtn, { marginTop: 12, backgroundColor: colors.border }]}
@@ -402,7 +402,7 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
                 ) : (
                   <>
                     <Ionicons name="card-outline" size={20} color={colors.text} />
-                    <Text style={[styles.registerBtnText, { color: colors.text }]}>Demo checkout</Text>
+                    <Text style={[styles.registerBtnText, { color: colors.text }]}>Checkout</Text>
                   </>
                 )}
               </TouchableOpacity>

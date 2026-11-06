@@ -217,6 +217,11 @@ def register_course(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             body = {}
     source = body.get("source", "mobile")
     service = CourseService()
+    # Paid courses cannot bypass verified checkout through the legacy registration route.
+    from shared.db import execute_query
+    price = execute_query('SELECT marked_price_paise,discount_bps FROM courses WHERE id=%s', (course_id,), fetch='one')
+    if price and int(price['marked_price_paise']) > 0 and int(price['discount_bps']) < 10000:
+        return create_error_response(402, "Please complete verified checkout for this course")
     success = service.register_course(course_id, app_user.id, source=source)
     if not success:
         return create_error_response(404, "Course not found")

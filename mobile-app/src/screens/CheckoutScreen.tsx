@@ -1,4 +1,4 @@
-// Checkout Screen – demo / pro forma order: saved quote, demo completion or cancellation, invoice PDF
+// Verified Razorpay checkout and historical demo quotes.
 import React, { useState } from 'react';
 import {
   View,
@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Alert,
   Platform,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +23,8 @@ import { colors, spacing, borderRadius } from '@/theme/colors';
 import { formatLocalDateTime } from '@/utils/datetime';
 import { formatPaise } from '@/utils/money';
 import { isOrderLinkExpired, orderStatusDisplay } from '@/utils/billing';
+import { openRazorpay } from '@/utils/razorpay';
+import { useQueryClient } from '@tanstack/react-query';
 import { downloadAndSharePdf } from '@/utils/sharePdf';
 
 interface CheckoutScreenProps {
@@ -33,6 +36,31 @@ export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
   const { data: order, isLoading, error, refetch, isRefetching } = useDemoOrder(orderId);
   const finish = useFinishDemoCheckout();
   const [downloading, setDownloading] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const queryClient = useQueryClient();
+  const refreshPayment = async () => {
+    await api.reconcilePayment(orderId);
+    await refetch();
+    await queryClient.invalidateQueries({ queryKey: ['me'] });
+    await queryClient.invalidateQueries({ queryKey: ['learning'] });
+    await queryClient.invalidateQueries({ queryKey: ['courses'] });
+  };
+  const pay = async () => {
+    if (!order || paying) return;
+    setPaying(true);
+    try {
+      if (Platform.OS !== 'web') { await Linking.openURL(order.checkout_url); return; }
+      const prepared = await api.preparePayment(orderId);
+      if (prepared.checkout) {
+        const result = await openRazorpay(prepared.checkout);
+        if (result) await api.verifyPayment(orderId, result);
+      }
+      await refreshPayment();
+    } catch (error) {
+      notify('Payment status', apiErrorMessage(error, 'Could not confirm payment. Use Check payment status before retrying.'));
+      await refetch();
+    } finally { setPaying(false); }
+  };
 
 
   const notify = (title: string, message: string) => {
@@ -86,8 +114,8 @@ export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
       await downloadAndSharePdf({
         url,
         headers,
-        fileName: `AI4Impact-demo-invoice-${orderId}.pdf`,
-        dialogTitle: 'Demo invoice',
+        fileName: `AI4Impact-order-${orderId}.pdf`,
+        dialogTitle: 'Order receipt',
       });
     } catch (err: any) {
       const status = err?.response?.status;
@@ -150,7 +178,7 @@ export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
         <View style={styles.demoBanner}>
           <Ionicons name="information-circle" size={20} color="#92400e" />
           <Text style={styles.demoText}>
-            DEMO / PRO FORMA. No money is collected and this does not grant course access. The AI4Impact team handles enrollment.
+            {order.demo ? 'Historical demo order. No money collected; no course access granted.' : order.notice}
           </Text>
         </View>
 
@@ -165,12 +193,15 @@ export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
           ) : null}
           <View style={styles.divider} />
           <Row label="Total" value={formatPaise(order.total_paise)} bold />
-          <Text style={styles.muted}>No tax is calculated on demo orders.</Text>
+          <Text style={styles.muted}>{order.demo ? 'No tax is calculated on demo orders.' : 'Displayed total is the amount payable. Receipt is not a GST tax invoice.'}</Text>
         </View>
 
-        <View style={styles.card}>
+        <View style={[styles.card, order.status === 'paid' && { borderColor: colors.success, borderWidth: 1 }]}>
+          <Ionicons name={order.status === 'paid' ? 'checkmark-circle' : 'shield-checkmark-outline'} size={26} color={order.status === 'paid' ? colors.success : colors.primary} />
           <Text style={styles.label}>Status</Text>
           <Text style={[styles.status, { color: statusDisplay.color }]}>{statusDisplay.label}</Text>
+          {!order.demo && order.status === 'paid' ? <Text style={styles.muted}>Your payment has been verified. Your course is available in My learning.</Text> : null}
+          {!order.demo && order.status === 'pending' ? <Text style={styles.muted}>If your bank shows a debit, check payment status before paying again. Access appears after capture is confirmed.</Text> : null}
           {order.status === 'pending' ? (
             <Text style={styles.muted}>
               {linkExpired ? 'Expired' : 'Link expires'} {formatLocalDateTime(order.expires_at)}
@@ -178,7 +209,7 @@ export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
           ) : null}
         </View>
 
-        {pending ? (
+        {pending && order.demo ? (
           <>
             <TouchableOpacity
               style={[styles.primaryBtn, finish.isPending && styles.disabled]}
@@ -201,13 +232,19 @@ export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
           </>
         ) : null}
 
+        {!order.demo && pending ? <TouchableOpacity accessibilityRole="button" style={styles.primaryBtn} disabled={paying} onPress={() => void pay()}>
+          <Text style={styles.primaryText}>{paying ? 'Opening secure checkout…' : order.mode === 'test' ? 'Pay with Razorpay · TEST' : 'Pay with Razorpay'}</Text>
+        </TouchableOpacity> : null}
+        {!order.demo && order.status === 'pending' ? <TouchableOpacity accessibilityRole="button" style={styles.secondaryBtn} disabled={paying} onPress={() => void refreshPayment().catch(e => notify('Payment status', apiErrorMessage(e, 'Please retry checking payment.')))}>
+          <Text style={styles.secondaryText}>Check payment status</Text>
+        </TouchableOpacity> : null}
         <TouchableOpacity style={styles.secondaryBtn} onPress={downloadInvoice} disabled={downloading} activeOpacity={0.75}>
           {downloading ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : (
             <>
               <Ionicons name="document-text-outline" size={20} color={colors.primary} />
-              <Text style={styles.secondaryText}>Download demo invoice (PDF)</Text>
+              <Text style={styles.secondaryText}>{order.demo ? 'Download demo invoice (PDF)' : 'Download order receipt (PDF)'}</Text>
             </>
           )}
         </TouchableOpacity>

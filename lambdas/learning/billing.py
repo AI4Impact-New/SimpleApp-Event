@@ -57,6 +57,8 @@ def order_response(row):
 
 
 def create_order(actor,body,as_admin=False):
+    from learning import payments
+    if payments.enabled(): return payments.create(actor,body,as_admin)
     if as_admin: admin(actor)
     if set(body)-({'course_id','request_id','buyer_email'} if as_admin else {'course_id','request_id'}): raise ApiError(400,'Unknown order field')
     cid=identifier(body.get('course_id'));request=identifier(body.get('request_id'))
@@ -91,12 +93,18 @@ def listing(actor,as_admin=False):
     if as_admin: admin(actor)
     rows=execute_query('SELECT * FROM demo_orders '+('' if as_admin else 'WHERE user_id=%s ')+ 'ORDER BY created_at DESC LIMIT 200',
                        () if as_admin else (actor['id'],),fetch='all') or []
-    return [order_response(r) for r in rows]
+    from learning import payments
+    paid=execute_query('SELECT * FROM payment_orders '+('' if as_admin else 'WHERE user_id=%s ')+ 'ORDER BY created_at DESC LIMIT 200',
+        () if as_admin else (actor['id'],),fetch='all') or []
+    return sorted([order_response(r) for r in rows]+[payments.response(r) for r in paid],key=lambda r:r['created_at'],reverse=True)[:200]
 
 
 def get_order(actor,oid):
     row=execute_query('SELECT * FROM demo_orders WHERE id=%s',(identifier(oid),),fetch='one')
-    if not row or (not actor['admin'] and str(row['user_id'])!=actor['id']): raise ApiError(404,'Order not found')
+    if not row:
+        from learning import payments
+        return payments.get(actor,oid)
+    if not actor['admin'] and str(row['user_id'])!=actor['id']: raise ApiError(404,'Order not found')
     return order_response(row)
 
 
@@ -121,10 +129,10 @@ def invoice_pdf(actor,oid):
     from reportlab.lib import colors
     from reportlab.lib.utils import simpleSplit
     out=io.BytesIO();pdf=canvas.Canvas(out,pagesize=A4);w,h=A4
-    pdf.setTitle('AI4Impact Demo Invoice '+str(row['id']));pdf.setAuthor('AI4Impact')
+    pdf.setTitle(('AI4Impact Demo Invoice ' if row.get('demo',True) else 'AI4Impact Order ')+str(row['id']));pdf.setAuthor('AI4Impact')
     pdf.drawImage(str(Path(__file__).parent/'assets'/'logo.png'),40,h-90,48,48,mask='auto')
     pdf.setFillColor(colors.HexColor('#081328'));pdf.setFont('Helvetica-Bold',24);pdf.drawString(100,h-72,'AI4Impact')
-    pdf.setFont('Helvetica-Bold',20);pdf.drawString(40,h-130,'DEMO / PRO FORMA INVOICE')
+    pdf.setFont('Helvetica-Bold',20);pdf.drawString(40,h-130,'DEMO / PRO FORMA INVOICE' if row.get('demo',True) else 'PAYMENT RECEIPT' if row['status']=='paid' else 'ORDER SUMMARY')
     pdf.setFont('Helvetica',10)
     lines=['Reference: '+str(row['id']),'Date: '+row['created_at'].strftime('%d %B %Y'),
            'Bill to: '+row['buyer_name'],'Email: '+row['buyer_email'],'Status: '+row['status']]
@@ -140,6 +148,7 @@ def invoice_pdf(actor,oid):
     pdf.setStrokeColor(colors.HexColor('#cbd5e1'));pdf.line(40,y,w-40,y)
     pdf.setFont('Helvetica-Bold',11);pdf.setFillColor(colors.HexColor('#9a3412'))
     y-=35
-    for line in ['DEMO ONLY - NO MONEY COLLECTED','Not a tax invoice or proof of payment.','Checkout provider integration and tax details are pending.','Demo completion does not grant course access.']:
+    notes = ['DEMO ONLY - NO MONEY COLLECTED','Not a tax invoice or proof of payment.','Demo completion does not grant course access.'] if row.get('demo',True) else [row['notice'], 'Not a GST tax invoice.', 'Payment reference: '+str(row.get('provider_payment_id') or 'Pending')]
+    for line in notes:
         pdf.drawString(40,y,line);y-=18
     pdf.showPage();pdf.save();return out.getvalue()

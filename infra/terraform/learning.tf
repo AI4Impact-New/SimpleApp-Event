@@ -169,6 +169,9 @@ resource "aws_lambda_function" "learning" {
       TRANSACTIONAL_FROM_EMAIL        = "noreply@ai4impact.in"
       RESEND_API_KEY_SECRET_ARN       = aws_secretsmanager_secret.resend_api_key.arn
       EXPO_PROJECT_ID                 = var.expo_project_id
+      RAZORPAY_ENABLED                = tostring(var.razorpay_enabled)
+      RAZORPAY_SECRET_ARN             = aws_secretsmanager_secret.razorpay.arn
+      STUDENT_CHECKOUT_URL            = "${local.student_portal_public_url}/checkout"
       CHECKOUT_PAGE_URL               = "https://admin.ai4impact.in/checkout"
     })
   }

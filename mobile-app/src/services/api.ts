@@ -350,7 +350,7 @@ class ApiService {
     return response.data as { deleted: boolean };
   }
 
-  // Demo commerce — no money is collected and no enrollment is granted
+  // Payment orders and historical demo quotes
   /** Public active course prices. */
   async getBillingCatalog(): Promise<CoursePrice[]> {
     const response = await this.publicClient.get('/billing/catalog');
@@ -366,6 +366,16 @@ class ApiService {
   async getDemoOrder(orderId: string): Promise<DemoOrder> {
     const response = await this.client.get(`/billing/orders/${orderId}`);
     return response.data;
+  }
+
+  async preparePayment(orderId: string): Promise<DemoOrder> {
+    return (await this.client.post(`/billing/orders/${orderId}/checkout`, {})).data;
+  }
+  async verifyPayment(orderId: string, result: import('@/utils/razorpay').CheckoutResult): Promise<DemoOrder> {
+    return (await this.client.post(`/billing/orders/${orderId}/verify`, result)).data;
+  }
+  async reconcilePayment(orderId: string): Promise<DemoOrder> {
+    return (await this.client.post(`/billing/orders/${orderId}/reconcile`, {})).data;
   }
 
   async finishDemoCheckout(orderId: string, action: DemoCheckoutAction): Promise<DemoOrder> {

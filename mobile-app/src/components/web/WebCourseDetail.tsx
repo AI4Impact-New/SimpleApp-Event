@@ -334,7 +334,7 @@ function EnrolCard(props: WebCourseDetailProps & { course: Course; recorded: num
                 </>
               ) : null}
             </View>
-            <Text style={styles.priceNote}>Demo checkout only. No money is collected and it does not grant course access.</Text>
+            <Text style={styles.priceNote}>Pay securely with Razorpay. Test checkout is currently restricted to authorized QA accounts.</Text>
           </View>
         ) : props.priceError ? (
           <View style={{ gap: 10 }}>
@@ -353,7 +353,7 @@ function EnrolCard(props: WebCourseDetailProps & { course: Course; recorded: num
               {props.canSelfRegister ? <BigButton label="Register for this course" icon="arrow-forward" onPress={props.onRegister} busy={props.registerPending} /> : null}
               {hasPrice ? (
                 <BigButton
-                  label="Demo checkout"
+                  label="Checkout"
                   icon="card-outline"
                   onPress={props.onCheckout}
                   busy={props.checkoutPending}

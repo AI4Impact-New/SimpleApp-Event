@@ -417,3 +417,47 @@ test('a replacement live poll accepts a new answer after the previous poll was a
   await page.getByRole('button',{name:/Second answer/}).click();
   await expect.poll(() => votedPolls).toEqual([cid,aid]);
 });
+
+for (const width of [390, 1440]) for (const outcome of ['captured', 'authorized', 'dismissed', 'provider-error'] as const) test(`Razorpay checkout ${outcome} at ${width}px preserves verified payment state`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 1000 });
+  await seed(page); await spaFallback(page);
+  let status = 'pending', verified = 0, prepared = 0;
+  const order = () => ({ id: aid, course_id: cid, user_id: cid, course_title: 'Payment QA course', buyer_name: 'QA learner', buyer_email: 'qa@example.invalid',
+    marked_price_paise: 10000, discount_bps: 1000, discount_paise: 1000, total_paise: 9000, currency: 'INR', status,
+    created_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000).toISOString(), demo: false, mode: 'test', notice: 'Test payment. No real money is collected.' });
+  page.on('dialog', dialog => dialog.accept());
+  await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**', async route => {
+    const pathname = new URL(route.request().url()).pathname;
+    let json: unknown = [];
+    if (pathname === '/users/me') json = { id: cid, email: 'qa@example.invalid', name: 'QA learner', user_type: 'professional', designation: 'Engineer', company: 'QA' };
+    if (pathname === `/billing/orders/${aid}`) json = order();
+    if (pathname.endsWith('/checkout')) {
+      prepared++;
+      if (outcome === 'provider-error') return route.fulfill({ status: 502, json: { message: 'Provider temporarily unavailable' } });
+      json = { ...order(), checkout: { key: 'rzp_test_public', order_id: 'order_QA', amount: 9000, currency: 'INR' } };
+    }
+    if (pathname.endsWith('/verify')) { verified++; if (outcome === 'captured') status = 'paid'; json = order(); }
+    if (pathname.endsWith('/reconcile')) json = order();
+    await route.fulfill({ json });
+  });
+  await page.addInitScript((outcome) => {
+    (window as any).Razorpay = class {
+      constructor(private options: any) {}
+      open() { if (outcome === 'dismissed') this.options.modal.ondismiss(); else this.options.handler({ razorpay_order_id: 'order_QA', razorpay_payment_id: 'pay_QA', razorpay_signature: 'qa-signature' }); }
+    };
+  }, outcome);
+  await page.goto(`/checkout/${aid}`);
+  await expect(page.getByText('Test payment. No real money is collected.', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Pay with Razorpay · TEST', exact: true }).click();
+  await expect.poll(() => prepared).toBe(1);
+  if (outcome === 'captured') {
+    await expect(page.getByText('Payment verified · enrolled', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Pay with Razorpay · TEST', exact: true })).toHaveCount(0);
+  } else {
+    await expect(page.getByRole('button', { name: 'Pay with Razorpay · TEST', exact: true })).toBeEnabled();
+    await expect(page.getByText('Awaiting payment', { exact: true })).toBeVisible();
+    await expect(page.getByText('Payment verified · enrolled', { exact: true })).toHaveCount(0);
+  }
+  expect(verified).toBe(outcome === 'captured' || outcome === 'authorized' ? 1 : 0);
+  if (process.env.QA_PAYMENT_SCREENSHOT_DIR) await page.screenshot({ path: `${process.env.QA_PAYMENT_SCREENSHOT_DIR}/razorpay-${outcome}-${width}.png`, fullPage: true });
+});

@@ -48,7 +48,7 @@ The corrected test credentials authenticate successfully. Migration 022 is appli
 
 Actual Standard Checkout was exercised with an official Razorpay test card and its mock bank page: failure left the order pending and access denied (403); the successful retry produced a captured payment, verified enrollment and a course in My learning. Duplicate verification, another user's access (404), unallowlisted test checkout (403), invalid signatures (400), paid-registration bypass (402), signed webhook replay and worker processing were checked against the deployed backend. Phone/desktop UI and all four CI jobs passed before rollout.
 
-Dashboard-delivered webhooks still require the owner to save the Test Mode webhook configuration above. Signed synthetic endpoint requests validate our receiver but do not prove Razorpay Dashboard delivery. Reconciliation provides recovery while this is pending.
+The owner configured the Test Mode Dashboard webhook. An independent actual test payment was then completed with its browser verification request intentionally blocked. Razorpay delivered both `payment.captured` and `order.paid`; both durable events were processed and the independent student became registered. This verifies genuine Dashboard delivery and recovery when the browser callback is lost. Duplicate signed requests and invalid signatures were also tested.
 
 Direct test refund requests using the documented API returned HTTP 400 (`invalid request sent`) even for the full INR 1 captured payment. Provider-side refunds remain unverified; transactional partial/full refund handling and protection of manual grants are covered by PostgreSQL regressions. Check this with Razorpay before live activation. This release does not expose a refund-initiation button.
 

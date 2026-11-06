@@ -30,13 +30,15 @@ import { downloadAndSharePdf } from '@/utils/sharePdf';
 interface CheckoutScreenProps {
   orderId: string;
   onBack: () => void;
+  onOpenLearning?: (courseId: string) => void;
 }
 
-export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
+export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScreenProps) {
   const { data: order, isLoading, error, refetch, isRefetching } = useDemoOrder(orderId);
   const finish = useFinishDemoCheckout();
   const [downloading, setDownloading] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
   const queryClient = useQueryClient();
   const refreshPayment = async () => {
     await api.reconcilePayment(orderId);
@@ -48,16 +50,30 @@ export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
   const pay = async () => {
     if (!order || paying) return;
     setPaying(true);
+    setPaymentError('');
     try {
       if (Platform.OS !== 'web') { await Linking.openURL(order.checkout_url); return; }
       const prepared = await api.preparePayment(orderId);
       if (prepared.checkout) {
-        const result = await openRazorpay(prepared.checkout);
-        if (result) await api.verifyPayment(orderId, result);
+        let failureDesc = '';
+        const result = await openRazorpay({
+          ...prepared.checkout,
+          onFailure: (failure) => {
+            failureDesc = failure.description || 'Payment was declined by your bank or provider.';
+          },
+        });
+        if (result) {
+          await api.verifyPayment(orderId, result);
+        } else if (failureDesc) {
+          setPaymentError(failureDesc);
+          notify('Payment declined', failureDesc);
+        }
       }
       await refreshPayment();
     } catch (error) {
-      notify('Payment status', apiErrorMessage(error, 'Could not confirm payment. Use Check payment status before retrying.'));
+      const msg = apiErrorMessage(error, 'Could not confirm payment. Use Check payment status before retrying.');
+      setPaymentError(msg);
+      notify('Payment status', msg);
       await refetch();
     } finally { setPaying(false); }
   };
@@ -201,13 +217,34 @@ export function CheckoutScreen({ orderId, onBack }: CheckoutScreenProps) {
           <Text style={styles.label}>Status</Text>
           <Text style={[styles.status, { color: statusDisplay.color }]}>{statusDisplay.label}</Text>
           {!order.demo && order.status === 'paid' ? <Text style={styles.muted}>Your payment has been verified. Your course is available in My learning.</Text> : null}
-          {!order.demo && order.status === 'pending' ? <Text style={styles.muted}>If your bank shows a debit, check payment status before paying again. Access appears after capture is confirmed.</Text> : null}
+          {!order.demo && order.status === 'pending' ? <Text style={styles.muted}>Click "Pay with Razorpay" below to complete your enrollment. If you were already charged, use Check payment status.</Text> : null}
           {order.status === 'pending' ? (
             <Text style={styles.muted}>
               {linkExpired ? 'Expired' : 'Link expires'} {formatLocalDateTime(order.expires_at)}
             </Text>
           ) : null}
         </View>
+
+        {paymentError ? (
+          <View style={styles.errorBanner}>
+            <Ionicons name="alert-circle-outline" size={22} color={colors.error} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.errorBannerTitle}>Payment not completed</Text>
+              <Text style={styles.errorBannerText}>{paymentError}</Text>
+            </View>
+          </View>
+        ) : null}
+
+        {order.status === 'paid' && !order.demo && onOpenLearning ? (
+          <TouchableOpacity
+            style={[styles.primaryBtn, { backgroundColor: colors.success }]}
+            onPress={() => onOpenLearning(order.course_id)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="school-outline" size={20} color={colors.white} />
+            <Text style={styles.primaryText}>Start Learning Now</Text>
+          </TouchableOpacity>
+        ) : null}
 
         {pending && order.demo ? (
           <>
@@ -316,4 +353,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundCard,
   },
   secondaryText: { color: colors.primary, fontSize: 15, fontWeight: '600' },
+  errorBanner: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    alignItems: 'center',
+  },
+  errorBannerTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.error,
+  },
+  errorBannerText: {
+    fontSize: 13,
+    color: '#991b1b',
+    marginTop: 2,
+    lineHeight: 18,
+  },
 });

@@ -148,7 +148,15 @@ export function StudentCommerce({ checkout = false }: { checkout?: boolean }) {
                 {!order.demo && order.status === "pending" && <>
                   <button disabled={busy} onClick={() => void act(async () => {
                     const prepared = await billing.prepare(order.id);
-                    if (prepared.checkout) { const result = await openRazorpay(prepared.checkout); if (result) await billing.verify(order.id, result); }
+                    if (prepared.checkout) {
+                      let failureMsg = "";
+                      const result = await openRazorpay({
+                        ...prepared.checkout,
+                        onFailure: (f) => { failureMsg = f.description || "Payment was declined by your bank or provider."; },
+                      });
+                      if (result) await billing.verify(order.id, result);
+                      else if (failureMsg) setError(failureMsg);
+                    }
                     setOrder(await billing.reconcile(order.id));
                   })} className="bg-primary-600 text-white px-4 py-3 rounded-lg disabled:opacity-50">Pay with Razorpay {order.mode === 'test' ? '· TEST' : ''}</button>
                   <button disabled={busy} onClick={() => void act(async () => setOrder(await billing.reconcile(order.id)))} className="border px-4 py-3 rounded-lg">Check payment status</button>
@@ -192,6 +200,23 @@ export function StudentCommerce({ checkout = false }: { checkout?: boolean }) {
                   Download order receipt PDF
                 </button>
               </div>
+              {order.status === "paid" && (
+                <div className="bg-green-50 border border-green-200 text-green-900 p-5 rounded-xl space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-bold text-green-700">✓</span>
+                    <strong className="text-lg">Payment Verified!</strong>
+                  </div>
+                  <p className="text-sm">
+                    You are enrolled in <strong>{order.course_title}</strong>. Your course is unlocked in My learning.
+                  </p>
+                  <Link
+                    href={`/dashboard/learning/${order.course_id}`}
+                    className="inline-block bg-green-700 text-white font-medium px-4 py-2 rounded-lg text-sm"
+                  >
+                    Go to course workspace
+                  </Link>
+                </div>
+              )}
               {order.status === "demo_completed" && (
                 <p
                   role="status"

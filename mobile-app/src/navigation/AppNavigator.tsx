@@ -489,7 +489,11 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
               </Stack.Screen>
               <Stack.Screen name="Checkout">
                 {({ route, navigation }: any) => (
-                  <CheckoutScreen orderId={route.params?.orderId ?? ''} onBack={() => navigation.goBack()} />
+                  <CheckoutScreen
+                    orderId={route.params?.orderId ?? ''}
+                    onBack={() => navigation.goBack()}
+                    onOpenLearning={(courseId) => openCourseLearning(navigation, courseId)}
+                  />
                 )}
               </Stack.Screen>
             </Stack.Navigator>
@@ -590,7 +594,11 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
               </Stack.Screen>
               <Stack.Screen name="Checkout">
                 {({ route, navigation }: any) => (
-                  <CheckoutScreen orderId={route.params?.orderId ?? ''} onBack={() => navigation.goBack()} />
+                  <CheckoutScreen
+                    orderId={route.params?.orderId ?? ''}
+                    onBack={() => navigation.goBack()}
+                    onOpenLearning={(courseId) => openCourseLearning(navigation, courseId)}
+                  />
                 )}
               </Stack.Screen>
             </Stack.Navigator>
@@ -685,7 +693,11 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
               </Stack.Screen>
               <Stack.Screen name="Checkout">
                 {({ route, navigation }: any) => (
-                  <CheckoutScreen orderId={route.params?.orderId ?? ''} onBack={() => navigation.goBack()} />
+                  <CheckoutScreen
+                    orderId={route.params?.orderId ?? ''}
+                    onBack={() => navigation.goBack()}
+                    onOpenLearning={(courseId) => openCourseLearning(navigation, courseId)}
+                  />
                 )}
               </Stack.Screen>
             </Stack.Navigator>

@@ -401,17 +401,17 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
                 Pay securely with Razorpay. Test checkout is currently restricted to authorized QA accounts.
               </Text>
               <TouchableOpacity
-                style={[styles.registerBtn, { marginTop: 12, backgroundColor: colors.border }]}
+                style={[styles.registerBtn, { marginTop: 12, backgroundColor: colors.primary }]}
                 onPress={handleDemoCheckout}
                 disabled={createOrder.isPending}
                 activeOpacity={0.75}
               >
                 {createOrder.isPending ? (
-                  <ActivityIndicator size="small" color={colors.text} />
+                  <ActivityIndicator size="small" color={colors.white} />
                 ) : (
                   <>
-                    <Ionicons name="card-outline" size={20} color={colors.text} />
-                    <Text style={[styles.registerBtnText, { color: colors.text }]}>Checkout</Text>
+                    <Ionicons name="card-outline" size={20} color={colors.white} />
+                    <Text style={[styles.registerBtnText, { color: colors.white }]}>Checkout</Text>
                   </>
                 )}
               </TouchableOpacity>

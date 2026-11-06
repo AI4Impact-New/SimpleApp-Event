@@ -14,7 +14,7 @@ export function orderStatusDisplay(order: DemoOrder): { label: string; color: st
     paid: { label: 'Payment verified · enrolled', color: colors.success },
     partially_refunded: { label: 'Partially refunded', color: '#b45309' },
     refunded: { label: 'Refunded', color: colors.error },
-    pending: { label: order.demo ? 'Awaiting demo payment' : 'Ready for payment', color: colors.primary },
+    pending: { label: order.demo ? 'Awaiting demo payment' : 'Awaiting payment', color: '#b45309' },
     demo_completed: { label: 'Demo payment completed', color: colors.success },
     cancelled: { label: 'Cancelled', color: colors.error },
   }[order.status];

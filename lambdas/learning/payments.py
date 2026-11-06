@@ -162,13 +162,6 @@ def apply_payment(payment):
         if row['mode']!=credentials()['mode']: raise ApiError(409,'Payment mode mismatch')
         if payment.get('amount')!=int(row['total_paise']) or payment.get('currency')!='INR':
             raise ApiError(409,'Payment amount does not match order')
-        if payment.get('status') == 'authorized':
-            try:
-                payment = provider('POST', 'payments/' + payment['id'] + '/capture', {
-                    'amount': int(row['total_paise']), 'currency': 'INR'
-                })
-            except ApiError:
-                pass
         captured = payment.get('status') in ('captured','refunded') and payment.get('captured') is True
         if not captured: return response(row)
         if row['provider_payment_id'] and row['provider_payment_id']!=payment['id']:

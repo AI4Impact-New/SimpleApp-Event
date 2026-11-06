@@ -67,21 +67,23 @@ export async function openRazorpay(options: OpenRazorpayOptions): Promise<Checko
       handler: (result: CheckoutResult) => resolve(result),
     });
 
-    checkout.on('payment.failed', (response: { error?: any }) => {
-      const err = response?.error;
-      if (err) {
-        lastFailure = {
-          code: err.code,
-          description: err.description || 'Payment was declined by your bank or provider.',
-          reason: err.reason,
-          step: err.step,
-          source: err.source,
-        };
-        if (onFailure) {
-          onFailure(lastFailure);
+    if (typeof (checkout as any)?.on === 'function') {
+      (checkout as any).on('payment.failed', (response: { error?: any }) => {
+        const err = response?.error;
+        if (err) {
+          lastFailure = {
+            code: err.code,
+            description: err.description || 'Payment was declined by your bank or provider.',
+            reason: err.reason,
+            step: err.step,
+            source: err.source,
+          };
+          if (onFailure) {
+            onFailure(lastFailure);
+          }
         }
-      }
-    });
+      });
+    }
 
     checkout.open();
   });

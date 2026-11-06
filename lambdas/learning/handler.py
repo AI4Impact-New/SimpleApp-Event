@@ -12,7 +12,7 @@ from psycopg2 import errors as db_errors
 from shared.auth import get_current_user, _normalize_groups
 from shared.user_repository import get_or_create_user_from_claims, IdentityConflictError
 from shared.db import execute_query
-from learning import service, exams, certificates, devices, enquiries, billing, access_windows, staff, operations, assisted
+from learning import service, exams, certificates, devices, enquiries, billing, access_windows, staff, operations, assisted, payments
 from learning.validation import ApiError, identifier
 
 logger = logging.getLogger(__name__)
@@ -54,6 +54,8 @@ def _actor(event):
 
 def handler(event, context):
     try:
+        if event.get('source')=='ai4impact.payments.reconcile':
+            return payments.worker(event,context)
         path = (event.get("rawPath") or event.get("path") or "/").rstrip("/")
         method = event.get("httpMethod") or (event.get("requestContext") or {}).get("http",{}).get("method","GET")
         if method == "OPTIONS": return {"statusCode":204,"body":""}
@@ -79,6 +81,8 @@ def handler(event, context):
         if path=='/webhooks/resend' and method=='POST':
             from programme import webhook
             return _response(200,webhook.receive(event))
+        if path=='/webhooks/razorpay' and method=='POST':
+            return _response(200,payments.webhook(event))
         actor = _actor(event)
         marketing_route=(path=="/admin/enquiries" or (len(parts)==3 and parts[:2]==['admin','enquiries']) or path=="/admin/marketing/interests" or (len(parts)>=4 and parts[:2]==["admin","enquiries"] and parts[3]=="assisted"))
         if parts[0]=="admin":
@@ -113,10 +117,13 @@ def handler(event, context):
         elif path=="/billing/orders" and method=="POST": result=billing.create_order(actor,body); status=201
         elif len(parts)>=3 and parts[:2]==['billing','orders']:
             if len(parts)==3 and method=='GET':result=billing.get_order(actor,parts[2])
+            elif len(parts)==4 and parts[3]=='checkout' and method=='POST':result=payments.checkout(actor,parts[2])
+            elif len(parts)==4 and parts[3]=='verify' and method=='POST':result=payments.verify(actor,parts[2],body)
+            elif len(parts)==4 and parts[3]=='reconcile' and method=='POST':result=payments.reconcile(actor,parts[2])
             elif len(parts)==4 and parts[3]=='demo-checkout' and method=='POST':result=billing.finish(actor,parts[2],body)
             elif len(parts)==4 and parts[3]=='invoice' and method=='GET':
                 contents=billing.invoice_pdf(actor,parts[2])
-                return {'statusCode':200,'isBase64Encoded':True,'headers':{'Content-Type':'application/pdf','Cache-Control':'no-store','Content-Disposition':'attachment; filename="AI4Impact-demo-invoice.pdf"'},'body':base64.b64encode(contents).decode()}
+                return {'statusCode':200,'isBase64Encoded':True,'headers':{'Content-Type':'application/pdf','Cache-Control':'no-store','Content-Disposition':'attachment; filename="AI4Impact-order-receipt.pdf"'},'body':base64.b64encode(contents).decode()}
         elif len(parts)==4 and parts[:2]==['admin','classes'] and parts[3]=='access-reset' and method=='POST': result=access_windows.reset(actor,parts[2],body)
         elif path=="/admin/enquiries" and method=="GET": result=enquiries.listing(actor,event.get("queryStringParameters") or {})
         elif len(parts)==3 and parts[:2]==["admin","enquiries"] and method=="PATCH": result=enquiries.update(actor,parts[2],body)

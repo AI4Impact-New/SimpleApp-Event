@@ -44,6 +44,7 @@ export interface WebCourseDetailProps {
   interestPending: boolean;
   onCheckout: () => void;
   checkoutPending: boolean;
+  checkoutError?: string;
   onAddToCalendar: () => void;
 }
 
@@ -334,7 +335,7 @@ function EnrolCard(props: WebCourseDetailProps & { course: Course; recorded: num
                 </>
               ) : null}
             </View>
-            <Text style={styles.priceNote}>Demo checkout only. No money is collected and it does not grant course access.</Text>
+            <Text style={styles.priceNote}>Pay securely with Razorpay. Test checkout is currently restricted to authorized QA accounts.</Text>
           </View>
         ) : props.priceError ? (
           <View style={{ gap: 10 }}>
@@ -353,13 +354,14 @@ function EnrolCard(props: WebCourseDetailProps & { course: Course; recorded: num
               {props.canSelfRegister ? <BigButton label="Register for this course" icon="arrow-forward" onPress={props.onRegister} busy={props.registerPending} /> : null}
               {hasPrice ? (
                 <BigButton
-                  label="Demo checkout"
+                  label="Checkout"
                   icon="card-outline"
                   onPress={props.onCheckout}
                   busy={props.checkoutPending}
                   variant={props.canSelfRegister ? 'outline' : 'primary'}
                 />
               ) : null}
+              {props.checkoutError ? <Text accessibilityRole="alert" style={{ color: '#b4321f', fontSize: 13, lineHeight: 20 }}>{props.checkoutError}</Text> : null}
               {interested ? (
                 <View style={styles.interested}>
                   <Ionicons name="heart" size={16} color={palette.teal700} />
@@ -396,6 +398,7 @@ function BigButton({ label, icon, onPress, busy, variant = 'primary' }: { label:
       onPress={onPress}
       disabled={busy}
       accessibilityRole="button"
+      accessibilityLabel={label}
       style={(s: PressState) => [primary ? styles.bigPrimary : styles.bigOutline, s.hovered && (primary ? styles.btnPrimaryHover : styles.btnOutlineHover)]}
     >
       {busy ? <Spinner size={16} track={primary ? '#2a3654' : palette.slate200} head={primary ? palette.teal400 : palette.teal600} /> : null}

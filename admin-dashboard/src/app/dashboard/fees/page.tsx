@@ -47,9 +47,7 @@ export default function Fees() {
         </p>
       </header>
       <p className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm">
-        Demo checkout only — Paintly integration is pending. No money is
-        collected and demo completion does not enrol a student. PDFs are pro
-        forma invoices, not tax invoices or proof of payment.
+        Razorpay test checkout is restricted to authorized QA accounts. Verified capture grants course access. Historical demo orders do not enrol students. Receipts are not GST tax invoices.
       </p>
       {error && (
         <p role="alert" className="rounded-lg bg-red-50 p-4 text-red-700">
@@ -136,10 +134,10 @@ export default function Fees() {
         ))}
       </div>
       <section className="rounded-xl border bg-white p-5">
-        <h2 className="text-lg font-semibold">Create a demo pay-by-link</h2>
+        <h2 className="text-lg font-semibold">Create a payment link</h2>
         <p className="text-sm text-gray-600 my-2">
           Use an existing student account email. Only that student can complete
-          the demo checkout.
+          secure checkout.
         </p>
         <form
           className="grid gap-4 md:grid-cols-3"
@@ -158,7 +156,7 @@ export default function Fees() {
               retry.current = null;
               await load();
               setNotice(
-                "Demo link created. Copy and share it manually; no message was sent.",
+                "Payment link created. Copy and share it manually; no message was sent.",
               );
             });
           }}
@@ -193,15 +191,15 @@ export default function Fees() {
             disabled={busy || !course}
             className="self-end rounded-lg bg-primary-600 text-white px-4 py-2 disabled:opacity-50"
           >
-            Create demo link
+            Create payment link
           </button>
         </form>
         {link && (
           <div className="mt-4">
             <label className="text-sm">
-              Demo checkout link
+              Checkout link
               <input
-                aria-label="Generated demo payment link"
+                aria-label="Generated payment link"
                 readOnly
                 value={link}
                 className={input}
@@ -222,9 +220,9 @@ export default function Fees() {
         )}
       </section>
       <section className="rounded-xl border bg-white p-5">
-        <h2 className="text-lg font-semibold mb-4">Demo orders & invoices</h2>
+        <h2 className="text-lg font-semibold mb-4">Orders & receipts</h2>
         <p className="text-sm text-gray-500 mb-3">
-          Latest 200 orders. All entries are demonstrations.
+          Latest 200 orders. Test payments are labelled separately from live payments.
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -245,7 +243,7 @@ export default function Fees() {
                     {o.course_title}
                   </td>
                   <td className="p-3">{money(o.total_paise)}</td>
-                  <td className="p-3">{o.status}</td>
+                  <td className="p-3">{o.status} · {o.demo ? "legacy demo" : o.mode} {o.provider_payment_id ? `· ${o.provider_payment_id}` : ""}</td>
                   <td className="p-3">
                     <button
                       disabled={busy}
@@ -260,7 +258,7 @@ export default function Fees() {
             </tbody>
           </table>
           {!orders.length && (
-            <p className="p-4 text-gray-500">No demo orders yet.</p>
+            <p className="p-4 text-gray-500">No orders yet.</p>
           )}
         </div>
       </section>

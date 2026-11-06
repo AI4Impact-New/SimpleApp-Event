@@ -1,4 +1,4 @@
-// Demo commerce types (fees are integer paise, INR only). No money is collected and no access is granted.
+// Payment records and legacy demo quotes. Amounts are integer paise, INR only.
 
 export interface CoursePrice {
   id: string;
@@ -11,7 +11,7 @@ export interface CoursePrice {
   currency: string;
 }
 
-export type OrderStatus = 'pending' | 'demo_completed' | 'cancelled';
+export type OrderStatus = 'pending' | 'demo_completed' | 'cancelled' | 'paid' | 'partially_refunded' | 'refunded';
 
 export interface DemoOrder {
   id: string;
@@ -30,7 +30,12 @@ export interface DemoOrder {
   checkout_url: string;
   invoice_url?: string;
   notice?: string;
-  demo: true;
+  demo: boolean;
+  mode?: 'test' | 'live';
+  provider_order_id?: string;
+  provider_payment_id?: string;
+  refunded_paise?: number;
+  checkout?: Record<string, unknown>;
 }
 
 export type DemoCheckoutAction = 'complete_demo' | 'cancel';

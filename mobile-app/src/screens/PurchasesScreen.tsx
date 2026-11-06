@@ -44,7 +44,7 @@ export function PurchasesScreen({ onBack, onOpenOrder }: PurchasesScreenProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScreenHeader title="Purchases (demo)" onBack={onBack} />
+      <ScreenHeader title="Purchases" onBack={onBack} />
       {isLoading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -67,7 +67,7 @@ export function PurchasesScreen({ onBack, onOpenOrder }: PurchasesScreenProps) {
           }
           ListHeaderComponent={
             orders.length > 0 ? (
-              <Text style={styles.notice}>Demo orders only. No money was collected.</Text>
+              <Text style={styles.notice}>Payment history includes test payments and historical demo orders.</Text>
             ) : null
           }
           ListEmptyComponent={

@@ -137,7 +137,7 @@ def checkout(actor, oid, as_admin=False):
             existing=provider('GET','orders?receipt='+str(row['id'])+'&count=100').get('items',[])
             matches=[o for o in existing if o.get('receipt')==str(row['id'])]
             order=matches[0] if matches else provider('POST','orders',{'amount':int(row['total_paise']), 'currency':'INR',
-                'receipt':str(row['id']), 'payment_capture':1, 'notes':{'local_order_id':str(row['id'])}})
+                'receipt':str(row['id']), 'notes':{'local_order_id':str(row['id'])}})
             if order.get('amount')!=int(row['total_paise']) or order.get('currency')!='INR' or not re.fullmatch(r'order_[A-Za-z0-9]+',order.get('id','')):
                 raise ApiError(502,'Provider order does not match the checkout amount')
             cur.execute('UPDATE payment_orders SET provider_order_id=%s,updated_at=now() WHERE id=%s RETURNING *',(order['id'],row['id']))

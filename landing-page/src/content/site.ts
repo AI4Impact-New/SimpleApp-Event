@@ -421,7 +421,7 @@ export function getTrackAction(track: Track | undefined) {
   }
   const portalUrl = (process.env.NEXT_PUBLIC_STUDENT_PORTAL_URL || "https://learn.ai4impact.in").replace(/\/$/, "");
   return {
-    href: `${portalUrl}/student?course=${encodeURIComponent(slug)}`,
+    href: `${portalUrl}/courses/${encodeURIComponent(slug)}`,
     label: "Enroll Now",
   };
 }

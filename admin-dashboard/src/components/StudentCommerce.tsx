@@ -209,12 +209,12 @@ export function StudentCommerce({ checkout = false }: { checkout?: boolean }) {
                   <p className="text-sm">
                     You are enrolled in <strong>{order.course_title}</strong>. Your course is unlocked in My learning.
                   </p>
-                  <Link
-                    href={`/dashboard/learning/${order.course_id}`}
+                  <a
+                    href={`${process.env.NEXT_PUBLIC_STUDENT_PORTAL_URL || "https://learn.ai4impact.in"}/learning/courses/${order.course_id}`}
                     className="inline-block bg-green-700 text-white font-medium px-4 py-2 rounded-lg text-sm"
                   >
                     Go to course workspace
-                  </Link>
+                  </a>
                 </div>
               )}
               {order.status === "demo_completed" && (

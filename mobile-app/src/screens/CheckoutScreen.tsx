@@ -41,7 +41,8 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
   const [paymentError, setPaymentError] = useState('');
   const queryClient = useQueryClient();
   const refreshPayment = async () => {
-    await api.reconcilePayment(orderId);
+    const updated = await api.reconcilePayment(orderId);
+    if (updated?.status === 'paid') setPaymentError('');
     await refetch();
     await queryClient.invalidateQueries({ queryKey: ['me'] });
     await queryClient.invalidateQueries({ queryKey: ['learning'] });
@@ -63,7 +64,8 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
           },
         });
         if (result) {
-          await api.verifyPayment(orderId, result);
+          const verifiedOrder = await api.verifyPayment(orderId, result);
+          if (verifiedOrder?.status === 'paid') setPaymentError('');
         } else if (failureDesc) {
           setPaymentError(failureDesc);
           notify('Payment declined', failureDesc);
@@ -225,7 +227,7 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
           ) : null}
         </View>
 
-        {paymentError ? (
+        {paymentError && order.status !== 'paid' ? (
           <View style={styles.errorBanner}>
             <Ionicons name="alert-circle-outline" size={22} color={colors.error} />
             <View style={{ flex: 1 }}>

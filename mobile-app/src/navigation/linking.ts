@@ -117,6 +117,8 @@ function normalizePath(path: string): string {
   const page = pathname.replace(/\/$/, '');
   const order = new URLSearchParams(query).get('order');
   if (page === '/checkout' && order) return `/checkout/${encodeURIComponent(order)}`;
+  const course = new URLSearchParams(query).get('course');
+  if (page === '/student' && course) return `/courses/${encodeURIComponent(course)}`;
   // The public verification link (/verify?id=<certificate-id>, printed on certificates) only exists in the
   // signed-out tree; signed in, open the same check under My Learning.
   if (page === '/verify' && signedIn) return `/learning/certificates/verify${query ? `?${query}` : ''}`;

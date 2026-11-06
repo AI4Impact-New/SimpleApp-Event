@@ -461,3 +461,18 @@ for (const width of [390, 1440]) for (const outcome of ['captured', 'authorized'
   expect(verified).toBe(outcome === 'captured' || outcome === 'authorized' ? 1 : 0);
   if (process.env.QA_PAYMENT_SCREENSHOT_DIR) await page.screenshot({ path: `${process.env.QA_PAYMENT_SCREENSHOT_DIR}/razorpay-${outcome}-${width}.png`, fullPage: true });
 });
+
+test('course checkout restriction is visible inline in the browser', async ({ page }) => {
+ await seed(page);await spaFallback(page);
+ await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**',async route=>{
+  const path=new URL(route.request().url()).pathname;let json:unknown=[];
+  if(path==='/users/me')json={id:cid,email:'qa@example.invalid',name:'QA',user_type:'professional',designation:'Engineer',company:'QA'};
+  if(path===`/courses/${cid}`)json={id:cid,title:'Payment restriction QA',slug:'qa',status:'published'};
+  if(path==='/billing/catalog')json=[{id:cid,marked_price_paise:10000,total_paise:9000,discount_paise:1000,discount_percentage:10}];
+  if(path==='/billing/orders')return route.fulfill({status:403,json:{error:'Checkout is currently available to authorized test accounts only'}});
+  await route.fulfill({json});
+ });
+ await page.goto(`/courses/${cid}`);
+ await page.getByRole('button',{name:'Checkout',exact:true}).click();
+ await expect(page.getByRole('alert')).toContainText('authorized test accounts only');
+});

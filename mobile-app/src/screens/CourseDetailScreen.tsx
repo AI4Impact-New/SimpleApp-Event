@@ -52,6 +52,7 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
   const { data: price, isError: priceError, refetch: refetchPrice, isFetching: priceFetching } = useCoursePrice(courseId);
   const { data: myCourses } = useMyCourses();
   const createOrder = useCreateDemoOrder();
+  const [checkoutError, setCheckoutError] = useState('');
   // One request UUID per intentional order; kept across network-failure retries so the server returns the same quote.
   const orderRequestIdRef = useRef<string | null>(null);
   const registerCourse = useRegisterCourse();
@@ -87,14 +88,21 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
   };
 
   const handleDemoCheckout = async () => {
+    setCheckoutError('');
     if (!orderRequestIdRef.current) orderRequestIdRef.current = uuidv4();
     try {
       const order = await createOrder.mutateAsync({ courseId, requestId: orderRequestIdRef.current });
       orderRequestIdRef.current = null;
       onOpenCheckout(order.id);
     } catch (err: any) {
+      const message = apiErrorMessage(err, 'Could not confirm checkout. Retry to recover the same order.');
+      setCheckoutError(message);
+      if (Platform.OS === 'web') {
+        if (err?.response?.status < 500 && err.response.status !== 429) orderRequestIdRef.current = null;
+        return;
+      }
       if (!err?.response) {
-        Alert.alert('Connection problem', 'Your order was not created yet.', [
+        Alert.alert('Connection problem', 'Could not confirm your order. Retry checks the same order.', [
           { text: 'Retry', onPress: () => handleDemoCheckout() },
           { text: 'Cancel', style: 'cancel', onPress: () => (orderRequestIdRef.current = null) },
         ]);
@@ -149,6 +157,7 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
         interestPending={markInterest.isPending}
         onCheckout={handleDemoCheckout}
         checkoutPending={createOrder.isPending}
+        checkoutError={checkoutError}
         onAddToCalendar={handleAddToCalendar}
       />
     );

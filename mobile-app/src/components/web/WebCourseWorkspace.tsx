@@ -1,9 +1,10 @@
 // Browser-only course workspace (design: "Course Workspace.dc.html"; loading/error from "States.dc.html").
 // Purely presentational: data loading, certificate issuing, calendar export and navigation stay in
 // CourseLearningScreen, which renders this layout on web and its app layout on native.
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Animated, Easing } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { EmptyState, Skeleton, StateCard, useShimmer } from '@/components/web/states';
 import { useWebLayout } from '@/hooks/useWebLayout';
 import { Spinner } from '@/components/web/Spinner';
 import type { Completion, Exam, LearningClass } from '@/types/learning';
@@ -154,7 +155,7 @@ export function WebCourseWorkspace(props: WebCourseWorkspaceProps) {
               ))}
             </View>
           ) : (
-            <Blank icon="play-outline" title="No recorded lectures yet" body="Recordings appear here after each session is published." />
+            <EmptyState icon="play-outline" title="No recorded lectures yet" body="Recordings appear here after each session is published." />
           )}
         </View>
       </>
@@ -178,7 +179,7 @@ export function WebCourseWorkspace(props: WebCourseWorkspaceProps) {
             ))}
           </View>
         ) : (
-          <Blank icon="radio-outline" title="No live classes scheduled" body="Live sessions for this course will be listed here with their joining links." />
+          <EmptyState icon="radio-outline" title="No live classes scheduled" body="Live sessions for this course will be listed here with their joining links." />
         )}
       </View>
     );
@@ -193,9 +194,9 @@ export function WebCourseWorkspace(props: WebCourseWorkspaceProps) {
             ))}
           </View>
         ) : exams.error ? (
-          <Blank icon="cloud-offline-outline" iconColor="#b4321f" title="Could not load assessments" body={exams.error} cta="Try again" onCta={exams.retry} />
+          <StateCard tone="error" icon="cloud-offline-outline" title="Could not load assessments" body={exams.error} action={{ label: 'Try again', onPress: exams.retry }} />
         ) : exams.list.length === 0 ? (
-          <Blank icon="document-text-outline" title="No assessments published yet" body="Assessments appear here once your course team publishes them." />
+          <EmptyState icon="document-text-outline" title="No assessments published yet" body="Assessments appear here once your course team publishes them." />
         ) : (
           <View style={styles.grid}>
             {exams.list.map((e) => (
@@ -527,64 +528,14 @@ function CertificatePanel(props: WebCourseWorkspaceProps & { wide: boolean }) {
   );
 }
 
-function Blank({
-  icon,
-  iconColor = body,
-  title,
-  body: text,
-  cta,
-  onCta,
-}: {
-  icon: IconName;
-  iconColor?: string;
-  title: string;
-  body: string;
-  cta?: string;
-  onCta?: () => void;
-}) {
-  return (
-    <View style={styles.blank}>
-      <View style={styles.blankIcon}>
-        <Ionicons name={icon} size={18} color={iconColor} />
-      </View>
-      <Text style={styles.blankTitle}>{title}</Text>
-      <Text style={styles.blankBody}>{text}</Text>
-      {cta && onCta ? (
-        <Pressable onPress={onCta} style={(s: PressState) => [styles.btnPrimary, styles.btnSm, { marginTop: 6 }, s.hovered && styles.btnPrimaryHover]}>
-          <Text style={styles.btnPrimaryText}>{cta}</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
 // ---- Loading and error (States design: skeletons in the final shape; spinners only for user actions) ----
-
-function useShimmer() {
-  const v = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(v, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-        Animated.timing(v, { toValue: 0, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [v]);
-  return v.interpolate({ inputRange: [0, 1], outputRange: [palette.slate150, '#eef1f5'] });
-}
-
-function Sk({ w, h, r = 6, color }: { w: number | `${number}%`; h: number; r?: number; color: Animated.AnimatedInterpolation<string> }) {
-  return <Animated.View style={{ width: w, height: h, borderRadius: r, backgroundColor: color }} />;
-}
 
 function SkeletonCard({ rows }: { rows: [number | `${number}%`, number][] }) {
   const color = useShimmer();
   return (
     <View style={[styles.examCard, { gap: 12 }]}>
       {rows.map(([w, h], i) => (
-        <Sk key={i} w={w} h={h} color={color} />
+        <Skeleton key={i} w={w} h={h} color={color} />
       ))}
     </View>
   );
@@ -597,19 +548,19 @@ export function WebCourseWorkspaceSkeleton() {
     <ScrollView style={styles.page} contentContainerStyle={styles.pageContent} accessibilityLabel="Loading course" aria-busy>
       <View style={[styles.header, wide && styles.headerWide]}>
         <View style={{ gap: 14, flex: 1 }}>
-          <Sk w={180} h={12} color={color} />
-          <Sk w="55%" h={30} color={color} />
+          <Skeleton w={180} h={12} color={color} />
+          <Skeleton w="55%" h={30} color={color} />
         </View>
         <View style={{ gap: 10, width: wide ? 260 : '100%' }}>
-          <Sk w="100%" h={12} color={color} />
-          <Sk w="100%" h={6} r={3} color={color} />
+          <Skeleton w="100%" h={12} color={color} />
+          <Skeleton w="100%" h={6} r={3} color={color} />
         </View>
       </View>
       <View style={[styles.body, wide && styles.bodyWide]}>
         {wide ? (
           <View style={[styles.aside, { gap: 10 }]}>
             {[0, 1, 2, 3].map((k) => (
-              <Sk key={k} w="100%" h={28} r={8} color={color} />
+              <Skeleton key={k} w="100%" h={28} r={8} color={color} />
             ))}
           </View>
         ) : null}
@@ -617,21 +568,21 @@ export function WebCourseWorkspaceSkeleton() {
           <View style={[styles.card, styles.stats, !wide && styles.statsNarrow]}>
             {[0, 1, 2].map((k) => (
               <View key={k} style={[styles.stat, !wide && styles.statNarrow, { gap: 12 }]}>
-                <Sk w="60%" h={12} color={color} />
-                <Sk w="40%" h={26} color={color} />
-                <Sk w="50%" h={10} color={color} />
+                <Skeleton w="60%" h={12} color={color} />
+                <Skeleton w="40%" h={26} color={color} />
+                <Skeleton w="50%" h={10} color={color} />
               </View>
             ))}
           </View>
           <View style={styles.card}>
             {[0, 1, 2, 3].map((k) => (
               <View key={k} style={[styles.row, k < 3 && styles.rowDivider]}>
-                <Sk w={28} h={28} r={14} color={color} />
+                <Skeleton w={28} h={28} r={14} color={color} />
                 <View style={{ flex: 1, gap: 8 }}>
-                  <Sk w="65%" h={14} color={color} />
-                  <Sk w="40%" h={10} color={color} />
+                  <Skeleton w="65%" h={14} color={color} />
+                  <Skeleton w="40%" h={10} color={color} />
                 </View>
-                <Sk w={44} h={12} color={color} />
+                <Skeleton w={44} h={12} color={color} />
               </View>
             ))}
           </View>
@@ -643,24 +594,16 @@ export function WebCourseWorkspaceSkeleton() {
 
 export function WebCourseWorkspaceError({ message, onRetry, onBack }: { message: string; onRetry?: () => void; onBack: () => void }) {
   return (
-    <ScrollView style={styles.page} contentContainerStyle={[styles.pageContent, { alignItems: 'center' }]}>
-      <View style={[styles.blank, { maxWidth: 480, width: '100%', marginTop: 48 }]}>
-        <View style={styles.blankIcon}>
-          <Ionicons name={onRetry ? 'cloud-offline-outline' : 'lock-closed-outline'} size={18} color={onRetry ? '#b4321f' : body} />
-        </View>
-        <Text style={styles.blankTitle}>{onRetry ? 'We could not load this course' : 'Course not available'}</Text>
-        <Text style={styles.blankBody}>{message}</Text>
-        <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
-          {onRetry ? (
-            <Pressable onPress={onRetry} style={(s: PressState) => [styles.btnPrimary, styles.btnSm, s.hovered && styles.btnPrimaryHover]}>
-              <Text style={styles.btnPrimaryText}>Try again</Text>
-            </Pressable>
-          ) : null}
-          <Pressable onPress={onBack} style={(s: PressState) => [styles.btnOutline, s.hovered && styles.btnOutlineHover]}>
-            <Text style={styles.btnOutlineText}>Back to my learning</Text>
-          </Pressable>
-        </View>
-      </View>
+    <ScrollView style={styles.page} contentContainerStyle={styles.pageContent}>
+      <StateCard
+        centered
+        tone={onRetry ? 'error' : 'neutral'}
+        icon={onRetry ? 'cloud-offline-outline' : 'lock-closed-outline'}
+        title={onRetry ? 'We could not load this course' : 'Course not available'}
+        body={message}
+        action={onRetry ? { label: 'Try again', onPress: onRetry } : undefined}
+        secondary={{ label: 'Back to my learning', onPress: onBack }}
+      />
     </ScrollView>
   );
 }
@@ -779,10 +722,6 @@ const styles = StyleSheet.create({
   certTitle: { ...display, marginTop: 4, fontSize: 18, lineHeight: 21, fontWeight: '700', color: ink },
   certProvider: { ...text, marginTop: 8, fontSize: 11, color: body },
 
-  blank: { backgroundColor: '#ffffff', borderWidth: 1, borderColor: line, borderRadius: 20, paddingVertical: 40, paddingHorizontal: 28, alignItems: 'flex-start', gap: 12 },
-  blankIcon: { width: 40, height: 40, borderRadius: 10, borderWidth: 1, borderColor: line, alignItems: 'center', justifyContent: 'center' },
-  blankTitle: { ...display, marginTop: 4, fontSize: 17, fontWeight: '600', color: ink },
-  blankBody: { ...text, fontSize: 14, lineHeight: 22, color: body },
 
   selfStart: { alignSelf: 'flex-start' },
   btnPrimary: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 40, paddingHorizontal: 18, borderRadius: 8, backgroundColor: palette.navy800 },

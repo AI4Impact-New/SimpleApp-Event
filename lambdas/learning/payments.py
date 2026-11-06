@@ -137,14 +137,19 @@ def checkout(actor, oid, as_admin=False):
             existing=provider('GET','orders?receipt='+str(row['id'])+'&count=100').get('items',[])
             matches=[o for o in existing if o.get('receipt')==str(row['id'])]
             order=matches[0] if matches else provider('POST','orders',{'amount':int(row['total_paise']), 'currency':'INR',
-                'receipt':str(row['id']), 'notes':{'local_order_id':str(row['id'])}})
+                'receipt':str(row['id']), 'payment_capture':1, 'notes':{'local_order_id':str(row['id'])}})
             if order.get('amount')!=int(row['total_paise']) or order.get('currency')!='INR' or not re.fullmatch(r'order_[A-Za-z0-9]+',order.get('id','')):
                 raise ApiError(502,'Provider order does not match the checkout amount')
             cur.execute('UPDATE payment_orders SET provider_order_id=%s,updated_at=now() WHERE id=%s RETURNING *',(order['id'],row['id']))
             row=cur.fetchone()
+        cur.execute('SELECT phone FROM users WHERE id=%s',(row['user_id'],))
+        buyer_user=cur.fetchone()
+        buyer_phone=(buyer_user['phone'] or '').strip() if buyer_user and buyer_user.get('phone') else ''
+    prefill={'name':row['buyer_name'],'email':row['buyer_email']}
+    if buyer_phone: prefill['contact']=buyer_phone
     return {**response(row),'checkout':{'key':config['key_id'],'order_id':row['provider_order_id'],
         'amount':int(row['total_paise']),'currency':'INR','name':'AI4Impact','description':row['course_title'],
-        'prefill':{'name':row['buyer_name'],'email':row['buyer_email']},'theme':{'color':'#008b78'}}}
+        'prefill':prefill,'theme':{'color':'#008b78'}}}
 
 
 def apply_payment(payment):
@@ -157,6 +162,13 @@ def apply_payment(payment):
         if row['mode']!=credentials()['mode']: raise ApiError(409,'Payment mode mismatch')
         if payment.get('amount')!=int(row['total_paise']) or payment.get('currency')!='INR':
             raise ApiError(409,'Payment amount does not match order')
+        if payment.get('status') == 'authorized':
+            try:
+                payment = provider('POST', 'payments/' + payment['id'] + '/capture', {
+                    'amount': int(row['total_paise']), 'currency': 'INR'
+                })
+            except ApiError:
+                pass
         captured = payment.get('status') in ('captured','refunded') and payment.get('captured') is True
         if not captured: return response(row)
         if row['provider_payment_id'] and row['provider_payment_id']!=payment['id']:
@@ -206,7 +218,7 @@ def reconcile(actor, oid):
     elif row['provider_order_id'] and row['status']=='pending':
         result=provider('GET','orders/'+row['provider_order_id']+'/payments')
         for payment in result.get('items',[]):
-            if payment.get('status')=='captured': apply_payment(payment)
+            if payment.get('status') in ('captured','refunded'): apply_payment(payment)
     return get(actor,oid)
 
 

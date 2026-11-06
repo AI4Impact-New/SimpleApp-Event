@@ -419,8 +419,9 @@ export function getTrackAction(track: Track | undefined) {
   if (!slug || track?.demoCheckoutEnabled === false) {
     return { href: "#guidance", label: "Book free guidance" };
   }
+  const portalUrl = (process.env.NEXT_PUBLIC_STUDENT_PORTAL_URL || "https://learn.ai4impact.in").replace(/\/$/, "");
   return {
-    href: `https://main.d16744ddqs159z.amplifyapp.com/student?course=${encodeURIComponent(slug)}`,
-    label: "View demo checkout",
+    href: `${portalUrl}/student?course=${encodeURIComponent(slug)}`,
+    label: "Enroll Now",
   };
 }

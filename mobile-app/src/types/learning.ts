@@ -81,6 +81,7 @@ export interface CourseProgress {
 export interface PlaybackWatermark {
   company: string;
   student_id: string;
+  email: string;
   move_interval_seconds: number;
 }
 

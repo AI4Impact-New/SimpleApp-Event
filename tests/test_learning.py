@@ -75,7 +75,7 @@ def test_attempt_response_never_exposes_answer_keys():
 
 def test_admin_access_comes_from_cognito_groups_not_database_role(monkeypatch):
     monkeypatch.setattr(handler,"get_current_user",lambda event:{"sub":UID,"cognito:groups":["Students"]})
-    monkeypatch.setattr(handler,"get_or_create_user_from_claims",lambda claims:SimpleNamespace(id=UID,name="Learner",role="admin"))
+    monkeypatch.setattr(handler,"get_or_create_user_from_claims",lambda claims:SimpleNamespace(id=UID,name="Learner",email="learner@example.com",role="admin"))
     assert not handler._actor({})["admin"]
 
 

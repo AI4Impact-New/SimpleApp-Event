@@ -413,6 +413,9 @@ export const LOGIN_FEATURES = [
   { icon: "certificates", title: "Certificates", body: "Download and share verifiable credentials." },
 ] as const;
 
+/** Canonical student portal. Fixed here so a stale deployment env value cannot send students to the old Amplify host. */
+export const STUDENT_PORTAL_URL = "https://learn.ai4impact.in";
+
 /** Keep marketing-only tracks on guidance until their backend catalog entry is ready. */
 export function getTrackAction(track: Track | undefined) {
   const slug = track?.href?.split("/").pop();

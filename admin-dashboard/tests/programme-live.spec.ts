@@ -926,7 +926,7 @@ test("student web sign-in, real exam submission, internship review and private d
     "/learning/attempts/" + aptitude.id + "/submit",
     { answers: { [aptitude.questions[0].id]: "yes" } },
   );
-  await page.goto("https://main.d26ztc5gxt79re.amplifyapp.com");
+  await page.goto("https://learn.ai4impact.in");
   await page
     .getByText("Sign In", { exact: true })
     .filter({ visible: true })

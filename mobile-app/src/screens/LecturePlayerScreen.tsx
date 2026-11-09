@@ -158,7 +158,7 @@ export function LecturePlayerScreen({ classId, courseId, title, onBack, onPlayNe
         const playback = await api.getPlayback(classId);
         if (!mountedRef.current || activeClassRef.current !== classId) return;
         // Fail closed rather than play unmarked content against an outdated/malformed API.
-        if (!playback.watermark?.student_id || !playback.watermark.company) {
+        if (!playback.watermark?.email || !playback.watermark.company) {
           throw new Error('Playback protection is unavailable. Please try again.');
         }
         setWatermark(playback.watermark);

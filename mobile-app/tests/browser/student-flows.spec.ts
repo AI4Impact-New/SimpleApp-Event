@@ -146,7 +146,7 @@ for (const fallback of [false, true]) test(`protected playback keeps the moving 
     if (pathname === `/learning/classes/${eid}/playback`) {
       sessions++;
       json = { url: 'https://video.example.invalid/test.mp4', session_id: `session-${sessions}`, expires_in: sessions === 1 ? 8 : 900, duration_seconds: 120, resume_seconds: 0,
-        watermark: { company: 'AI4Impact', student_id: 'verified-student-123', move_interval_seconds: 25 } };
+        watermark: { company: 'AI4Impact', student_id: 'verified-student-123', email: 'learner@example.com', move_interval_seconds: 25 } };
     }
     if (pathname.endsWith('/progress') && route.request().method() === 'POST') json = { watched_seconds: 0, completed: false, progress_percentage: 0, duration_seconds: 120 };
     await route.fulfill({ json });
@@ -155,7 +155,8 @@ for (const fallback of [false, true]) test(`protected playback keeps the moving 
   await page.goto(`/learning/courses/${cid}/lectures/${eid}`);
   const mark = page.getByTestId('video-watermark');
   await expect(mark).toContainText('AI4Impact');
-  await expect(mark).toContainText('Student ID: verified-student-123');
+  await expect(mark).toContainText('learner@example.com');
+  await expect(mark).not.toContainText('verified-student-123');
   await page.waitForFunction(() => (document.querySelector('video')?.readyState ?? 0) >= 2);
   await expect(page.locator('video')).toHaveJSProperty('disablePictureInPicture', true);
   await page.getByRole('button', { name: 'Full screen', exact: true }).click();
@@ -236,7 +237,7 @@ async function protectedScrubPlayer(page: Page, posts: Array<{event:string;posit
       course: { id: cid, title: 'QA course' }, classes: [lesson], completion: { progress_percentage: 0 } };
     if (pathname.endsWith('/playback')) json = { url: 'https://video.example.invalid/scrubbing.mp4', session_id: aid,
       expires_in: 900, duration_seconds: 120, resume_seconds: 2, watched_seconds: 4.8, completed: false,
-      watermark: { company: 'AI4Impact', student_id: cid, move_interval_seconds: 25 } };
+      watermark: { company: 'AI4Impact', student_id: cid, email: 'learner@example.com', move_interval_seconds: 25 } };
     if (pathname.endsWith('/progress') && route.request().method() === 'POST') {
       posts.push(route.request().postDataJSON());
       json = { class_id: eid, watched_seconds: 4.8, duration_seconds: 120, progress_percentage: 4, completed: false };

@@ -148,7 +148,7 @@ def playback(actor, class_id):
         resume = float(progress["position_seconds"]) if progress else 0
         sid = str(uuid.uuid4())
         cur.execute("INSERT INTO playback_sessions(id,user_id,asset_id,last_position,expires_at) VALUES (%s,%s,%s,%s,%s)", (sid,actor["id"],asset["id"],resume,min(deadline,datetime.now(timezone.utc)+timedelta(hours=4)) if deadline else datetime.now(timezone.utc)+timedelta(hours=4)))
-    return {"watched_seconds": float(progress["watched_seconds"]) if progress else 0, "completed": bool(progress["completed"]) if progress else False, "watermark": {"company": "AI4Impact", "student_id": actor["id"], "move_interval_seconds": 25}, "url": url, "session_id": sid, "expires_in": seconds, "access_expires_at": deadline, "duration_seconds": asset["duration_seconds"], "resume_seconds": resume}
+    return {"watched_seconds": float(progress["watched_seconds"]) if progress else 0, "completed": bool(progress["completed"]) if progress else False, "watermark": {"company": "AI4Impact", "student_id": actor["id"], "email": actor["email"], "move_interval_seconds": 25}, "url": url, "session_id": sid, "expires_in": seconds, "access_expires_at": deadline, "duration_seconds": asset["duration_seconds"], "resume_seconds": resume}
 
 
 def progress_heartbeat(actor, class_id, body):

@@ -14,7 +14,7 @@ export function VideoWatermark({ identity }: { identity: PlaybackWatermark }) {
       (current + 1 + Math.floor(Math.random() * (POSITIONS.length - 1))) % POSITIONS.length
     ), Math.max(20, Math.min(40, identity.move_interval_seconds || 25)) * 1000);
     return () => clearInterval(timer);
-  }, [identity.student_id, identity.move_interval_seconds]);
+  }, [identity.email, identity.move_interval_seconds]);
   return (
     <View pointerEvents="none" style={styles.stage} onLayout={e => setStage(e.nativeEvent.layout)}>
       <View testID="video-watermark" onLayout={e => setLabel(e.nativeEvent.layout)} style={[styles.label, {
@@ -23,7 +23,7 @@ export function VideoWatermark({ identity }: { identity: PlaybackWatermark }) {
         top: Math.max(0, stage.height - label.height) * POSITIONS[slot][1],
       }]}>
         <Text style={styles.company}>{identity.company}</Text>
-        <Text style={styles.id}>Student ID: {identity.student_id}</Text>
+        <Text style={styles.id}>{identity.email}</Text>
       </View>
     </View>
   );

@@ -167,6 +167,7 @@ resource "aws_lambda_function" "learning" {
       RESEND_WEBHOOK_SECRET_ARN       = aws_secretsmanager_secret.resend_webhook.arn
       TRANSACTIONAL_EMAIL_ENABLED     = tostring(var.transactional_email_enabled)
       TRANSACTIONAL_FROM_EMAIL        = "noreply@ai4impact.in"
+      TRANSACTIONAL_REPLY_TO          = var.transactional_reply_to
       RESEND_API_KEY_SECRET_ARN       = aws_secretsmanager_secret.resend_api_key.arn
       EXPO_PROJECT_ID                 = var.expo_project_id
       RAZORPAY_ENABLED                = tostring(var.razorpay_enabled)

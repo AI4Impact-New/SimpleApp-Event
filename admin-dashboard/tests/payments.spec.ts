@@ -4,7 +4,7 @@ const oid='00000000-0000-0000-0000-000000000002';
 test('admin distinguishes test payments from demo orders and creates buyer checkout links',async({page})=>{
  const payload=Buffer.from(JSON.stringify({token_use:'id',sub:'test-admin','cognito:groups':['Admins'],exp:Math.floor(Date.now()/1000)+3600})).toString('base64url');
  await page.addInitScript(token=>localStorage.setItem('auth_id_token',token),`test.${payload}.test`);
- const order={id:oid,course_id:cid,course_title:'Payment QA',buyer_email:'qa@example.invalid',total_paise:9000,status:'paid',demo:false,mode:'test',provider_payment_id:'pay_QA',checkout_url:`https://main.d26ztc5gxt79re.amplifyapp.com/checkout/${oid}`};
+ const order={id:oid,course_id:cid,course_title:'Payment QA',buyer_email:'qa@example.invalid',total_paise:9000,status:'paid',demo:false,mode:'test',provider_payment_id:'pay_QA',checkout_url:`https://learn.ai4impact.in/checkout/${oid}`};
  let created:any;
  await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**',async route=>{
   const path=new URL(route.request().url()).pathname;let json:unknown=[];

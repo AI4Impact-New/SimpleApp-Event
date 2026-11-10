@@ -201,7 +201,9 @@ async function openStudent(page: import("@playwright/test").Page) {
   ).toBeVisible();
   if (await page.getByRole("button", { name: /^Show students in/ }).count())
     await page.getByRole("button", { name: /^Show students in/ }).click();
-  await page.getByRole("button", { name: "Open QA Learner Ledger QA" }).click();
+  await page
+    .getByRole("button", { name: "View payment trail for QA Learner" })
+    .click();
   await expect(page.getByRole("dialog")).toBeVisible();
 }
 

@@ -1074,10 +1074,10 @@ export default function ProgrammeWorkspace() {
               aria-hidden="true"
             />
             <input
-              aria-label={`Search ${tab.toLowerCase()}`}
+              aria-label={`Search ${sectionLabel(tab).toLowerCase()}`}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={`Search ${tab.toLowerCase()}…`}
+              placeholder={`Search ${sectionLabel(tab).toLowerCase()}…`}
               className="w-full rounded-lg border bg-white py-2.5 pl-9 pr-3 text-sm"
             />
           </label>

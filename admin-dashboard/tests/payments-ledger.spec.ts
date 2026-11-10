@@ -402,4 +402,11 @@ test("ledger uses one keyboard-accessible expansion control per group", async ({
   await expect(
     page.getByRole("button", { name: "Open QA Learner Ledger QA" }),
   ).toBeHidden();
+  await toggle.click();
+  const studentLink = page.getByRole("button", {
+    name: "View payment trail for QA Learner",
+  });
+  await studentLink.click();
+  await page.getByRole("button", { name: "Close dialog" }).click();
+  await expect(studentLink).toBeFocused();
 });

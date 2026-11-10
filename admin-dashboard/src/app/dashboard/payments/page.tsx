@@ -1058,6 +1058,8 @@ function FeePanel({
     payload: Record<string, unknown>,
   ) => Record<string, unknown>;
 }) {
+  const [receiptIntent, setReceiptIntent] = useState(""),
+    [emailIntent, setEmailIntent] = useState("");
   const [action, setAction] = useState(""),
     [plan, setPlan] = useState<{ amount: string; date: string }[]>([]),
     [link, setLink] = useState(""),
@@ -1074,6 +1076,7 @@ function FeePanel({
   const email = (kind: string) => {
     void run(async () => {
       setPreview(await feeLedger.preview(d.id, kind, d.as_of, fromDate));
+      setEmailIntent(crypto.randomUUID());
       setAction(kind);
     }, "Email preview prepared; review before sending.");
   };
@@ -1130,7 +1133,10 @@ function FeePanel({
         </button>
         <button
           className={button}
-          onClick={() => setAction(action === "receipt" ? "" : "receipt")}
+          onClick={() => {
+            if (action !== "receipt") setReceiptIntent(crypto.randomUUID());
+            setAction(action === "receipt" ? "" : "receipt");
+          }}
         >
           Record offline payment
         </button>
@@ -1263,7 +1269,7 @@ function FeePanel({
               void run(async () => {
                 await feeLedger.email(
                   d.id,
-                  request(action + d.id, {
+                  request(action + d.id + emailIntent, {
                     kind: action,
                     as_of: d.as_of,
                     from_on: fromDate,
@@ -1287,7 +1293,7 @@ function FeePanel({
             void run(async () => {
               await feeLedger.receipt(
                 d.id,
-                request("receipt" + d.id, {
+                request("receipt" + d.id + receiptIntent, {
                   method: f.get("method"),
                   amount_paise: amount(f.get("amount")),
                   reference: f.get("reference"),

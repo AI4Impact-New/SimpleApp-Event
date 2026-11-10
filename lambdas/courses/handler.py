@@ -348,9 +348,11 @@ def _catalog_content(item, event):
     if not staff and item.get("status") != "published":
         return create_error_response(404, "Course not found")
     user = get_or_create_user_from_claims(claims) if claims else None
-    unlocked = staff or (user and enrolled(user.id, item["id"]))
+    # Staff preview permission is separate from the learner's enrollment.
+    has_enrollment = bool(user and enrolled(user.id, item["id"]))
+    unlocked = staff or has_enrollment
     result = dict(item)
-    result["learning_access"] = bool(unlocked)
+    result["learning_access"] = has_enrollment
     if not unlocked:
         result["classes"] = [{**cl, "zoom_link":None, "recording_material_id":None} for cl in item.get("classes",[])]
     return result

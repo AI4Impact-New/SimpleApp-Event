@@ -8,7 +8,7 @@ from learning.validation import ApiError
 
 UID = '00000000-0000-0000-0000-000000000001'
 CID = '00000000-0000-0000-0000-000000000002'
-ACTOR = {'id': UID, 'admin': False}
+ACTOR = {'id': UID, 'email': 'learner@example.com', 'admin': False}
 
 @pytest.mark.parametrize('remaining,expected', [(None,900),(60,60),(1800,900)])
 def test_playback_issues_verified_identity_and_bounds_url_expiry(monkeypatch,remaining,expected):
@@ -25,7 +25,7 @@ def test_playback_issues_verified_identity_and_bounds_url_expiry(monkeypatch,rem
     monkeypatch.setattr(service, 'get_db_cursor', db)
     result = service.playback(ACTOR,CID)
     assert result['expires_in'] == expected
-    assert result['watermark'] == {'company':'AI4Impact','student_id':UID,'move_interval_seconds':25}
+    assert result['watermark'] == {'company':'AI4Impact','student_id':UID,'email':'learner@example.com','move_interval_seconds':25}
     signer.assert_called_once_with('private.mp4',expected)
 
 

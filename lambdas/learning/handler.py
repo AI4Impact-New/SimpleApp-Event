@@ -49,7 +49,7 @@ def _actor(event):
     user = get_or_create_user_from_claims(claims)
     if not user: raise ApiError(401,"User identity could not be resolved")
     groups = {str(g).lower() for g in _normalize_groups(claims.get("cognito:groups"))}
-    return {"id":str(user.id),"sub":str(claims.get('sub') or ''),"name":user.name,"admin":"admins" in groups,"marketing":"marketing" in groups}
+    return {"id":str(user.id),"sub":str(claims.get('sub') or ''),"name":user.name,"email":user.email,"admin":"admins" in groups,"marketing":"marketing" in groups}
 
 
 def handler(event, context):

@@ -1,0 +1,107 @@
+[
+  {
+    "alias": "ai4impact-course-enrolled-v1",
+    "id": "b3a3f471-0b65-429b-ba08-0ca60ca8f3d9",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-course-completed-v1",
+    "id": "c0b6bb39-ad64-4023-8cde-6a4bf2e71171",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-course-access-updated-v1",
+    "id": "5814df54-e66f-47b6-a934-b68ee29be178",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-payment-confirmed-v1",
+    "id": "7bb602f2-77ed-4276-ae33-c04d05850e26",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-refund-partial-v1",
+    "id": "c24248ed-c969-4e94-b822-a9a023ff0b83",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-refund-full-v1",
+    "id": "0dc85268-cb70-4c41-afc0-98147a1f837e",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-certificate-issued-v1",
+    "id": "f8758723-793a-4573-90b9-dd3f5215c480",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-session-confirmed-v1",
+    "id": "c57ca84d-4756-4ea3-b84f-948ff5919311",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-session-rescheduled-v1",
+    "id": "d906daf0-0d90-4285-bea1-fa3d46288c52",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-session-cancelled-v1",
+    "id": "74be210d-d093-466f-b85a-dceab311a11d",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-session-reminder-v1",
+    "id": "5143472c-388d-4358-a5c8-b4031dfba30a",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-session-outcome-v1",
+    "id": "eb919f98-2b9c-443c-be09-1f2266d66f63",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-webinar-confirmed-v1",
+    "id": "c04fcf13-91d9-4156-a10d-a95fb77f6814",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-webinar-updated-v1",
+    "id": "139a0ff3-8d69-48da-9d64-54d3caba1d4b",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-webinar-cancelled-v1",
+    "id": "658aa657-3091-4f9d-b2dd-ccb367d2c536",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-webinar-reminder-v1",
+    "id": "c823f832-fa66-437e-b92d-aab6ad3eb68f",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-application-received-v1",
+    "id": "04ce7508-614e-4402-94eb-39e3a3ca2d14",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-application-updated-v1",
+    "id": "b373c7d5-7544-44ee-ab2f-88acc6b14945",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-internship-updated-v1",
+    "id": "289c1763-610d-4cc1-93f7-e0184c0424cb",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-course-announcement-v1",
+    "id": "b3ece1cc-3d2c-4c57-8f06-1ebce4390c25",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-course-quote-v1",
+    "id": "9a2ea001-4fed-458f-80fb-b5c3172d2e63",
+    "status": "published"
+  }
+]

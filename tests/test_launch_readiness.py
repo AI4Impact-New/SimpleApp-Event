@@ -62,7 +62,7 @@ def test_public_employer_route_does_not_require_login(monkeypatch):
 def test_multi_group_authorizer_shapes(claim,monkeypatch):
     from types import SimpleNamespace
     monkeypatch.setattr(handler,'get_current_user',lambda event:{'cognito:groups':claim})
-    monkeypatch.setattr(handler,'get_or_create_user_from_claims',lambda claims:SimpleNamespace(id=ID,name='QA'))
+    monkeypatch.setattr(handler,'get_or_create_user_from_claims',lambda claims:SimpleNamespace(id=ID,name='QA',email='qa@example.com'))
     actor=handler._actor({})
     assert actor['marketing'] is True and actor['admin'] is False
 

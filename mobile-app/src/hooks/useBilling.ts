@@ -1,4 +1,4 @@
-// Demo commerce hooks — quotes, demo checkout and purchase history. Never grants enrollment.
+// Checkout and purchase history. Enrollment is granted by the server after verified capture.
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import type { DemoCheckoutAction } from '@/types/billing';

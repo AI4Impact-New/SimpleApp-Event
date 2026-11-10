@@ -5,7 +5,7 @@ Run from repo root unless noted.
 ## 1) Build Lambda zip packages
 
 ```bash
-cd /Users/gundellysiddarthayadav/Code/Piresearch/SimpleApp-Event
+cd ~/Coder/PayIntelli/SimpleApp-Event
 bash scripts/build_lambdas.sh
 ```
 
@@ -37,7 +37,7 @@ done
 ## 4) Terraform plan/apply
 
 ```bash
-cd /Users/gundellysiddarthayadav/Code/Piresearch/SimpleApp-Event/infra/terraform
+cd ~/Coder/PayIntelli/SimpleApp-Event/infra/terraform
 chmod +x run_terraform.sh
 ./run_terraform.sh init
 ./run_terraform.sh plan
@@ -47,7 +47,7 @@ chmod +x run_terraform.sh
 ## 5) Create Cognito groups (one-time)
 
 ```bash
-cd /Users/gundellysiddarthayadav/Code/Piresearch/SimpleApp-Event
+cd ~/Coder/PayIntelli/SimpleApp-Event
 USER_POOL_ID=$(cd infra/terraform && ./run_terraform.sh output -raw cognito_user_pool_id)
 AWS_PROFILE=jm AWS_REGION=ap-south-1 ./scripts/create_cognito_groups.sh "$USER_POOL_ID"
 ```

@@ -10,11 +10,12 @@ export function useMyLearning() {
   });
 }
 
-export function useLearningHome(courseId: string) {
+// Preview-only callers pass false: detail reads initialize persisted lecture access windows.
+export function useLearningHome(courseId: string, enabled = true) {
   return useQuery({
     queryKey: ['learning', 'course', courseId],
     queryFn: () => api.getLearningHome(courseId),
-    enabled: !!courseId,
+    enabled: !!courseId && enabled,
     staleTime: 0, // server-authoritative progress: refetch on every foreground
   });
 }

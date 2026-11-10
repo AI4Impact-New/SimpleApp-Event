@@ -1,0 +1,214 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ProjectSchedules",
+      "Effect": "Allow",
+      "Action": [
+        "events:DescribeRule",
+        "events:ListTargetsByRule",
+        "events:PutRule",
+        "events:PutTargets",
+        "events:EnableRule",
+        "events:DisableRule",
+        "events:TagResource"
+      ],
+      "Resource": [
+        "arn:aws:events:ap-south-1:767491588787:rule/pilearn-*"
+      ]
+    },
+    {
+      "Sid": "ProjectQueues",
+      "Effect": "Allow",
+      "Action": [
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl",
+        "sqs:ListQueueTags",
+        "sqs:SendMessage",
+        "sqs:ReceiveMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:CreateQueue",
+        "sqs:TagQueue"
+      ],
+      "Resource": [
+        "arn:aws:sqs:ap-south-1:767491588787:pilearn-*"
+      ]
+    },
+    {
+      "Sid": "ProjectTopics",
+      "Effect": "Allow",
+      "Action": [
+        "sns:GetTopicAttributes",
+        "sns:ListSubscriptionsByTopic",
+        "sns:Publish",
+        "sns:CreateTopic",
+        "sns:Subscribe",
+        "sns:ConfirmSubscription"
+      ],
+      "Resource": [
+        "arn:aws:sns:ap-south-1:767491588787:pilearn-*"
+      ]
+    },
+    {
+      "Sid": "ProjectLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:DescribeLogStreams",
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents",
+        "logs:StartQuery",
+        "logs:GetLogGroupFields"
+      ],
+      "Resource": [
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/lambda/pilearn-*",
+        "arn:aws:logs:ap-south-1:767491588787:log-group:/aws/apigateway/pilearn*"
+      ]
+    },
+    {
+      "Sid": "QueryResults",
+      "Effect": "Allow",
+      "Action": [
+        "logs:GetQueryResults",
+        "logs:StopQuery"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "ap-south-1"
+        }
+      }
+    },
+    {
+      "Sid": "ProjectAlarms",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:PutMetricAlarm",
+        "cloudwatch:TagResource"
+      ],
+      "Resource": [
+        "arn:aws:cloudwatch:ap-south-1:767491588787:alarm:pilearn-*"
+      ]
+    },
+    {
+      "Sid": "TraceDiagnostics",
+      "Effect": "Allow",
+      "Action": [
+        "xray:Get*",
+        "xray:BatchGetTraces",
+        "xray:List*"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "ap-south-1"
+        }
+      }
+    },
+    {
+      "Sid": "HostingDiscovery",
+      "Effect": "Allow",
+      "Action": [
+        "amplify:ListApps",
+        "cloudfront:ListDistributions"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "ProjectHostingDeployments",
+      "Effect": "Allow",
+      "Action": [
+        "amplify:Get*",
+        "amplify:List*",
+        "amplify:StartJob",
+        "amplify:StopJob",
+        "amplify:CreateDeployment",
+        "amplify:StartDeployment"
+      ],
+      "Resource": [
+        "arn:aws:amplify:ap-south-1:767491588787:apps/d26ztc5gxt79re",
+        "arn:aws:amplify:ap-south-1:767491588787:apps/d16744ddqs159z",
+        "arn:aws:amplify:ap-south-1:767491588787:apps/d3revsgd6isklp",
+        "arn:aws:amplify:ap-south-1:767491588787:apps/d26ztc5gxt79re/*",
+        "arn:aws:amplify:ap-south-1:767491588787:apps/d16744ddqs159z/*",
+        "arn:aws:amplify:ap-south-1:767491588787:apps/d3revsgd6isklp/*"
+      ]
+    },
+    {
+      "Sid": "ProjectMediaCdn",
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:GetDistribution",
+        "cloudfront:GetDistributionConfig",
+        "cloudfront:ListTagsForResource",
+        "cloudfront:CreateInvalidation",
+        "cloudfront:GetInvalidation",
+        "cloudfront:ListInvalidations"
+      ],
+      "Resource": [
+        "arn:aws:cloudfront::767491588787:distribution/EYNLYF9QVLVRP"
+      ]
+    },
+    {
+      "Sid": "EmailDiagnostics",
+      "Effect": "Allow",
+      "Action": [
+        "ses:Get*",
+        "ses:List*"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "ap-south-1"
+        }
+      }
+    },
+    {
+      "Sid": "SelfIdentity",
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity",
+        "sts:GetSessionToken",
+        "iam:GetAccountPasswordPolicy",
+        "iam:ListVirtualMFADevices"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "SelfCredentialSetup",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetUser",
+        "iam:ChangePassword",
+        "iam:ListMFADevices",
+        "iam:EnableMFADevice",
+        "iam:ResyncMFADevice",
+        "iam:ListAccessKeys",
+        "iam:CreateAccessKey",
+        "iam:UpdateAccessKey"
+      ],
+      "Resource": [
+        "arn:aws:iam::767491588787:user/${aws:username}"
+      ]
+    },
+    {
+      "Sid": "SelfMfaRegistration",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateVirtualMFADevice"
+      ],
+      "Resource": [
+        "arn:aws:iam::767491588787:mfa/${aws:username}"
+      ]
+    }
+  ]
+}

@@ -24,7 +24,7 @@ resource "aws_lambda_function" "notifications" {
     subnet_ids         = [aws_subnet.private["a"].id, aws_subnet.private["b"].id]
     security_group_ids = [aws_security_group.lambda.id]
   }
-  environment { variables = merge(local.lambda_env, { EXPO_ACCESS_TOKEN = var.expo_push_access_token, EXPO_PROJECT_ID = var.expo_project_id }) }
+  environment { variables = merge(local.lambda_env, { PROGRAMME_NOTIFICATIONS_ENABLED = tostring(var.programme_notifications_enabled), EXPO_ACCESS_TOKEN = var.expo_push_access_token, EXPO_PROJECT_ID = var.expo_project_id }) }
   depends_on = [aws_iam_role_policy_attachment.notifications_db_secret, aws_iam_role_policy_attachment.notifications_vpc, aws_cloudwatch_log_group.notifications, null_resource.build_lambdas]
 }
 resource "aws_cloudwatch_event_rule" "notifications" {

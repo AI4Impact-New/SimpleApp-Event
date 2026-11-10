@@ -1,0 +1,143 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "MaximumBackendServices",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:*",
+        "cognito-idp:*",
+        "apigateway:*",
+        "s3:*",
+        "secretsmanager:*",
+        "ssm:*",
+        "logs:*",
+        "events:*",
+        "sqs:*",
+        "sns:*",
+        "rds:*",
+        "ec2:Describe*",
+        "cloudwatch:*",
+        "xray:*",
+        "amplify:*",
+        "cloudfront:*",
+        "ses:Get*",
+        "ses:List*",
+        "iam:Get*",
+        "iam:List*",
+        "iam:ChangePassword",
+        "iam:CreateAccessKey",
+        "iam:UpdateAccessKey",
+        "iam:CreateVirtualMFADevice",
+        "iam:EnableMFADevice",
+        "iam:ResyncMFADevice",
+        "sts:GetCallerIdentity",
+        "sts:GetSessionToken"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "PassOnlyProjectLambdaRoles",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": [
+        "arn:aws:iam::767491588787:role/pilearn-lambda-role",
+        "arn:aws:iam::767491588787:role/pilearn-learning-role",
+        "arn:aws:iam::767491588787:role/pilearn-notifications-role",
+        "arn:aws:iam::767491588787:role/pilearn-programme-worker"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "lambda.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "NoDirectDeletion",
+      "Effect": "Deny",
+      "Action": [
+        "lambda:Delete*",
+        "cognito-idp:Delete*",
+        "s3:Delete*",
+        "secretsmanager:Delete*",
+        "ssm:Delete*",
+        "logs:Delete*",
+        "events:Delete*",
+        "sqs:Delete*",
+        "sns:Delete*",
+        "rds:Delete*",
+        "cloudwatch:Delete*",
+        "amplify:Delete*",
+        "cloudfront:Delete*",
+        "iam:Delete*",
+        "kms:Delete*",
+        "cloudformation:Delete*",
+        "apigateway:DELETE",
+        "cognito-idp:AdminDelete*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "NoPrivilegeChangesOrRoleAssumption",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreatePolicy*",
+        "iam:CreateRole",
+        "iam:CreateUser",
+        "iam:CreateGroup",
+        "iam:CreateServiceLinkedRole",
+        "iam:CreateLoginProfile",
+        "iam:UpdateLoginProfile",
+        "iam:Put*",
+        "iam:Attach*",
+        "iam:Detach*",
+        "iam:AddUserToGroup",
+        "iam:Remove*",
+        "iam:SetDefaultPolicyVersion",
+        "iam:UpdateAssumeRolePolicy",
+        "iam:UpdateRole*",
+        "iam:UpdateUser",
+        "iam:Tag*",
+        "iam:Untag*",
+        "sts:AssumeRole*",
+        "sts:GetFederationToken"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "NoDestructiveShortcuts",
+      "Effect": "Deny",
+      "Action": [
+        "cognito-idp:AdminDisableUser",
+        "kms:ScheduleKeyDeletion",
+        "kms:DisableKey",
+        "sqs:PurgeQueue",
+        "secretsmanager:RotateSecret",
+        "s3:PutLifecycleConfiguration",
+        "s3:PutBucketPolicy",
+        "s3:PutBucketAcl",
+        "s3:PutBucketPublicAccessBlock",
+        "logs:PutRetentionPolicy",
+        "lambda:CreateFunctionUrlConfig",
+        "lambda:UpdateFunctionUrlConfig",
+        "rds:StopDBInstance",
+        "rds:RebootDBInstance",
+        "cloudformation:UpdateStack",
+        "cloudformation:ExecuteChangeSet"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ProtectTerraformState",
+      "Effect": "Deny",
+      "Action": [
+        "s3:GetObject*",
+        "s3:PutObject*",
+        "s3:DeleteObject*"
+      ],
+      "Resource": "arn:aws:s3:::pilearn-terraform-state-767491588787/*"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-// Events Screen – QR check-in and the public event list
+// Events Screen – QR check-in (native app only) and the public event list
 import React from 'react';
 import {
   View,
@@ -15,15 +15,34 @@ import { useEvents } from '@/hooks/useEvents';
 import { EventCard } from '@/components/EventCard';
 import { Event } from '@/types/event';
 import { colors, spacing } from '@/theme/colors';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebEvents } from '@/components/web/WebEvents';
 
 interface EventsScreenProps {
   onEventPress: (event: Event) => void;
-  onScanPress: () => void;
+  /** Omitted on web: browsers on laptops/desktops have no practical QR check-in. */
+  onScanPress?: () => void;
   onLeaderboardPress?: () => void;
   onBack?: () => void;
 }
 
-export function EventsScreen({ onEventPress, onScanPress, onLeaderboardPress, onBack }: EventsScreenProps) {
+export function EventsScreen(props: EventsScreenProps) {
+  // Browser portal: design's events page (join by code, live hero + poll, upcoming, leaderboard).
+  if (isWeb) {
+    return (
+      <WebEvents
+        onEventPress={props.onEventPress}
+        // Navigation only reads the id; after a code join we have just that.
+        onOpenEvent={(eventId) => props.onEventPress({ id: eventId } as Event)}
+        onLeaderboardPress={props.onLeaderboardPress}
+      />
+    );
+  }
+  return <NativeEvents {...props} />;
+}
+
+function NativeEvents({ onEventPress, onScanPress, onLeaderboardPress, onBack }: EventsScreenProps) {
   const {
     data: events,
     isLoading,
@@ -41,6 +60,19 @@ export function EventsScreen({ onEventPress, onScanPress, onLeaderboardPress, on
 
   return (
     <SafeAreaView style={styles.container}>
+      {isWeb ? (
+        <ScreenHeader
+          title="Events"
+          onBack={onBack}
+          right={
+            onLeaderboardPress ? (
+              <TouchableOpacity style={styles.profileButton} onPress={onLeaderboardPress} activeOpacity={0.7} accessibilityLabel="Leaderboards">
+                <Ionicons name="podium-outline" size={24} color={colors.primary} />
+              </TouchableOpacity>
+            ) : null
+          }
+        />
+      ) : (
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           {onBack ? (
@@ -56,8 +88,10 @@ export function EventsScreen({ onEventPress, onScanPress, onLeaderboardPress, on
           </TouchableOpacity>
         ) : null}
       </View>
+      )}
 
       {/* QR-first: primary action */}
+      {onScanPress ? (
       <TouchableOpacity
         style={styles.qrCard}
         onPress={onScanPress}
@@ -72,11 +106,14 @@ export function EventsScreen({ onEventPress, onScanPress, onLeaderboardPress, on
         </View>
         <Ionicons name="chevron-forward" size={24} color={colors.primary} />
       </TouchableOpacity>
+      ) : null}
 
       {/* View available events section */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>View available events</Text>
-      </View>
+      {!isWeb ? (
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>View available events</Text>
+        </View>
+      ) : null}
 
       {isLoading ? (
         <View style={styles.loadingContainer}>
@@ -108,7 +145,7 @@ export function EventsScreen({ onEventPress, onScanPress, onLeaderboardPress, on
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>No upcoming events</Text>
               <Text style={styles.emptySubtext}>
-                Scan a QR code at an event to join, or check back later
+                {onScanPress ? 'Scan a QR code at an event to join, or check back later' : 'Check back later for new events'}
               </Text>
             </View>
           }

@@ -20,11 +20,17 @@ export interface Order {
   discount_bps: number;
   discount_paise: number;
   total_paise: number;
-  status: "pending" | "demo_completed" | "cancelled";
+  status: "pending" | "demo_completed" | "cancelled" | "paid" | "refunded" | "partially_refunded";
   created_at: string;
   expires_at: string;
   checkout_url: string;
-  demo: true;
+  demo: boolean;
+  mode?: "test" | "live";
+  provider_payment_id?: string;
+  provider_order_id?: string;
+  refunded_paise?: number;
+  notice?: string;
+  checkout?: Record<string, unknown>;
 }
 export const money = (paise: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
@@ -52,6 +58,9 @@ export const billing = {
     ),
   order: (id: string) =>
     api.learningRequest<Order>("GET", `/billing/orders/${id}`),
+  prepare: (id: string) => api.learningRequest<Order>("POST", `/billing/orders/${id}/checkout`, {}),
+  verify: (id: string, result: import('@/utils/razorpay').CheckoutResult) => api.learningRequest<Order>("POST", `/billing/orders/${id}/verify`, result),
+  reconcile: (id: string) => api.learningRequest<Order>("POST", `/billing/orders/${id}/reconcile`, {}),
   finish: (id: string, action: "complete_demo" | "cancel") =>
     api.learningRequest<Order>("POST", `/billing/orders/${id}/demo-checkout`, {
       action,
@@ -85,7 +94,7 @@ export const billing = {
       url = URL.createObjectURL(blob),
       a = document.createElement("a");
     a.href = url;
-    a.download = `AI4Impact-demo-invoice-${id}.pdf`;
+    a.download = `AI4Impact-order-receipt-${id}.pdf`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   },

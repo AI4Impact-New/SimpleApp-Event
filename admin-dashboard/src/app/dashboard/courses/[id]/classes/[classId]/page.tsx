@@ -16,9 +16,9 @@ function buildClassIcs(cl: CourseClass, courseTitle: string): string {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//PiResearch//AI4Impact//EN',
+    'PRODID:-//Samagyaan Data solutions//AI4Impact//EN',
     'BEGIN:VEVENT',
-    `UID:class-${cl.id}@piresearch`,
+    `UID:class-${cl.id}@ai4impact.in`,
     `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
     `DTSTART:${start || new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z'}`,
     `DTEND:${end || new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z'}`,

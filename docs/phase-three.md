@@ -39,7 +39,7 @@ Goal: extend the existing course schema to support **third-party certifications*
 
 - **1.2 Add course-level certification metadata**
   - Decide fields needed for course certifications (in-house + third-party), e.g.:
-    - Provider name (e.g. `AWS`, `Google`, `PIResearch`).
+    - Provider name (e.g. `AWS`, `Google`, `Samagyaan Data solutions`).
     - Certification type / code (e.g. `AWS-CLF-C02`).
     - Issuer URL / portal link.
     - Whether the certificate is auto-issued or requires manual verification.
@@ -114,7 +114,7 @@ Goal: create a **pluggable integration layer** for third-party certifications th
     - e.g. `shared/certification/providers.py` with a base class/protocol:
       - `issue_certificate(user, course, completion_context) -> CertificateIssueResult`.
       - `revoke_certificate()`, `get_status()`, etc. (optional for v1).
-  - Implement a default **internal provider** (`PiResearchCertificateProvider`) that:
+  - Implement a default **internal provider** (`SamagyaanCertificateProvider`) that:
     - Generates certificate IDs and stores them in a `course_certificates_issued` table.
     - Renders PDFs using a template (see Section 11) or records as a DB row for now.
   - Design a config model:
@@ -552,10 +552,10 @@ Goal: provide **exam centers** and **assessment flows** that feed into course co
 
 ## 11. Certificate of Attendance and Event Certificates
 
-Goal: automatically generate **certificates of attendance** for events and courses, using a PiResearch template.
+Goal: automatically generate **certificates of attendance** for events and courses, using a Samagyaan Data solutions template.
 
 - **11.1 Define certificate templates**
-  - Create a base **PiResearch certificate template**:
+  - Create a base **Samagyaan Data solutions certificate template**:
     - PDF/HTML template with placeholders:
       - `{user_name}`, `{course_name}`, `{event_name}`, `{date}`, `{hours}`, `{certificate_id}`, `{issuer}`.
   - Store template assets:
@@ -678,7 +678,7 @@ Goal: create and integrate a **Privacy Policy** for the PiLearn mobile app and p
 7. **Materials ↔ courses/classes linkage**: implement Section 8 for learning paths.
 8. **Completion logic and synchronization**: implement Section 9 for progress and readiness.
 9. **Exams and exam centers**: implement Section 10.
-10. **Certificates (attendance + course completion)**: implement Section 11 with PiResearch template.
+10. **Certificates (attendance + course completion)**: implement Section 11 with Samagyaan Data solutions template.
 11. **Privacy policy drafting and integration**: implement Section 12.
 12. **Security, observability, and testing**: finalize Section 13 and ensure all new flows are stable.
 

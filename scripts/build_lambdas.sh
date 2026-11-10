@@ -30,10 +30,13 @@ for name in "${LAMBDA_NAMES[@]}"; do
   # Copy this Lambda's package into build dir
   rm -rf "$BUILD_DIR/$name"
   cp -r "$LAMBDAS_DIR/$name" "$BUILD_DIR/$name"
+  if [[ "$name" == "learning" ]]; then
+    cp -r "$LAMBDAS_DIR/programme" "$BUILD_DIR/programme"
+  fi
   # Zip contents of build dir (so zip root has shared/, events/, psycopg2/, etc.)
   python3 "$REPO_ROOT/scripts/zip_lambda.py" "$BUILD_DIR" "$LAMBDAS_DIR/$name.zip"
   # Remove this package so next iteration gets a clean copy
-  rm -rf "$BUILD_DIR/$name"
+  rm -rf "$BUILD_DIR/$name" "$BUILD_DIR/programme"
 done
 
 # Remove shared so we don't leave it in build_dir for next run

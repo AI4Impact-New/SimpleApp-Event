@@ -1,0 +1,84 @@
+{
+  "release_commit": "90287d40f6530c9fa7b30bd78aa6d49c25632cb4",
+  "environment": "production",
+  "runner": "Playwright CLI, Chromium, one worker",
+  "api_responses_mocked": false,
+  "start_utc": "2026-11-03T18:38:06.796Z",
+  "duration_ms": 94301.38,
+  "passed": 14,
+  "failed": 0,
+  "skipped": 0,
+  "flaky": 0,
+  "cases": [
+    {
+      "name": "live authentication, enrollment and role boundaries",
+      "passed": true,
+      "duration_ms": 570
+    },
+    {
+      "name": "real admin sign-in and session form persist UTC and meeting privacy",
+      "passed": true,
+      "duration_ms": 3134
+    },
+    {
+      "name": "real educator workspace hides admin-only functions",
+      "passed": true,
+      "duration_ms": 2003
+    },
+    {
+      "name": "last-seat race, idempotency, ownership and cancellation refund",
+      "passed": true,
+      "duration_ms": 673
+    },
+    {
+      "name": "reschedule transfers one credit, stale retries cannot overspend",
+      "passed": true,
+      "duration_ms": 434
+    },
+    {
+      "name": "invalid dates, duration, unsafe links and educator overlap are rejected",
+      "passed": true,
+      "duration_ms": 333
+    },
+    {
+      "name": "job filters, consent, owned applications, manual timeline and withdrawal",
+      "passed": true,
+      "duration_ms": 704
+    },
+    {
+      "name": "entitlement revocation and included quotas are enforced server-side",
+      "passed": true,
+      "duration_ms": 243
+    },
+    {
+      "name": "preferences, inbox ownership, queued announcements and disabled real email",
+      "passed": true,
+      "duration_ms": 250
+    },
+    {
+      "name": "live webinar registration and pause with private join link and safe QA visibility",
+      "passed": true,
+      "duration_ms": 1155
+    },
+    {
+      "name": "queued course announcement reaches only enrolled QA inboxes",
+      "passed": true,
+      "duration_ms": 75634
+    },
+    {
+      "name": "existing QR event generation, validation, duplicate and future-event guards",
+      "passed": true,
+      "duration_ms": 2744
+    },
+    {
+      "name": "student web sign-in, real exam submission, internship review and private documents",
+      "passed": true,
+      "duration_ms": 4373
+    },
+    {
+      "name": "last-credit race and near-session cancellation cutoffs",
+      "passed": true,
+      "duration_ms": 1060
+    }
+  ]
+}

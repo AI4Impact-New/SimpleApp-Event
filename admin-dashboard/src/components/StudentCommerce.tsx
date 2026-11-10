@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { openRazorpay } from "@/utils/razorpay";
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { billing, money, Price, Order } from "@/services/billing";
@@ -85,16 +86,14 @@ export function StudentCommerce({ checkout = false }: { checkout?: boolean }) {
       <main className="max-w-5xl mx-auto p-5 sm:p-8 space-y-6">
         <div>
           <p className="text-sm text-primary-700 font-semibold">
-            Paintly · DEMO
+            Razorpay checkout
           </p>
           <h1 className="text-3xl font-bold mt-2">
-            {checkout ? "Demo checkout" : "Courses & purchase history"}
+            {checkout ? "Checkout" : "Courses & purchase history"}
           </h1>
         </div>
         <p className="border border-amber-300 bg-amber-50 rounded-xl p-4 text-sm">
-          Checkout is a demonstration. No card or bank details are requested. No
-          money is collected; completing it does not grant course access.
-          Downloaded PDFs are demo/pro forma invoices, not proof of payment.
+          Test checkout is restricted to authorized QA accounts and collects no real money. Course access is granted after backend verification. Historical demo orders do not grant access. Receipts are not GST tax invoices.
         </p>
         {error && (
           <p role="alert" className="bg-red-50 text-red-800 p-4 rounded-lg">
@@ -146,7 +145,23 @@ export function StudentCommerce({ checkout = false }: { checkout?: boolean }) {
                 {new Date(order.expires_at).toLocaleString()}
               </p>
               <div className="flex flex-wrap gap-4">
-                {order.status === "pending" && (
+                {!order.demo && order.status === "pending" && <>
+                  <button disabled={busy} onClick={() => void act(async () => {
+                    const prepared = await billing.prepare(order.id);
+                    if (prepared.checkout) {
+                      let failureMsg = "";
+                      const result = await openRazorpay({
+                        ...prepared.checkout,
+                        onFailure: (f) => { failureMsg = f.description || "Payment was declined by your bank or provider."; },
+                      });
+                      if (result) await billing.verify(order.id, result);
+                      else if (failureMsg) setError(failureMsg);
+                    }
+                    setOrder(await billing.reconcile(order.id));
+                  })} className="bg-primary-600 text-white px-4 py-3 rounded-lg disabled:opacity-50">Pay with Razorpay {order.mode === 'test' ? '· TEST' : ''}</button>
+                  <button disabled={busy} onClick={() => void act(async () => setOrder(await billing.reconcile(order.id)))} className="border px-4 py-3 rounded-lg">Check payment status</button>
+                </>}
+                {order.status === "pending" && order.demo && (
                   <>
                     <button
                       disabled={
@@ -182,9 +197,26 @@ export function StudentCommerce({ checkout = false }: { checkout?: boolean }) {
                   onClick={() => void act(() => billing.invoice(order.id))}
                   className="underline text-primary-700"
                 >
-                  Download demo invoice PDF
+                  Download order receipt PDF
                 </button>
               </div>
+              {order.status === "paid" && (
+                <div className="bg-green-50 border border-green-200 text-green-900 p-5 rounded-xl space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-bold text-green-700">✓</span>
+                    <strong className="text-lg">Payment Verified!</strong>
+                  </div>
+                  <p className="text-sm">
+                    You are enrolled in <strong>{order.course_title}</strong>. Your course is unlocked in My learning.
+                  </p>
+                  <a
+                    href={`${process.env.NEXT_PUBLIC_STUDENT_PORTAL_URL || "https://learn.ai4impact.in"}/learning/courses/${order.course_id}`}
+                    className="inline-block bg-green-700 text-white font-medium px-4 py-2 rounded-lg text-sm"
+                  >
+                    Go to course workspace
+                  </a>
+                </div>
+              )}
               {order.status === "demo_completed" && (
                 <p
                   role="status"
@@ -241,14 +273,14 @@ export function StudentCommerce({ checkout = false }: { checkout?: boolean }) {
                       }
                       className="bg-primary-600 text-white rounded-lg px-4 py-2 disabled:opacity-50"
                     >
-                      Open demo checkout
+                      Open checkout
                     </button>
                   </article>
                 ))}
               </div>
             </section>
             <section className="bg-white rounded-xl border p-5">
-              <h2 className="text-xl font-semibold">Purchase history — demo</h2>
+              <h2 className="text-xl font-semibold">Purchase history</h2>
               <p className="text-sm text-gray-500 my-2">
                 Latest 200 orders. Pending and cancelled orders are included;
                 none represent real payments.

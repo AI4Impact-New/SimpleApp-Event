@@ -3,7 +3,7 @@ import { Eyebrow } from "@/components/core/Eyebrow";
 import { Accordion } from "@/components/data/Accordion";
 import { Section } from "@/components/layout/Section";
 import { SectionHeader } from "@/components/navigation/SectionHeader";
-import type { CourseDetail, CoursePhase } from "@/content/courses";
+import type { CourseDetail, CourseModule, CoursePhase } from "@/content/courses";
 
 /** Three-segment bar: weeks already covered (pale), this phase (teal), the rest (track). */
 function PhaseProgress({ weeks: [from, to], total }: { weeks: CoursePhase["weeks"]; total: number }) {
@@ -13,6 +13,39 @@ function PhaseProgress({ weeks: [from, to], total }: { weeks: CoursePhase["weeks
       <span className="bg-(--teal-100)" style={{ width: pct(from - 1) }} />
       <span className="rounded-(--radius-pill) bg-(--teal-600)" style={{ width: pct(to - from + 1) }} />
     </div>
+  );
+}
+
+/** Logo files in `public/tools`, keyed by the tool names used in `CoursePhase.tools`. */
+const TOOL_LOGOS: Record<string, string> = {
+  Azure: "/tools/azure.svg",
+  "Azure SQL": "/tools/azure-sql.svg",
+  "Azure Data Factory": "/tools/azure-data-factory.svg",
+  "Azure DevOps": "/tools/azure-devops.svg",
+  Python: "/tools/python.svg",
+  "Apache Spark": "/tools/apache-spark.svg",
+  Databricks: "/tools/databricks.svg",
+  "Microsoft Fabric": "/tools/microsoft-fabric.svg",
+  "Power BI": "/tools/power-bi.svg",
+};
+
+/** Row of tool logos for a phase; each tile carries the tool name as its tooltip and accessible label. */
+function PhaseTools({ tools }: { tools: string[] }) {
+  const known = tools.filter((tool) => TOOL_LOGOS[tool]);
+  if (!known.length) return null;
+  return (
+    <ul aria-label="Tools in this phase" className="mt-(--space-5) flex flex-wrap gap-(--space-2)">
+      {known.map((tool) => (
+        <li
+          key={tool}
+          title={tool}
+          className="flex size-(--space-10) items-center justify-center rounded-(--radius-xl) border border-(--border-default) bg-(--surface-card)"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- static SVG logos */}
+          <img src={TOOL_LOGOS[tool]} alt={tool} width={22} height={22} className="size-[22px] object-contain" />
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -41,19 +74,36 @@ function WeekDetail({ icon: Icon, label, children }: { icon: LucideIcon; label: 
   );
 }
 
+/** Tinted panel listing one syllabus module's topics; long lists flow into two columns. */
+function ModuleDetail({ module }: { module: CourseModule }) {
+  return (
+    <div className="rounded-(--radius-3xl) bg-(--slate-100) p-(--space-6)">
+      <span className="font-(family-name:--font-mono) text-(length:--fs-eyebrow) uppercase leading-none tracking-(--ls-label) text-(--text-body)">
+        {module.title}
+      </span>
+      <ul
+        className={`mt-(--space-4) list-disc gap-x-(--space-8) pl-(--space-5) text-(length:--fs-sm) leading-(--lh-body) text-(--text-strong) marker:text-(--text-accent) ${module.topics.length > 8 ? "sm:columns-2" : ""}`}
+      >
+        {module.topics.map((topic) => (
+          <li key={topic} className="break-inside-avoid">
+            {topic}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function CurriculumSection({ course }: { course: CourseDetail }) {
-  const hasWeekDetails = course.phases.some((phase) => phase.items.some((week) => week.lab || week.assignment));
+  const weeks = course.phases.flatMap((phase) => phase.items);
+  const lead = weeks.some((week) => week.lab || week.assignment)
+    ? "Every week has a hands-on lab and an assignment. Open a week to see both."
+    : weeks.some((week) => week.modules?.length)
+      ? "Open a week to see every topic it covers."
+      : "The topics covered in each week.";
   return (
     <Section id="curriculum" tone="alt">
-      <SectionHeader
-        eyebrow="Curriculum"
-        title="Week by week."
-        lead={
-          hasWeekDetails
-            ? "Every week has a hands-on lab and an assignment. Open a week to see both."
-            : "The topics covered in each week."
-        }
-      />
+      <SectionHeader eyebrow="Curriculum" title="Week by week." lead={lead} />
       <div className="mt-(--space-12) flex flex-col gap-(--space-10)">
         {course.phases.map((phase, p) => (
           <div key={phase.title} className="grid gap-(--space-6) lg:grid-cols-[1fr_3.2fr] lg:gap-(--space-8)">
@@ -65,6 +115,7 @@ export function CurriculumSection({ course }: { course: CourseDetail }) {
               <p className="mt-(--space-3) text-(length:--fs-xs) leading-(--lh-body) text-(--text-body)">
                 {phase.summary}
               </p>
+              {phase.tools?.length ? <PhaseTools tools={phase.tools} /> : null}
               <div className="mt-(--space-5) max-w-xs">
                 <PhaseProgress weeks={phase.weeks} total={course.coreWeeks} />
               </div>
@@ -77,21 +128,26 @@ export function CurriculumSection({ course }: { course: CourseDetail }) {
                 leading: <WeekNumber n={phase.weeks[0] + i} />,
                 title: week.title,
                 subtitle: week.topics.join(" · "),
-                content:
-                  week.lab || week.assignment ? (
-                    <div className="grid gap-(--space-4) sm:ml-[calc(var(--space-10)+var(--space-4))] sm:grid-cols-2">
-                      {week.lab ? (
-                        <WeekDetail icon={FlaskConical} label="Lab">
-                          {week.lab}
-                        </WeekDetail>
-                      ) : null}
-                      {week.assignment ? (
-                        <WeekDetail icon={ClipboardCheck} label="Weekly assignment">
-                          {week.assignment}
-                        </WeekDetail>
-                      ) : null}
-                    </div>
-                  ) : undefined,
+                content: week.modules?.length ? (
+                  <div className="flex flex-col gap-(--space-4) sm:ml-[calc(var(--space-10)+var(--space-4))]">
+                    {week.modules.map((module) => (
+                      <ModuleDetail key={module.title} module={module} />
+                    ))}
+                  </div>
+                ) : week.lab || week.assignment ? (
+                  <div className="grid gap-(--space-4) sm:ml-[calc(var(--space-10)+var(--space-4))] sm:grid-cols-2">
+                    {week.lab ? (
+                      <WeekDetail icon={FlaskConical} label="Lab">
+                        {week.lab}
+                      </WeekDetail>
+                    ) : null}
+                    {week.assignment ? (
+                      <WeekDetail icon={ClipboardCheck} label="Weekly assignment">
+                        {week.assignment}
+                      </WeekDetail>
+                    ) : null}
+                  </div>
+                ) : undefined,
               }))}
             />
           </div>

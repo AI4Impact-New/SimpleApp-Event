@@ -53,7 +53,7 @@ export function VerifyEmailNotice() {
   </View>;
 }
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#eff6ff', borderColor: '#bfdbfe', borderWidth: 1, borderRadius: 12, padding: 16, marginBottom: 16, gap: 10 },
+  card: { backgroundColor: '#ebf6f4', borderColor: '#d9eeeb', borderWidth: 1, borderRadius: 12, padding: 16, marginBottom: 16, gap: 10 },
   title: { color: colors.text, fontSize: 16, fontWeight: '700' },
   body: { color: colors.textSecondary, fontSize: 14, lineHeight: 21 },
   error: { color: colors.error, fontSize: 14 },

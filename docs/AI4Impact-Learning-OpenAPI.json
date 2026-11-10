@@ -45,6 +45,15 @@
           "position_seconds": {
             "type": "number",
             "minimum": 0
+          },
+          "event": {
+            "type": "string",
+            "enum": [
+              "watch",
+              "seek"
+            ],
+            "default": "watch",
+            "description": "Seek resets the playback baseline without awarding watch credit. Send a final watch heartbeat before the seek."
           }
         }
       },
@@ -61,13 +70,42 @@
           },
           "expires_in": {
             "type": "integer",
-            "example": 3600
+            "example": 3600,
+            "maximum": 900
           },
           "duration_seconds": {
             "type": "integer"
           },
           "resume_seconds": {
             "type": "number"
+          },
+          "watermark": {
+            "type": "object",
+            "required": [
+              "company",
+              "student_id",
+              "move_interval_seconds"
+            ],
+            "properties": {
+              "company": {
+                "type": "string"
+              },
+              "student_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "move_interval_seconds": {
+                "type": "integer",
+                "minimum": 20,
+                "maximum": 40
+              }
+            }
+          },
+          "watched_seconds": {
+            "type": "number"
+          },
+          "completed": {
+            "type": "boolean"
           }
         }
       },

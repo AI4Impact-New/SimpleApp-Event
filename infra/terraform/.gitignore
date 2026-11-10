@@ -16,3 +16,8 @@ local.tfvars
 # IDE
 .idea/
 .vscode/
+
+# Generated deployment plans may contain sensitive values.
+*.tfplan
+tfplan
+tfplan-*

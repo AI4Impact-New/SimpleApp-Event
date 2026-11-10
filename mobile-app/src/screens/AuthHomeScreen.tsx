@@ -4,6 +4,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from '@/components/SafeAreaView';
 import { colors, spacing, borderRadius } from '@/theme/colors';
+import { PrivacyPolicyLink } from '@/components/PrivacyPolicyLink';
 import { PiLogo } from '@/components/PiLogo';
 
 interface AuthHomeScreenProps {
@@ -63,7 +64,8 @@ export function AuthHomeScreen({ onSignIn, onCreateAccount, onVerifyCertificate 
           </Pressable>
         ) : null}
 
-        <Text style={styles.footer}>Powered by PiResearch Labs</Text>
+        <Text style={styles.footer}>Powered by Samagyaan Data solutions</Text>
+          <Text style={{ textAlign: 'center', marginTop: 12 }}><PrivacyPolicyLink /></Text>
       </View>
     </SafeAreaView>
   );

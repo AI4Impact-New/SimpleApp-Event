@@ -7,11 +7,12 @@ from urllib.parse import quote
 from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
+from psycopg2 import errors as db_errors
 
 from shared.auth import get_current_user, _normalize_groups
 from shared.user_repository import get_or_create_user_from_claims, IdentityConflictError
 from shared.db import execute_query
-from learning import service, exams, certificates, devices, enquiries, billing, access_windows, staff, operations, assisted
+from learning import service, exams, certificates, devices, enquiries, billing, access_windows, staff, operations, assisted, payments
 from learning.validation import ApiError, identifier
 
 logger = logging.getLogger(__name__)
@@ -48,11 +49,13 @@ def _actor(event):
     user = get_or_create_user_from_claims(claims)
     if not user: raise ApiError(401,"User identity could not be resolved")
     groups = {str(g).lower() for g in _normalize_groups(claims.get("cognito:groups"))}
-    return {"id":str(user.id),"sub":str(claims.get('sub') or ''),"name":user.name,"admin":"admins" in groups,"marketing":"marketing" in groups}
+    return {"id":str(user.id),"sub":str(claims.get('sub') or ''),"name":user.name,"email":user.email,"admin":"admins" in groups,"marketing":"marketing" in groups}
 
 
 def handler(event, context):
     try:
+        if event.get('source')=='ai4impact.payments.reconcile':
+            return payments.worker(event,context)
         path = (event.get("rawPath") or event.get("path") or "/").rstrip("/")
         method = event.get("httpMethod") or (event.get("requestContext") or {}).get("http",{}).get("method","GET")
         if method == "OPTIONS": return {"statusCode":204,"body":""}
@@ -72,11 +75,22 @@ def handler(event, context):
             return _response(200,billing.catalog(None))
         if path == "/employer-enquiries" and method == "POST":
             return _response(202,enquiries.submit(_body(event),True))
+        if path.startswith('/public/webinars'):
+            from programme import api as programme_api
+            return _response(200,programme_api.public(path,method,_body(event) if method=='POST' else {},event))
+        if path=='/webhooks/resend' and method=='POST':
+            from programme import webhook
+            return _response(200,webhook.receive(event))
+        if path=='/webhooks/razorpay' and method=='POST':
+            return _response(200,payments.webhook(event))
         actor = _actor(event)
         marketing_route=(path=="/admin/enquiries" or (len(parts)==3 and parts[:2]==['admin','enquiries']) or path=="/admin/marketing/interests" or (len(parts)>=4 and parts[:2]==["admin","enquiries"] and parts[3]=="assisted"))
         if parts[0]=="admin":
             enquiries.staff(actor) if marketing_route else service.admin(actor)
         body = _body(event) if method in ("POST","PUT","PATCH") else {}
+        if parts[0]=='programme' or parts[:2]==['admin','programme']:
+            from programme import api as programme_api
+            return _response(200,programme_api.dispatch(actor,path,method,body,event.get('queryStringParameters')))
         result, status = None, 200
         if len(parts)>=4 and parts[:2]==['admin','enquiries'] and parts[3]=='assisted':
             eid=identifier(parts[2]);suffix=parts[4] if len(parts)>4 else ''
@@ -103,10 +117,13 @@ def handler(event, context):
         elif path=="/billing/orders" and method=="POST": result=billing.create_order(actor,body); status=201
         elif len(parts)>=3 and parts[:2]==['billing','orders']:
             if len(parts)==3 and method=='GET':result=billing.get_order(actor,parts[2])
+            elif len(parts)==4 and parts[3]=='checkout' and method=='POST':result=payments.checkout(actor,parts[2])
+            elif len(parts)==4 and parts[3]=='verify' and method=='POST':result=payments.verify(actor,parts[2],body)
+            elif len(parts)==4 and parts[3]=='reconcile' and method=='POST':result=payments.reconcile(actor,parts[2])
             elif len(parts)==4 and parts[3]=='demo-checkout' and method=='POST':result=billing.finish(actor,parts[2],body)
             elif len(parts)==4 and parts[3]=='invoice' and method=='GET':
                 contents=billing.invoice_pdf(actor,parts[2])
-                return {'statusCode':200,'isBase64Encoded':True,'headers':{'Content-Type':'application/pdf','Cache-Control':'no-store','Content-Disposition':'attachment; filename="AI4Impact-demo-invoice.pdf"'},'body':base64.b64encode(contents).decode()}
+                return {'statusCode':200,'isBase64Encoded':True,'headers':{'Content-Type':'application/pdf','Cache-Control':'no-store','Content-Disposition':'attachment; filename="AI4Impact-order-receipt.pdf"'},'body':base64.b64encode(contents).decode()}
         elif len(parts)==4 and parts[:2]==['admin','classes'] and parts[3]=='access-reset' and method=='POST': result=access_windows.reset(actor,parts[2],body)
         elif path=="/admin/enquiries" and method=="GET": result=enquiries.listing(actor,event.get("queryStringParameters") or {})
         elif len(parts)==3 and parts[:2]==["admin","enquiries"] and method=="PATCH": result=enquiries.update(actor,parts[2],body)
@@ -171,6 +188,10 @@ def handler(event, context):
             elif len(parts)==4 and parts[3]=="submit" and method=="POST": result=exams.submit_attempt(actor,aid,body)
         if result is None: raise ApiError(404,"Endpoint not found")
         return _response(status,result)
+    except (db_errors.UniqueViolation, db_errors.DeadlockDetected, db_errors.SerializationFailure, db_errors.LockNotAvailable):
+        return _response(409, {'error':'This operation conflicts with another change; refresh and retry with the same request ID'})
+    except (db_errors.ForeignKeyViolation, db_errors.CheckViolation, db_errors.InvalidTextRepresentation):
+        return _response(400, {'error':'Invalid or unavailable referenced data'})
     except IdentityConflictError as error:
         return _response(409, {"error":str(error)})
     except ApiError as error:

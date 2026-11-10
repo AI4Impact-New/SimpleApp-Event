@@ -17,10 +17,12 @@ import { useEvents } from '@/hooks/useEvents';
 import { useCourses } from '@/hooks/useCourses';
 import { useBillingCatalog } from '@/hooks/useBilling';
 import { authService } from '@/services/auth';
-import type { MyLearningCourse } from '@/types/learning';
+import type { LearningClass, MyLearningCourse } from '@/types/learning';
 import type { Course } from '@/types/course';
 import type { Event } from '@/types/event';
 import { colors, spacing, borderRadius } from '@/theme/colors';
+import { useWebLayout } from '@/hooks/useWebLayout';
+import { WebHomeDashboard } from '@/components/web/WebHomeDashboard';
 import { formatCompactDateTimeInIst } from '@/utils/datetime';
 import { formatPaise } from '@/utils/money';
 
@@ -29,10 +31,15 @@ interface HomeScreenProps {
   onOpenInbox: () => void;
   onOpenEvents: () => void;
   onEventPress: (event: Event) => void;
-  onScanPress: () => void;
+  /** Omitted on web: QR check-in needs a phone camera. */
+  onScanPress?: () => void;
   onLeaderboardPress: () => void;
   onExploreCourses: () => void;
   onCoursePress: (courseId: string) => void;
+  /** Web dashboard: resume a lecture straight from the Continue learning hero. */
+  onPlayLecture?: (lecture: LearningClass) => void;
+  /** Web dashboard: open My Learning. */
+  onOpenLearning?: () => void;
 }
 
 /** Most recently useful unfinished course: registered (not completed), most progress first. */
@@ -59,6 +66,8 @@ export function HomeScreen({
   onLeaderboardPress,
   onExploreCourses,
   onCoursePress,
+  onPlayLecture,
+  onOpenLearning,
 }: HomeScreenProps) {
   const [name, setName] = useState<string | null>(null);
   const learning = useMyLearning();
@@ -87,15 +96,133 @@ export function HomeScreen({
   const continueCourse = pickContinueCourse(learning.data ?? []);
   const nextEvents = upcomingEvents(events.data ?? []);
   const discover = (courses.data ?? []).slice(0, 6) as Course[];
+  const { isWeb } = useWebLayout();
+
+  const continueBlock = learning.isLoading ? (
+    <View style={[styles.card, styles.cardCenter]}>
+      <ActivityIndicator color={colors.primary} />
+    </View>
+  ) : learning.error ? (
+    <RetryCard message="Could not load your courses" onRetry={() => learning.refetch()} />
+  ) : continueCourse ? (
+    <ContinueCard course={continueCourse} onPress={() => onContinueCourse(continueCourse.id)} />
+  ) : (
+    <TouchableOpacity style={[styles.card, styles.exploreCard]} onPress={onExploreCourses} activeOpacity={0.8}>
+      <Ionicons name="compass-outline" size={32} color={colors.primary} />
+      <View style={{ flex: 1 }}>
+        <Text style={styles.cardTitle}>
+          {(learning.data ?? []).length > 0 ? 'All caught up' : 'Start your first course'}
+        </Text>
+        <Text style={styles.muted}>Explore the AI4Impact career tracks</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+    </TouchableOpacity>
+  );
+
+  const inboxBlock =
+    unread > 0 ? (
+      <TouchableOpacity style={[styles.card, styles.inboxCard]} onPress={onOpenInbox} activeOpacity={0.8}>
+        <Ionicons name="mail-unread-outline" size={24} color={colors.primaryDark} />
+        <Text style={styles.inboxText}>
+          {unread} unread {unread === 1 ? 'message' : 'messages'} in your inbox
+        </Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
+      </TouchableOpacity>
+    ) : null;
+
+  const eventsBlock = events.isLoading ? (
+    <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+  ) : events.error ? (
+    <RetryCard message="Could not load events" onRetry={() => events.refetch()} />
+  ) : nextEvents.length === 0 ? (
+    <Text style={styles.muted}>No upcoming events right now.</Text>
+  ) : (
+    nextEvents.map((event) => (
+      <TouchableOpacity key={event.id} style={[styles.card, styles.eventRow]} onPress={() => onEventPress(event)} activeOpacity={0.75}>
+        <Ionicons
+          name={event.event_type === 'online' ? 'videocam-outline' : 'location-outline'}
+          size={22}
+          color={colors.primary}
+        />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.rowTitle} numberOfLines={1}>{event.name}</Text>
+          <Text style={styles.muted} numberOfLines={1}>
+            {formatCompactDateTimeInIst(event.start_time)} IST{event.location ? ` · ${event.location}` : ''}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      </TouchableOpacity>
+    ))
+  );
+
+  const courseCards = discover.map((course) => {
+    const price = prices.data?.find((p) => p.id === course.id);
+    return (
+      <TouchableOpacity
+        key={course.id}
+        style={styles.courseCard}
+        onPress={() => onCoursePress(course.id)}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.courseTitle} numberOfLines={2}>{course.title}</Text>
+        {course.short_description ? (
+          <Text style={styles.courseDesc} numberOfLines={3}>{course.short_description}</Text>
+        ) : null}
+        <View style={{ flex: 1 }} />
+        <Text style={styles.coursePrice}>
+          {price ? formatPaise(price.total_paise) : 'View current fee'}
+        </Text>
+      </TouchableOpacity>
+    );
+  });
+
+  const coursesBlock = courses.isLoading ? (
+    <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+  ) : courses.error ? (
+    <RetryCard message="Could not load courses" onRetry={() => courses.refetch()} />
+  ) : (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.courseStrip}>
+      {courseCards}
+    </ScrollView>
+  );
+
+  const refresh = (
+    <RefreshControl refreshing={refreshing} onRefresh={refreshAll} tintColor={colors.primary} colors={[colors.primary]} />
+  );
+
+  // Browser portal: website dashboard (native keeps the app layout below).
+  if (isWeb) {
+    return (
+      <WebHomeDashboard
+        name={name}
+        learning={learning}
+        inbox={inbox}
+        events={events}
+        courses={courses as any}
+        prices={prices as any}
+        continueCourse={continueCourse}
+        nextEvents={nextEvents}
+        refreshing={refreshing}
+        onRefresh={refreshAll}
+        onContinueCourse={onContinueCourse}
+        onPlayLecture={(lecture) => onPlayLecture?.(lecture)}
+        onOpenLearning={() => onOpenLearning?.()}
+        onOpenInbox={onOpenInbox}
+        onOpenEvents={onOpenEvents}
+        onEventPress={onEventPress}
+        onLeaderboardPress={onLeaderboardPress}
+        onExploreCourses={onExploreCourses}
+        onCoursePress={onCoursePress}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={refreshAll} tintColor={colors.primary} colors={[colors.primary]} />
-        }
+        refreshControl={refresh}
       >
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
@@ -114,100 +241,24 @@ export function HomeScreen({
 
         {/* Continue learning */}
         <Text style={styles.sectionTitle}>Continue learning</Text>
-        {learning.isLoading ? (
-          <View style={[styles.card, styles.cardCenter]}>
-            <ActivityIndicator color={colors.primary} />
-          </View>
-        ) : learning.error ? (
-          <RetryCard message="Could not load your courses" onRetry={() => learning.refetch()} />
-        ) : continueCourse ? (
-          <ContinueCard course={continueCourse} onPress={() => onContinueCourse(continueCourse.id)} />
-        ) : (
-          <TouchableOpacity style={[styles.card, styles.exploreCard]} onPress={onExploreCourses} activeOpacity={0.8}>
-            <Ionicons name="compass-outline" size={32} color={colors.primary} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>
-                {(learning.data ?? []).length > 0 ? 'All caught up' : 'Start your first course'}
-              </Text>
-              <Text style={styles.muted}>Explore the AI4Impact career tracks</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.primary} />
-          </TouchableOpacity>
-        )}
+        {continueBlock}
 
-        {unread > 0 ? (
-          <TouchableOpacity style={[styles.card, styles.inboxCard]} onPress={onOpenInbox} activeOpacity={0.8}>
-            <Ionicons name="mail-unread-outline" size={24} color={colors.primaryDark} />
-            <Text style={styles.inboxText}>
-              {unread} unread {unread === 1 ? 'message' : 'messages'} in your inbox
-            </Text>
-            <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
-          </TouchableOpacity>
-        ) : null}
+        {inboxBlock}
 
         {/* Quick actions */}
         <View style={styles.actions}>
-          <QuickAction icon="qr-code-outline" label="Scan QR" onPress={onScanPress} />
+          {onScanPress ? <QuickAction icon="qr-code-outline" label="Scan QR" onPress={onScanPress} /> : null}
           <QuickAction icon="calendar-outline" label="Events" onPress={onOpenEvents} />
           <QuickAction icon="podium-outline" label="Leaderboard" onPress={onLeaderboardPress} />
         </View>
 
         {/* Upcoming events */}
         <SectionHeader title="Upcoming events" action="See all" onAction={onOpenEvents} />
-        {events.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
-        ) : events.error ? (
-          <RetryCard message="Could not load events" onRetry={() => events.refetch()} />
-        ) : nextEvents.length === 0 ? (
-          <Text style={styles.muted}>No upcoming events right now.</Text>
-        ) : (
-          nextEvents.map((event) => (
-            <TouchableOpacity key={event.id} style={[styles.card, styles.eventRow]} onPress={() => onEventPress(event)} activeOpacity={0.75}>
-              <Ionicons
-                name={event.event_type === 'online' ? 'videocam-outline' : 'location-outline'}
-                size={22}
-                color={colors.primary}
-              />
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={styles.rowTitle} numberOfLines={1}>{event.name}</Text>
-                <Text style={styles.muted} numberOfLines={1}>
-                  {formatCompactDateTimeInIst(event.start_time)} IST{event.location ? ` · ${event.location}` : ''}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-          ))
-        )}
+        {eventsBlock}
 
         {/* Course discovery */}
         <SectionHeader title="Explore courses" action="View all" onAction={onExploreCourses} />
-        {courses.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
-        ) : courses.error ? (
-          <RetryCard message="Could not load courses" onRetry={() => courses.refetch()} />
-        ) : (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.courseStrip}>
-            {discover.map((course) => {
-              const price = prices.data?.find((p) => p.id === course.id);
-              return (
-                <TouchableOpacity
-                  key={course.id}
-                  style={styles.courseCard}
-                  onPress={() => onCoursePress(course.id)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.courseTitle} numberOfLines={2}>{course.title}</Text>
-                  {course.short_description ? (
-                    <Text style={styles.courseDesc} numberOfLines={3}>{course.short_description}</Text>
-                  ) : null}
-                  <Text style={styles.coursePrice}>
-                    {price ? formatPaise(price.total_paise) : 'View current fee'}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        )}
+        {coursesBlock}
       </ScrollView>
     </SafeAreaView>
   );

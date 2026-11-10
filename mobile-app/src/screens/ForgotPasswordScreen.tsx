@@ -43,7 +43,7 @@ export function ForgotPasswordScreen({ initialEmail, onDone, onBack }: ForgotPas
     setLoading(false);
     if (result.success) {
       setCode('');
-      setInfo(`We sent a reset code to ${result.destination ?? email.trim()}.`);
+      setInfo(`If this account is eligible for password recovery, a code will be sent to ${result.destination ?? email.trim()}. Newly invited users must first sign in with their temporary password.`);
       setStep('confirm');
     } else {
       setError(result.error ?? 'Could not send a reset code.');

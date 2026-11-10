@@ -21,11 +21,13 @@ import { EventScreen } from '@/screens/EventScreen';
 import { PollScreen } from '@/screens/PollScreen';
 import { LeaderboardScreen } from '@/screens/LeaderboardScreen';
 import { LeaderboardHomeScreen } from '@/screens/LeaderboardHomeScreen';
+import { MaterialsScreen } from '@/screens/MaterialsScreen';
 import { QRScannerScreen } from '@/screens/QRScannerScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
 import { EditProfileScreen } from '@/screens/EditProfileScreen';
 import { CoursesScreen } from '@/screens/CoursesScreen';
 import { CourseDetailScreen } from '@/screens/CourseDetailScreen';
+import { openPrivacyPolicy } from '@/utils/legal';
 import { PrivacyPolicyScreen } from '@/screens/PrivacyPolicyScreen';
 import { MyLearningScreen } from '@/screens/MyLearningScreen';
 import { CourseLearningScreen } from '@/screens/CourseLearningScreen';
@@ -37,7 +39,9 @@ import { NotificationDetailScreen } from '@/screens/NotificationDetailScreen';
 import { CheckoutScreen } from '@/screens/CheckoutScreen';
 import { PurchasesScreen } from '@/screens/PurchasesScreen';
 import { VerifyCertificateScreen } from '@/screens/VerifyCertificateScreen';
-import { useNotifications } from '@/hooks/useLearning';
+import { useCourseExams, useLearningHome, useNotifications } from '@/hooks/useLearning';
+import type { Exam } from '@/types/learning';
+import { webLinking, takeReturnAction, setLinkingSignedIn } from '@/navigation/linking';
 import {
   courseIdFromResponse,
   notificationIdFromResponse,
@@ -49,12 +53,23 @@ import {
 import { clearPrivateStores } from '@/utils/userStorage';
 import { parseDeepLink, type LinkTarget } from '@/utils/deepLinks';
 import { colors, spacing } from '@/theme/colors';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebNavBar } from '@/components/web/WebNavBar';
+import { WebPageFrame } from '@/components/web/WebPageFrame';
+import { WebAuthFrame } from '@/components/web/WebAuthFrame';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 type SignUpFlowParams = { email?: string; password?: string; name?: string };
 type LoginParams = { email?: string; notice?: string };
 const navigationRef = createNavigationContainerRef<any>();
+
+// Browser portal: every signed-in page sits in the site's centered content column.
+const webScreenLayout = isWeb
+  ? ({ route, children }: { route: { name: string }; children: React.ReactElement }) => (
+      <WebPageFrame routeName={route.name}>{children}</WebPageFrame>
+    )
+  : undefined;
 
 /** Open a course workspace from any tab, keeping My Learning underneath it. */
 function openCourseLearning(navigation: any, courseId: string) {
@@ -96,6 +111,7 @@ const SCREEN_TITLES: Record<string, string> = {
   Events: 'Events',
   Event: 'Event',
   Poll: 'Poll',
+  EventMaterials: 'Event materials',
   QRScanner: 'Scan QR code',
   LeaderboardHome: 'Leaderboards',
   LeaderboardDetail: 'Leaderboard',
@@ -303,13 +319,15 @@ function SignedIn({ onLogout }: { onLogout: () => void }) {
   }
   if (gate.kind === 'incomplete') {
     return (
-      <CompleteProfileScreen
-        email={gate.email}
-        name={gate.name}
-        initialProfile={gate.profile}
-        onComplete={() => setGate({ kind: 'ready' })}
-        onSignOut={onLogout}
-      />
+      <WebAuthFrame>
+        <CompleteProfileScreen
+          email={gate.email}
+          name={gate.name}
+          initialProfile={gate.profile}
+          onComplete={() => setGate({ kind: 'ready' })}
+          onSignOut={onLogout}
+        />
+      </WebAuthFrame>
     );
   }
   return <MainTabs onLogout={onLogout} />;
@@ -325,6 +343,11 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
       flushPendingNotification();
       restoreResumeTarget();
       flushPendingLink();
+      // Web: a signed-out visitor who opened a deep URL lands there after sign-in.
+      if (isWeb && navigationRef.isReady()) {
+        const action = takeReturnAction();
+        if (action && focusedRoute(navigationRef.getRootState())?.leaf === 'HomeMain') navigationRef.dispatch(action);
+      }
     }, 0);
     return () => clearTimeout(id);
   }, []);
@@ -333,7 +356,10 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
     <>
       <PushBridge />
       <Tab.Navigator
+        // Web gets a website header (top navigation) instead of an app tab bar.
+        tabBar={isWeb ? (props) => <WebNavBar {...props} unread={unread} /> : undefined}
         screenOptions={{
+          tabBarPosition: isWeb ? 'top' : 'bottom',
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textMuted,
           // No fixed height: React Navigation adds the home-indicator / gesture-bar inset itself.
@@ -359,7 +385,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           }}
         >
           {() => (
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator screenOptions={{ headerShown: false }} screenLayout={webScreenLayout}>
               <Stack.Screen name="HomeMain">
                 {({ navigation }: any) => (
                   <HomeScreen
@@ -367,12 +393,20 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                     onOpenInbox={() => navigation.navigate('Inbox', { screen: 'InboxMain' })}
                     onOpenEvents={() => navigation.navigate('Events')}
                     onEventPress={(event) => navigation.navigate('Event', { eventId: event.id })}
-                    onScanPress={() => navigation.navigate('QRScanner')}
+                    onScanPress={isWeb ? undefined : () => navigation.navigate('QRScanner')}
                     onLeaderboardPress={() => navigation.navigate('LeaderboardHome')}
                     onExploreCourses={() => navigation.navigate('Courses', { screen: 'CoursesMain' })}
                     onCoursePress={(courseId) =>
                       navigation.navigate('Courses', { screen: 'CourseDetail', params: { courseId }, initial: false })
                     }
+                    onPlayLecture={(lecture) =>
+                      navigation.navigate('Learning', {
+                        screen: 'LecturePlayer',
+                        params: { classId: lecture.id, courseId: lecture.course_id, title: lecture.title },
+                        initial: false,
+                      })
+                    }
+                    onOpenLearning={() => navigation.navigate('Learning', { screen: 'MyLearningMain' })}
                   />
                 )}
               </Stack.Screen>
@@ -381,7 +415,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                   <EventsScreen
                     onBack={() => navigation.goBack()}
                     onEventPress={(event) => navigation.navigate('Event', { eventId: event.id })}
-                    onScanPress={() => navigation.navigate('QRScanner')}
+                    onScanPress={isWeb ? undefined : () => navigation.navigate('QRScanner')}
                     onLeaderboardPress={() => navigation.navigate('LeaderboardHome')}
                   />
                 )}
@@ -392,34 +426,60 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                     eventId={route.params?.eventId}
                     onBack={() => navigation.goBack()}
                     onPollPress={(pollId) => navigation.navigate('Poll', { pollId })}
+                    onOpenMaterials={() => navigation.navigate('EventMaterials', { eventId: route.params?.eventId })}
+                    onOpenLeaderboard={() => navigation.navigate('LeaderboardDetail', { eventId: route.params?.eventId })}
+                    onOpenEvents={() => navigation.navigate('Events')}
+                  />
+                )}
+              </Stack.Screen>
+              <Stack.Screen name="EventMaterials">
+                {({ route, navigation }: any) => (
+                  <MaterialsScreen
+                    eventId={route.params?.eventId}
+                    onBack={() => navigation.goBack()}
+                    onOpenEvent={() => navigation.navigate('Event', { eventId: route.params?.eventId })}
                   />
                 )}
               </Stack.Screen>
               <Stack.Screen name="Poll">
                 {({ route, navigation }: any) => (
-                  <PollScreen pollId={route.params?.pollId} onBack={() => navigation.goBack()} />
-                )}
-              </Stack.Screen>
-              <Stack.Screen name="QRScanner">
-                {({ navigation }: any) => (
-                  <QRScannerScreen
-                    onScanSuccess={(eventId) => navigation.replace('Event', { eventId })}
+                  <PollScreen
+                    pollId={route.params?.pollId}
                     onBack={() => navigation.goBack()}
+                    onOpenEvent={(eventId) => navigation.navigate('Event', { eventId })}
                   />
                 )}
               </Stack.Screen>
+              {/* Camera check-in exists only in the native app. */}
+              {!isWeb ? (
+                <Stack.Screen name="QRScanner">
+                  {({ navigation }: any) => (
+                    <QRScannerScreen
+                      onScanSuccess={(eventId) => navigation.replace('Event', { eventId })}
+                      onBack={() => navigation.goBack()}
+                    />
+                  )}
+                </Stack.Screen>
+              ) : null}
               <Stack.Screen name="LeaderboardHome">
                 {({ navigation }: any) => (
                   <LeaderboardHomeScreen
                     onBack={() => navigation.goBack()}
                     onOpenEvents={() => navigation.navigate('Events')}
                     onOpenLeaderboard={(eventId) => navigation.navigate('LeaderboardDetail', { eventId })}
+                    onOpenEvent={(eventId) => navigation.navigate('Event', { eventId })}
                   />
                 )}
               </Stack.Screen>
               <Stack.Screen name="LeaderboardDetail">
                 {({ route, navigation }: any) => (
-                  <LeaderboardScreen eventId={route.params?.eventId} onBack={() => navigation.goBack()} />
+                  <LeaderboardScreen
+                    eventId={route.params?.eventId}
+                    onBack={() => navigation.navigate('LeaderboardHome')}
+                    onSelect={(eventId) => navigation.setParams({ eventId })}
+                    onOpenEvents={() => navigation.navigate('Events')}
+                    onOpenEvent={(eventId) => navigation.navigate('Event', { eventId })}
+                  />
                 )}
               </Stack.Screen>
             </Stack.Navigator>
@@ -436,7 +496,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           }}
         >
           {() => (
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator screenOptions={{ headerShown: false }} screenLayout={webScreenLayout}>
               <Stack.Screen name="CoursesMain">
                 {({ navigation }: any) => (
                   <CoursesScreen onCoursePress={(course) => navigation.navigate('CourseDetail', { courseId: course.id })} />
@@ -454,7 +514,11 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
               </Stack.Screen>
               <Stack.Screen name="Checkout">
                 {({ route, navigation }: any) => (
-                  <CheckoutScreen orderId={route.params?.orderId ?? ''} onBack={() => navigation.goBack()} />
+                  <CheckoutScreen
+                    orderId={route.params?.orderId ?? ''}
+                    onBack={() => navigation.goBack()}
+                    onOpenLearning={(courseId) => openCourseLearning(navigation, courseId)}
+                  />
                 )}
               </Stack.Screen>
             </Stack.Navigator>
@@ -471,7 +535,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           }}
         >
           {() => (
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator screenOptions={{ headerShown: false }} screenLayout={webScreenLayout}>
               <Stack.Screen name="MyLearningMain">
                 {({ navigation }: any) => (
                   <MyLearningScreen
@@ -480,6 +544,9 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                     onNotificationsPress={() => navigation.navigate('Inbox', { screen: 'InboxMain' })}
                     onPurchasesPress={() => navigation.navigate('Purchases')}
                     onBrowseCourses={() => navigation.navigate('Courses', { screen: 'CoursesMain' })}
+                    onPlayLecture={(lecture) =>
+                      navigation.navigate('LecturePlayer', { classId: lecture.id, courseId: lecture.course_id, title: lecture.title })
+                    }
                   />
                 )}
               </Stack.Screen>
@@ -495,19 +562,19 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                         title: lecture.title,
                       })
                     }
-                    onOpenExam={(exam) => navigation.navigate('Exam', { exam })}
+                    onOpenExam={(exam) => navigation.navigate('Exam', { courseId: exam.course_id, examId: exam.id, exam })}
                     onCertificateIssued={() => navigation.navigate('Certificates')}
                   />
                 )}
               </Stack.Screen>
               <Stack.Screen name="LecturePlayer">
                 {({ route, navigation }: any) => (
-                  <LecturePlayerScreen
+                  <LectureRoute
                     // Remount for the next lecture so the old session's final heartbeat is flushed first.
                     key={route.params?.classId}
                     classId={route.params?.classId ?? ''}
                     courseId={route.params?.courseId}
-                    title={route.params?.title ?? 'Lecture'}
+                    title={route.params?.title}
                     onBack={() => navigation.goBack()}
                     onPlayNext={(lecture) =>
                       navigation.replace('LecturePlayer', {
@@ -520,7 +587,14 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                 )}
               </Stack.Screen>
               <Stack.Screen name="Exam">
-                {({ route, navigation }: any) => <ExamScreen exam={route.params?.exam} onBack={() => navigation.goBack()} />}
+                {({ route, navigation }: any) => (
+                  <ExamRoute
+                    exam={route.params?.exam}
+                    courseId={route.params?.courseId}
+                    examId={route.params?.examId}
+                    onBack={() => navigation.goBack()}
+                  />
+                )}
               </Stack.Screen>
               <Stack.Screen name="Certificates">
                 {({ navigation }: any) => (
@@ -545,7 +619,11 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
               </Stack.Screen>
               <Stack.Screen name="Checkout">
                 {({ route, navigation }: any) => (
-                  <CheckoutScreen orderId={route.params?.orderId ?? ''} onBack={() => navigation.goBack()} />
+                  <CheckoutScreen
+                    orderId={route.params?.orderId ?? ''}
+                    onBack={() => navigation.goBack()}
+                    onOpenLearning={(courseId) => openCourseLearning(navigation, courseId)}
+                  />
                 )}
               </Stack.Screen>
             </Stack.Navigator>
@@ -563,11 +641,12 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           }}
         >
           {() => (
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator screenOptions={{ headerShown: false }} screenLayout={webScreenLayout}>
               <Stack.Screen name="InboxMain">
                 {({ navigation }: any) => (
                   <NotificationsScreen
                     onOpenNotification={(item) => navigation.navigate('NotificationDetail', { notificationId: item.id })}
+                    onOpenCourse={(courseId) => openCourseLearning(navigation, courseId)}
                   />
                 )}
               </Stack.Screen>
@@ -594,16 +673,17 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           }}
         >
           {() => (
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator screenOptions={{ headerShown: false }} screenLayout={webScreenLayout}>
               <Stack.Screen name="ProfileMain">
                 {({ navigation }: any) => (
                   <ProfileScreen
                     onLogout={onLogout}
                     onEditProfile={() => navigation.navigate('EditProfile')}
-                    onPrivacyPolicy={() => navigation.navigate('PrivacyPolicy')}
+                    onPrivacyPolicy={openPrivacyPolicy}
                     onCertificates={() => navigation.navigate('Certificates')}
                     onPurchases={() => navigation.navigate('Purchases')}
-                    onVerifyCertificate={() => navigation.navigate('VerifyCertificate')}
+                    onVerifyCertificate={(id?: string) => navigation.navigate('VerifyCertificate', id ? { id } : undefined)}
+                    onOpenOrder={(orderId) => navigation.navigate('Checkout', { orderId })}
                   />
                 )}
               </Stack.Screen>
@@ -638,7 +718,11 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
               </Stack.Screen>
               <Stack.Screen name="Checkout">
                 {({ route, navigation }: any) => (
-                  <CheckoutScreen orderId={route.params?.orderId ?? ''} onBack={() => navigation.goBack()} />
+                  <CheckoutScreen
+                    orderId={route.params?.orderId ?? ''}
+                    onBack={() => navigation.goBack()}
+                    onOpenLearning={(courseId) => openCourseLearning(navigation, courseId)}
+                  />
                 )}
               </Stack.Screen>
             </Stack.Navigator>
@@ -646,6 +730,35 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
         </Tab.Screen>
       </Tab.Navigator>
     </>
+  );
+}
+
+// ---- URL-addressable screens ------------------------------------------------------------------
+// Titles and exam objects travel in memory only; a refreshed or shared URL carries IDs, so load the rest.
+
+function LectureRoute(props: Omit<React.ComponentProps<typeof LecturePlayerScreen>, 'title'> & { title?: string }) {
+  const home = useLearningHome(props.title ? '' : props.courseId ?? '');
+  const title = props.title ?? home.data?.classes.find((c) => c.id === props.classId)?.title ?? 'Lecture';
+  return <LecturePlayerScreen {...props} title={title} />;
+}
+
+function ExamRoute({ exam, courseId, examId, onBack }: { exam?: Exam; courseId?: string; examId?: string; onBack: () => void }) {
+  const exams = useCourseExams(exam ? '' : courseId ?? '');
+  const found = exam ?? exams.data?.find((e) => e.id === examId);
+  if (found) return <ExamScreen exam={found} onBack={onBack} />;
+  return (
+    <View style={styles.center}>
+      {exams.isLoading ? (
+        <ActivityIndicator size="large" color={colors.primary} />
+      ) : (
+        <>
+          <Text style={styles.centerText}>This assessment could not be found.</Text>
+          <TouchableOpacity onPress={onBack} style={{ padding: spacing.sm }}>
+            <Text style={styles.link}>Go back</Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </View>
   );
 }
 
@@ -696,6 +809,8 @@ export function AppNavigator() {
 
   // Deep links: the cold-start URL once per app run, then any URL that arrives while running.
   useEffect(() => {
+    // Web routes through the URL config (webLinking); these hints are for native app links.
+    if (isWeb) return;
     if (!initialUrlHandled) {
       initialUrlHandled = true;
       Linking.getInitialURL().then((url) => openDeepLink(parseDeepLink(url))).catch(() => {});
@@ -713,6 +828,9 @@ export function AppNavigator() {
     setRefreshKey((prev) => prev + 1);
   }, []);
 
+  // URL parsing must target the tree about to mount (read when NavigationContainer resolves the address).
+  if (isAuthenticated !== null) setLinkingSignedIn(isAuthenticated);
+
   if (isAuthenticated === null) {
     return (
       <View style={styles.center}>
@@ -722,7 +840,12 @@ export function AppNavigator() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef} onReady={flushPendingNotification} documentTitle={documentTitle}>
+    <NavigationContainer
+      ref={navigationRef}
+      onReady={flushPendingNotification}
+      documentTitle={documentTitle}
+      linking={isWeb ? webLinking : undefined}
+    >
       {isAuthenticated ? <SignedIn onLogout={handleLogout} /> : <AuthStack onLoginSuccess={handleLoginSuccessStable} />}
     </NavigationContainer>
   );
@@ -731,6 +854,7 @@ export function AppNavigator() {
 // Auth Stack: AuthHome (entry) → Sign In → Login | Create account → SignUp → ConfirmSignUp → CompleteProfile
 function AuthStack({ onLoginSuccess }: { onLoginSuccess: () => void }) {
   return (
+    <WebAuthFrame>
     <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="AuthHome">
       <Stack.Screen name="AuthHome">
         {({ navigation }) => (
@@ -742,7 +866,13 @@ function AuthStack({ onLoginSuccess }: { onLoginSuccess: () => void }) {
         )}
       </Stack.Screen>
       <Stack.Screen name="VerifyCertificate">
-        {({ navigation }) => <VerifyCertificateScreen onBack={() => navigation.goBack()} />}
+        {({ route, navigation }) => (
+          <VerifyCertificateScreen
+            // /verify?id=<certificate-id> opened from a certificate link: check it straight away.
+            initialId={(route.params as { id?: string } | undefined)?.id}
+            onBack={() => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate('AuthHome'))}
+          />
+        )}
       </Stack.Screen>
       <Stack.Screen name="Login">
         {({ route, navigation }) => {
@@ -818,6 +948,7 @@ function AuthStack({ onLoginSuccess }: { onLoginSuccess: () => void }) {
         }}
       </Stack.Screen>
     </Stack.Navigator>
+    </WebAuthFrame>
   );
 }
 

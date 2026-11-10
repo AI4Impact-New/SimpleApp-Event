@@ -48,6 +48,11 @@ function withClockOffset(response: { data: ExamAttempt; headers: Record<string, 
 }
 
 class ApiService {
+  async programmeRequest<T>(method: 'GET'|'POST'|'PATCH'|'PUT'|'DELETE', path:string, data?:unknown):Promise<T>{
+    const response=await this.client.request<T>({method,url:path,data});
+    return response.data;
+  }
+
   private client: AxiosInstance;
   // Unauthenticated routes (public verification, catalog prices): no token, no 401 handling
   private publicClient = axios.create({ baseURL: API_URL });
@@ -253,10 +258,11 @@ class ApiService {
     return response.data;
   }
 
-  async sendLectureProgress(classId: string, sessionId: string, positionSeconds: number): Promise<LectureProgress> {
+  async sendLectureProgress(classId: string, sessionId: string, positionSeconds: number, event: 'watch' | 'seek' = 'watch'): Promise<LectureProgress> {
     const response = await this.client.post(`/learning/classes/${classId}/progress`, {
       session_id: sessionId,
       position_seconds: positionSeconds,
+      event,
     });
     return response.data;
   }
@@ -344,7 +350,7 @@ class ApiService {
     return response.data as { deleted: boolean };
   }
 
-  // Demo commerce — no money is collected and no enrollment is granted
+  // Payment orders and historical demo quotes
   /** Public active course prices. */
   async getBillingCatalog(): Promise<CoursePrice[]> {
     const response = await this.publicClient.get('/billing/catalog');
@@ -360,6 +366,16 @@ class ApiService {
   async getDemoOrder(orderId: string): Promise<DemoOrder> {
     const response = await this.client.get(`/billing/orders/${orderId}`);
     return response.data;
+  }
+
+  async preparePayment(orderId: string): Promise<DemoOrder> {
+    return (await this.client.post(`/billing/orders/${orderId}/checkout`, {})).data;
+  }
+  async verifyPayment(orderId: string, result: import('@/utils/razorpay').CheckoutResult): Promise<DemoOrder> {
+    return (await this.client.post(`/billing/orders/${orderId}/verify`, result)).data;
+  }
+  async reconcilePayment(orderId: string): Promise<DemoOrder> {
+    return (await this.client.post(`/billing/orders/${orderId}/reconcile`, {})).data;
   }
 
   async finishDemoCheckout(orderId: string, action: DemoCheckoutAction): Promise<DemoOrder> {

@@ -24,6 +24,9 @@ import type { CoursePhase, CourseClass } from '@/types/course';
 import { PILOT_SELF_REGISTRATION } from '@/config/features';
 import { shareTextFile } from '@/utils/sharePdf';
 import { formatLocalTimeRange } from '@/utils/datetime';
+import { openCourseLanding } from '@/utils/courseLanding';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebCourseDetail } from '@/components/web/WebCourseDetail';
 
 const cardShadow = Platform.select({
   ios: {
@@ -49,6 +52,7 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
   const { data: price, isError: priceError, refetch: refetchPrice, isFetching: priceFetching } = useCoursePrice(courseId);
   const { data: myCourses } = useMyCourses();
   const createOrder = useCreateDemoOrder();
+  const [checkoutError, setCheckoutError] = useState('');
   // One request UUID per intentional order; kept across network-failure retries so the server returns the same quote.
   const orderRequestIdRef = useRef<string | null>(null);
   const registerCourse = useRegisterCourse();
@@ -84,19 +88,26 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
   };
 
   const handleDemoCheckout = async () => {
+    setCheckoutError('');
     if (!orderRequestIdRef.current) orderRequestIdRef.current = uuidv4();
     try {
       const order = await createOrder.mutateAsync({ courseId, requestId: orderRequestIdRef.current });
       orderRequestIdRef.current = null;
       onOpenCheckout(order.id);
     } catch (err: any) {
+      const message = apiErrorMessage(err, 'Could not confirm checkout. Retry to recover the same order.');
+      setCheckoutError(message);
+      if (Platform.OS === 'web') {
+        if (err?.response?.status < 500 && err.response.status !== 429) orderRequestIdRef.current = null;
+        return;
+      }
       if (!err?.response) {
-        Alert.alert('Connection problem', 'Your order was not created yet.', [
+        Alert.alert('Connection problem', 'Could not confirm your order. Retry checks the same order.', [
           { text: 'Retry', onPress: () => handleDemoCheckout() },
           { text: 'Cancel', style: 'cancel', onPress: () => (orderRequestIdRef.current = null) },
         ]);
       } else {
-        orderRequestIdRef.current = null;
+        if (err.response.status < 500 && err.response.status !== 429) orderRequestIdRef.current = null;
         Alert.alert('Checkout unavailable', apiErrorMessage(err, 'Could not start checkout.'));
       }
     }
@@ -122,6 +133,35 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
       );
     }
   };
+
+  // Browser portal: design's course page over the same data and actions.
+  if (isWeb) {
+    return (
+      <WebCourseDetail
+        course={course}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => refetch()}
+        onBack={onBack}
+        price={price}
+        priceError={priceError}
+        priceFetching={priceFetching}
+        onRetryPrice={() => refetchPrice()}
+        hasAccess={!!course?.learning_access || registerCourse.isSuccess}
+        interested={interested}
+        canSelfRegister={PILOT_SELF_REGISTRATION}
+        onOpenLearning={() => onOpenLearning(courseId)}
+        onRegister={handleRegister}
+        registerPending={registerCourse.isPending}
+        onInterest={handleInterest}
+        interestPending={markInterest.isPending}
+        onCheckout={handleDemoCheckout}
+        checkoutPending={createOrder.isPending}
+        checkoutError={checkoutError}
+        onAddToCalendar={handleAddToCalendar}
+      />
+    );
+  }
 
   // Check the error first: a failed load has no data, and would otherwise spin forever.
   if (error && !course) {
@@ -209,6 +249,17 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
             ) : null}
           </View>
         )}
+
+        <TouchableOpacity
+          style={[styles.registerBtn, { backgroundColor: colors.border, marginBottom: spacing.lg }]}
+          onPress={() => openCourseLanding(course)}
+          activeOpacity={0.75}
+          accessibilityRole="link"
+          accessibilityLabel="View all details on ai4impact.in"
+        >
+          <Ionicons name="open-outline" size={20} color={colors.text} />
+          <Text style={[styles.registerBtnText, { color: colors.text }]}>View all details</Text>
+        </TouchableOpacity>
 
         {highlights.length > 0 && (
           <View style={styles.section}>
@@ -347,20 +398,20 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
                 ) : null}
               </View>
               <Text style={[styles.bulletDesc, { marginTop: 6 }]}>
-                Demo checkout only. No money is collected and it does not grant course access.
+                Pay securely with Razorpay. Test checkout is currently restricted to authorized QA accounts.
               </Text>
               <TouchableOpacity
-                style={[styles.registerBtn, { marginTop: 12, backgroundColor: colors.border }]}
+                style={[styles.registerBtn, { marginTop: 12, backgroundColor: colors.primary }]}
                 onPress={handleDemoCheckout}
                 disabled={createOrder.isPending}
                 activeOpacity={0.75}
               >
                 {createOrder.isPending ? (
-                  <ActivityIndicator size="small" color={colors.text} />
+                  <ActivityIndicator size="small" color={colors.white} />
                 ) : (
                   <>
-                    <Ionicons name="card-outline" size={20} color={colors.text} />
-                    <Text style={[styles.registerBtnText, { color: colors.text }]}>Demo checkout</Text>
+                    <Ionicons name="card-outline" size={20} color={colors.white} />
+                    <Text style={[styles.registerBtnText, { color: colors.white }]}>Checkout</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -398,9 +449,9 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
               <Text style={styles.registerBtnText}>Open course</Text>
             </TouchableOpacity>
           ) : interested ? (
-            <View style={[styles.registerBtn, styles.registeredBtn, { backgroundColor: '#dbeafe' }]}>
-              <Ionicons name="heart" size={22} color="#1d4ed8" />
-              <Text style={[styles.registeredText, { color: '#1d4ed8' }]}>Interested – we&apos;ll be in touch</Text>
+            <View style={[styles.registerBtn, styles.registeredBtn, { backgroundColor: '#d9eeeb' }]}>
+              <Ionicons name="heart" size={22} color="#016e5d" />
+              <Text style={[styles.registeredText, { color: '#016e5d' }]}>Interested – we&apos;ll be in touch</Text>
             </View>
           ) : (
             <>
@@ -439,7 +490,7 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
               </TouchableOpacity>
               {!PILOT_SELF_REGISTRATION ? (
                 <Text style={[styles.bulletDesc, { textAlign: 'center', marginTop: spacing.md }]}>
-                  The AI4Impact team enrolls learners. Tap I&apos;m Interested and we&apos;ll contact you.
+                  The AI4Impact team enrolls learners. Choose I&apos;m Interested and we&apos;ll contact you.
                 </Text>
               ) : null}
             </>

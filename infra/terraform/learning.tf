@@ -156,18 +156,25 @@ resource "aws_lambda_function" "learning" {
   }
   environment {
     variables = merge(local.lambda_env, {
-      VIDEO_BUCKET                = aws_s3_bucket.videos.id
-      CERTIFICATE_BUCKET          = aws_s3_bucket.certificates.id
-      VIDEO_DOMAIN                = aws_cloudfront_distribution.videos.domain_name
-      VIDEO_KEY_ID                = aws_cloudfront_public_key.videos.id
-      VIDEO_SIGNER_SECRET_ARN     = aws_secretsmanager_secret.video_signer.arn
-      CERTIFICATE_VERIFY_BASE_URL = aws_apigatewayv2_api.main.api_endpoint
-      CERTIFICATE_VERIFY_PAGE_URL = "https://www.ai4impact.in/verify"
-      TRANSACTIONAL_EMAIL_ENABLED = tostring(var.transactional_email_enabled)
-      TRANSACTIONAL_FROM_EMAIL    = "noreply@ai4impact.in"
-      RESEND_API_KEY_SECRET_ARN   = aws_secretsmanager_secret.resend_api_key.arn
-      EXPO_PROJECT_ID             = var.expo_project_id
-      CHECKOUT_PAGE_URL           = "https://admin.ai4impact.in/checkout"
+      VIDEO_BUCKET                    = aws_s3_bucket.videos.id
+      CERTIFICATE_BUCKET              = aws_s3_bucket.certificates.id
+      VIDEO_DOMAIN                    = aws_cloudfront_distribution.videos.domain_name
+      VIDEO_KEY_ID                    = aws_cloudfront_public_key.videos.id
+      VIDEO_SIGNER_SECRET_ARN         = aws_secretsmanager_secret.video_signer.arn
+      CERTIFICATE_VERIFY_BASE_URL     = aws_apigatewayv2_api.main.api_endpoint
+      CERTIFICATE_VERIFY_PAGE_URL     = "https://www.ai4impact.in/verify"
+      PROGRAMME_NOTIFICATIONS_ENABLED = tostring(var.programme_notifications_enabled)
+      RESEND_WEBHOOK_SECRET_ARN       = aws_secretsmanager_secret.resend_webhook.arn
+      TRANSACTIONAL_EMAIL_ENABLED     = tostring(var.transactional_email_enabled)
+      RESEND_TEMPLATES_ENABLED        = tostring(var.resend_templates_enabled)
+      TRANSACTIONAL_FROM_EMAIL        = "noreply@ai4impact.in"
+      TRANSACTIONAL_REPLY_TO          = var.transactional_reply_to
+      RESEND_API_KEY_SECRET_ARN       = aws_secretsmanager_secret.resend_api_key.arn
+      EXPO_PROJECT_ID                 = var.expo_project_id
+      RAZORPAY_ENABLED                = tostring(var.razorpay_enabled)
+      RAZORPAY_SECRET_ARN             = aws_secretsmanager_secret.razorpay.arn
+      STUDENT_CHECKOUT_URL            = "${local.student_portal_public_url}/checkout"
+      CHECKOUT_PAGE_URL               = "https://admin.ai4impact.in/checkout"
     })
   }
   depends_on = [aws_iam_role_policy_attachment.learning_db_secret, aws_iam_role_policy.learning_runtime, aws_iam_role_policy_attachment.learning_vpc, aws_cloudwatch_log_group.learning, null_resource.build_lambdas, aws_secretsmanager_secret_version.video_signer]

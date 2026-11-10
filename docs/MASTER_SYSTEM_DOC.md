@@ -4,7 +4,7 @@
 
 This is the single reference for what the project currently has, what is deployed, what data model exists, what was fixed recently, and what is still important to know.
 
-Last updated: 2026-03-10
+Last updated: 2026-11-05
 
 ## System Overview
 
@@ -36,13 +36,13 @@ Current live environment is in:
 
 Main live resources:
 
-- API Gateway HTTP API: `payintelli-api`
-- API ID: `ggszk3v52a`
-- Base URL: `https://ggszk3v52a.execute-api.ap-south-1.amazonaws.com`
-- Cognito User Pool ID: `ap-south-1_6SDlpRoIV`
-- RDS host: `payintelli-postgres.c5k40ukyg956.ap-south-1.rds.amazonaws.com`
-- Database name: `PiResearchLabs`
-- Materials bucket: `piresearchlabs-materials-442042527593`
+- API Gateway HTTP API: `pilearn-api`
+- API ID: `ke8dywmhil`
+- Base URL: `https://ke8dywmhil.execute-api.ap-south-1.amazonaws.com`
+- Cognito User Pool ID: `ap-south-1_kc1sfOoEG`
+- RDS host: `pilearn-postgres.c766w0kgwlwi.ap-south-1.rds.amazonaws.com`
+- Database name: `PiLearn`
+- Materials bucket: `pilearn-materials-767491588787`
 
 ## Backend Architecture
 

@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebLeaderboards } from '@/components/web/WebLeaderboards';
 import { SafeAreaView } from '@/components/SafeAreaView';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,10 +24,26 @@ interface LeaderboardHomeScreenProps {
   onOpenLeaderboard: (eventId: string) => void;
   onOpenEvents: () => void;
   onBack?: () => void;
+  /** Browser only: open an event from its board. */
+  onOpenEvent?: (eventId: string) => void;
 }
 
-export function LeaderboardHomeScreen({ onOpenLeaderboard, onOpenEvents, onBack }: LeaderboardHomeScreenProps) {
-  const attendanceQuery = useMyAttendance();
+// Browser gets its own layout; native keeps the app screen. `isWeb` is fixed per build, so hooks stay stable.
+export function LeaderboardHomeScreen(props: LeaderboardHomeScreenProps) {
+  return isWeb ? (
+    <WebLeaderboards
+      onSelect={props.onOpenLeaderboard}
+      onOpenEvents={props.onOpenEvents}
+      onOpenEvent={(id) => props.onOpenEvent?.(id)}
+    />
+  ) : <NativeLeaderboardHomeScreen {...props} />;
+}
+
+function NativeLeaderboardHomeScreen({ onOpenLeaderboard, onOpenEvents, onBack }: LeaderboardHomeScreenProps) {
+  const attendanceQuery = useQuery({
+    queryKey: ['attendance'],
+    queryFn: () => api.getAttendance() as Promise<AttendanceRecord[]>,
+  });
 
   const eventsQuery = useQuery({
     queryKey: ['events', 'all-for-leaderboard'],

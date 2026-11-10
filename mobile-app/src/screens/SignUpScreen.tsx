@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from '@/components/SafeAreaView';
 import { colors, spacing, borderRadius } from '@/theme/colors';
+import { PrivacyPolicyLink } from '@/components/PrivacyPolicyLink';
 import { PiLogo } from '@/components/PiLogo';
 
 const PASSWORD_HINT = '8+ characters, upper & lower case, number, symbol';
@@ -183,7 +184,8 @@ export function SignUpScreen({ onSuccess, onSignIn }: SignUpScreenProps) {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.footer}>Powered by PiResearch Labs</Text>
+          <Text style={styles.footer}>Powered by Samagyaan Data solutions</Text>
+          <Text style={{ textAlign: 'center', marginTop: 12 }}><PrivacyPolicyLink /></Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

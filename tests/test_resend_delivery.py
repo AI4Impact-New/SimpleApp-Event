@@ -8,6 +8,7 @@ from learning import email_delivery as mail
 def setup(monkeypatch):
     monkeypatch.setenv('RESEND_API_KEY_SECRET_ARN','arn:aws:secretsmanager:ap-south-1:767491588787:secret:test')
     monkeypatch.setenv('TRANSACTIONAL_FROM_EMAIL','noreply@ai4impact.in')
+    monkeypatch.setenv('TRANSACTIONAL_REPLY_TO','support@ai4impact.in')
     monkeypatch.setattr(mail,'_key_cache',None)
     monkeypatch.setattr(mail,'api_key',lambda:'re_test_only')
 
@@ -20,6 +21,7 @@ def test_resend_request_has_pdf_and_idempotency_key(monkeypatch):
     assert post.call_args.args==('https://api.resend.com/emails',)
     assert args['json']['to']==['learner@example.invalid']
     assert args['json']['from']=='AI4Impact <noreply@ai4impact.in>'
+    assert args['json']['reply_to']=='support@ai4impact.in'
     assert base64.b64decode(args['json']['attachments'][0]['content'])==b'%PDF-demo'
     assert args['headers']['Idempotency-Key']=='quote/action-id'
     assert args['allow_redirects'] is False and args['timeout']==(3,10)
@@ -78,3 +80,10 @@ def test_unknown_delivery_is_preserved_for_review(monkeypatch):
     assert e.value.status==502
     assert finish.call_args.args[1]=='pending'
     assert finish.call_args.args[2]['delivery_uncertain'] is True
+
+
+def test_invalid_reply_to_does_not_call_provider(monkeypatch):
+    monkeypatch.setenv('TRANSACTIONAL_REPLY_TO','support@ai4impact.in\r\nBcc: other@example.com')
+    post=Mock();monkeypatch.setattr(mail.requests,'post',post)
+    with pytest.raises(mail.DeliveryError):send()
+    post.assert_not_called()

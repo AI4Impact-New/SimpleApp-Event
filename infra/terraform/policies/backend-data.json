@@ -1,0 +1,131 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ProjectCognitoOperations",
+      "Effect": "Allow",
+      "Action": [
+        "cognito-idp:Describe*",
+        "cognito-idp:List*",
+        "cognito-idp:Get*",
+        "cognito-idp:AdminGetUser",
+        "cognito-idp:AdminListGroupsForUser",
+        "cognito-idp:AdminCreateUser",
+        "cognito-idp:AdminConfirmSignUp",
+        "cognito-idp:AdminSetUserPassword",
+        "cognito-idp:AdminResetUserPassword",
+        "cognito-idp:AdminUpdateUserAttributes",
+        "cognito-idp:AdminEnableUser",
+        "cognito-idp:AdminAddUserToGroup",
+        "cognito-idp:AdminRemoveUserFromGroup",
+        "cognito-idp:AdminInitiateAuth",
+        "cognito-idp:AdminRespondToAuthChallenge",
+        "cognito-idp:AdminUserGlobalSignOut",
+        "cognito-idp:CreateGroup",
+        "cognito-idp:UpdateGroup",
+        "cognito-idp:CreateUserPoolClient",
+        "cognito-idp:UpdateUserPoolClient",
+        "cognito-idp:UpdateUserPool",
+        "cognito-idp:SetUserPoolMfaConfig",
+        "cognito-idp:SetUICustomization"
+      ],
+      "Resource": [
+        "arn:aws:cognito-idp:ap-south-1:767491588787:userpool/ap-south-1_kc1sfOoEG"
+      ]
+    },
+    {
+      "Sid": "DiscoverBuckets",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListAllMyBuckets"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "ProjectMediaBuckets",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetBucket*",
+        "s3:GetEncryptionConfiguration",
+        "s3:ListBucketMultipartUploads"
+      ],
+      "Resource": [
+        "arn:aws:s3:::pilearn-videos-767491588787",
+        "arn:aws:s3:::pilearn-certificates-767491588787",
+        "arn:aws:s3:::pilearn-materials-767491588787-767491588787"
+      ]
+    },
+    {
+      "Sid": "ProjectMediaObjects",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:PutObject",
+        "s3:PutObjectTagging",
+        "s3:ListMultipartUploadParts",
+        "s3:AbortMultipartUpload"
+      ],
+      "Resource": [
+        "arn:aws:s3:::pilearn-videos-767491588787/*",
+        "arn:aws:s3:::pilearn-certificates-767491588787/*",
+        "arn:aws:s3:::pilearn-materials-767491588787-767491588787/*"
+      ]
+    },
+    {
+      "Sid": "ProjectIntegrationSecrets",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:ListSecretVersionIds",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:PutSecretValue",
+        "secretsmanager:UpdateSecret",
+        "secretsmanager:CreateSecret"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:ap-south-1:767491588787:secret:pilearn/*",
+        "arn:aws:secretsmanager:ap-south-1:767491588787:secret:pilearn-*"
+      ]
+    },
+    {
+      "Sid": "ProjectParameters",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath",
+        "ssm:PutParameter",
+        "ssm:GetParameterHistory"
+      ],
+      "Resource": [
+        "arn:aws:ssm:ap-south-1:767491588787:parameter/pilearn/*"
+      ]
+    },
+    {
+      "Sid": "DatabaseLogs",
+      "Effect": "Allow",
+      "Action": [
+        "rds:DownloadDBLogFilePortion"
+      ],
+      "Resource": [
+        "arn:aws:rds:ap-south-1:767491588787:db:pilearn-postgres"
+      ]
+    },
+    {
+      "Sid": "CreateDatabaseBackup",
+      "Effect": "Allow",
+      "Action": [
+        "rds:CreateDBSnapshot",
+        "rds:AddTagsToResource"
+      ],
+      "Resource": [
+        "arn:aws:rds:ap-south-1:767491588787:db:pilearn-postgres",
+        "arn:aws:rds:ap-south-1:767491588787:snapshot:pilearn-*"
+      ]
+    }
+  ]
+}

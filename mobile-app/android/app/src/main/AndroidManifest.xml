@@ -27,7 +27,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="ai4impact"/>
-        <data android:scheme="com.piresearchlabs.mobile"/>
+        <data android:scheme="com.samagyaan.ai4impact"/>
       </intent-filter>
     </activity>
   </application>

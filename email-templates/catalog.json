@@ -1,0 +1,191 @@
+[
+  {
+    "key": "course-enrolled",
+    "alias": "ai4impact-course-enrolled-v1",
+    "name": "AI4Impact \u2014 Course Enrolled",
+    "trigger": "Enrollment becomes registered, including staff/manual or free registration. Paid enrollments use the payment-confirmation email.",
+    "subject": "Course enrollment confirmed",
+    "body": "Your enrollment in {course_title} is confirmed. Open My learning to get started.",
+    "attachment": null
+  },
+  {
+    "key": "course-completed",
+    "alias": "ai4impact-course-completed-v1",
+    "name": "AI4Impact \u2014 Course Completed",
+    "trigger": "Enrollment status changes to completed.",
+    "subject": "Course completed",
+    "body": "Your course {course_title} is marked complete. Open your course workspace to review your progress and certificate eligibility.",
+    "attachment": null
+  },
+  {
+    "key": "course-access-updated",
+    "alias": "ai4impact-course-access-updated-v1",
+    "name": "AI4Impact \u2014 Course Access Updated",
+    "trigger": "Manual enrollment status changes to dropped.",
+    "subject": "Course access updated",
+    "body": "Your enrollment in {course_title} is no longer active. Contact support if this was unexpected.",
+    "attachment": null
+  },
+  {
+    "key": "payment-confirmed",
+    "alias": "ai4impact-payment-confirmed-v1",
+    "name": "AI4Impact \u2014 Payment Confirmed",
+    "trigger": "Verified Razorpay captured payment changes order to paid. Test transactions are labeled TEST.",
+    "subject": "Payment confirmed",
+    "body": "Course: {course_title}\nOrder reference: {order_id}\nOrder total: INR {amount}\nYour course access is ready.",
+    "attachment": "Payment summary PDF"
+  },
+  {
+    "key": "refund-partial",
+    "alias": "ai4impact-refund-partial-v1",
+    "name": "AI4Impact \u2014 Refund Partial",
+    "trigger": "Verified cumulative refunded amount increases without reaching the full payment.",
+    "subject": "Partial refund confirmed",
+    "body": "Course: {course_title}\nOrder reference: {order_id}\nOrder total: INR {amount}\nTotal refunded: INR {refunded_amount}. Your course access remains active.",
+    "attachment": "Payment summary PDF"
+  },
+  {
+    "key": "refund-full",
+    "alias": "ai4impact-refund-full-v1",
+    "name": "AI4Impact \u2014 Refund Full",
+    "trigger": "Verified cumulative refund reaches the full payment.",
+    "subject": "Refund confirmed",
+    "body": "Course: {course_title}\nOrder reference: {order_id}\nOrder total: INR {amount}\nTotal refunded: INR {refunded_amount}. Access granted by this payment has been removed; separate manual grants are preserved.",
+    "attachment": "Payment summary PDF"
+  },
+  {
+    "key": "certificate-issued",
+    "alias": "ai4impact-certificate-issued-v1",
+    "name": "AI4Impact \u2014 Certificate Issued",
+    "trigger": "A new attendance, completion or internship certificate record is issued.",
+    "subject": "Your certificate is ready",
+    "body": "A {certificate_type} certificate has been issued. Sign in to the student portal and open your certificates to view it.",
+    "attachment": null
+  },
+  {
+    "key": "session-confirmed",
+    "alias": "ai4impact-session-confirmed-v1",
+    "name": "AI4Impact \u2014 Session Confirmed",
+    "trigger": "Student confirms a group clarification or personal handholding booking.",
+    "subject": "{session_title} - confirmed",
+    "body": "Session starts {ISO_datetime_with_offset} ({IANA_timezone}). Open your bookings for details.",
+    "attachment": "Calendar invitation (.ics)"
+  },
+  {
+    "key": "session-rescheduled",
+    "alias": "ai4impact-session-rescheduled-v1",
+    "name": "AI4Impact \u2014 Session Rescheduled",
+    "trigger": "Staff changes a booked session or student reschedules to another slot.",
+    "subject": "{session_title} - rescheduled",
+    "body": "Session starts {new_ISO_datetime_with_offset} ({IANA_timezone}). Open your bookings for details.",
+    "attachment": "Calendar invitation (.ics)"
+  },
+  {
+    "key": "session-cancelled",
+    "alias": "ai4impact-session-cancelled-v1",
+    "name": "AI4Impact \u2014 Session Cancelled",
+    "trigger": "A booked session is cancelled; previous reminders expire.",
+    "subject": "{session_title} - cancelled",
+    "body": "Session starts {original_ISO_datetime_with_offset} ({IANA_timezone}). Open your bookings for details.",
+    "attachment": "Calendar invitation (.ics)"
+  },
+  {
+    "key": "session-reminder",
+    "alias": "ai4impact-session-reminder-v1",
+    "name": "AI4Impact \u2014 Session Reminder",
+    "trigger": "24 hours and 1 hour before a confirmed future session, when still eligible.",
+    "subject": "Upcoming session: {session_title}",
+    "body": "Session starts {ISO_datetime_with_offset} ({IANA_timezone}). Open your bookings for details.",
+    "attachment": "Calendar invitation (.ics)"
+  },
+  {
+    "key": "session-outcome",
+    "alias": "ai4impact-session-outcome-v1",
+    "name": "AI4Impact \u2014 Session Outcome",
+    "trigger": "Staff records a completed session or no-show.",
+    "subject": "{session_title} - {completed_or_no_show}",
+    "body": "Session starts {ISO_datetime_with_offset} ({IANA_timezone}). Open your bookings for details.",
+    "attachment": "Calendar invitation (.ics)"
+  },
+  {
+    "key": "webinar-confirmed",
+    "alias": "ai4impact-webinar-confirmed-v1",
+    "name": "AI4Impact \u2014 Webinar Confirmed",
+    "trigger": "A visitor registers for a published webinar.",
+    "subject": "{webinar_title} - confirmed",
+    "body": "{webinar_title} starts {ISO_datetime_with_offset} ({IANA_timezone}). Join: {meeting_url}",
+    "attachment": "Calendar invitation (.ics)"
+  },
+  {
+    "key": "webinar-updated",
+    "alias": "ai4impact-webinar-updated-v1",
+    "name": "AI4Impact \u2014 Webinar Updated",
+    "trigger": "Registered webinar details change and campaign version advances.",
+    "subject": "{webinar_title} - updated",
+    "body": "{webinar_title} starts {new_ISO_datetime_with_offset} ({IANA_timezone}). Join: {meeting_url}",
+    "attachment": "Calendar invitation (.ics)"
+  },
+  {
+    "key": "webinar-cancelled",
+    "alias": "ai4impact-webinar-cancelled-v1",
+    "name": "AI4Impact \u2014 Webinar Cancelled",
+    "trigger": "A registered webinar is cancelled; previous reminders expire.",
+    "subject": "{webinar_title} - cancelled",
+    "body": "{webinar_title} starts {original_ISO_datetime_with_offset} ({IANA_timezone}).",
+    "attachment": "Calendar invitation (.ics)"
+  },
+  {
+    "key": "webinar-reminder",
+    "alias": "ai4impact-webinar-reminder-v1",
+    "name": "AI4Impact \u2014 Webinar Reminder",
+    "trigger": "24 hours and 1 hour before a registered future webinar.",
+    "subject": "Webinar reminder: {webinar_title}",
+    "body": "{webinar_title} starts {ISO_datetime_with_offset} ({IANA_timezone}). Join: {meeting_url}",
+    "attachment": "Calendar invitation (.ics)"
+  },
+  {
+    "key": "application-received",
+    "alias": "ai4impact-application-received-v1",
+    "name": "AI4Impact \u2014 Application Received",
+    "trigger": "Student submits a recruitment job application.",
+    "subject": "Application received",
+    "body": "Your application for {job_title} was received.",
+    "attachment": null
+  },
+  {
+    "key": "application-updated",
+    "alias": "ai4impact-application-updated-v1",
+    "name": "AI4Impact \u2014 Application Updated",
+    "trigger": "Staff changes recruitment application status.",
+    "subject": "Application update",
+    "body": "Your application status is now {status}.",
+    "attachment": null
+  },
+  {
+    "key": "internship-updated",
+    "alias": "ai4impact-internship-updated-v1",
+    "name": "AI4Impact \u2014 Internship Updated",
+    "trigger": "Staff changes internship application status.",
+    "subject": "Internship update",
+    "body": "Your internship application status is now {status}.",
+    "attachment": null
+  },
+  {
+    "key": "course-announcement",
+    "alias": "ai4impact-course-announcement-v1",
+    "name": "AI4Impact \u2014 Course Announcement",
+    "trigger": "Staff publishes a course announcement to enrolled students.",
+    "subject": "{staff_subject}",
+    "body": "{staff_message}",
+    "attachment": null
+  },
+  {
+    "key": "course-quote",
+    "alias": "ai4impact-course-quote-v1",
+    "name": "AI4Impact \u2014 Course Quote",
+    "trigger": "Staff explicitly sends a personal course quote with its pro forma PDF.",
+    "subject": "AI4Impact | Your course quote and demo checkout link",
+    "body": "Hello {student_name},\n\nYour quote for {course_title} is INR {total}.\nMarked price: INR {marked_price}\nDiscount: {discount_percentage}%\n\nDemo checkout: {checkout_url}\n\nThis is a demonstration. No money is collected and completing it does not grant course access. The attached PDF is pro forma, not a tax invoice.\n\nThe AI4Impact team",
+    "attachment": "Demo / pro forma quote PDF"
+  }
+]

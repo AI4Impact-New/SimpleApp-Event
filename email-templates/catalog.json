@@ -187,5 +187,50 @@
     "subject": "AI4Impact | Your course quote and demo checkout link",
     "body": "Hello {student_name},\n\nYour quote for {course_title} is INR {total}.\nMarked price: INR {marked_price}\nDiscount: {discount_percentage}%\n\nDemo checkout: {checkout_url}\n\nThis is a demonstration. No money is collected and completing it does not grant course access. The attached PDF is pro forma, not a tax invoice.\n\nThe AI4Impact team",
     "attachment": "Demo / pro forma quote PDF"
+  },
+  {
+    "key": "fee-reminder",
+    "alias": "ai4impact-fee-reminder-v1",
+    "name": "AI4Impact \u2014 Fee Reminder",
+    "trigger": "Staff explicitly sends an outstanding-fee reminder after preview. Limited to one per fee account per day.",
+    "subject": "Fee reminder: {course_title}",
+    "body": "Hello {student_name},\nYour outstanding fee for {course_title} is INR {outstanding}.\nNext due: {due_on} (INR {next_amount}).\nPay securely: {existing_checkout_link_if_available}\nSign in to AI4Impact or reply to support@ai4impact.in if you need assistance.",
+    "attachment": "Immutable statement of account PDF"
+  },
+  {
+    "key": "fee-statement",
+    "alias": "ai4impact-fee-statement-v1",
+    "name": "AI4Impact \u2014 Fee Statement",
+    "trigger": "Staff previews and emails an immutable statement for the selected date range.",
+    "subject": "Your fee statement: {course_title}",
+    "body": "Hello {student_name},\nYour outstanding fee for {course_title} is INR {outstanding}.\nNext due: {due_on} (INR {next_amount}).\nSign in to AI4Impact or reply to support@ai4impact.in if you need assistance.",
+    "attachment": "Immutable statement of account PDF"
+  },
+  {
+    "key": "offline-payment-confirmed",
+    "alias": "ai4impact-offline-payment-confirmed-v1",
+    "name": "AI4Impact \u2014 Offline Payment Confirmed",
+    "trigger": "Staff records cash/bank/offline UPI received, or clears a pending cheque.",
+    "subject": "Offline payment received",
+    "body": "A payment record for {course_title} is paid. Open your fee statement for the amount, reference and updated balance.",
+    "attachment": "Immutable statement of account PDF"
+  },
+  {
+    "key": "cheque-pending",
+    "alias": "ai4impact-cheque-pending-v1",
+    "name": "AI4Impact \u2014 Cheque Pending",
+    "trigger": "Staff records a cheque; collection and course-access totals do not change until cleared.",
+    "subject": "Cheque received - awaiting clearance",
+    "body": "A payment record for {course_title} is pending. Open your fee statement for the amount, reference and updated balance.",
+    "attachment": "Immutable statement of account PDF"
+  },
+  {
+    "key": "offline-payment-reversed",
+    "alias": "ai4impact-offline-payment-reversed-v1",
+    "name": "AI4Impact \u2014 Offline Payment Reversed",
+    "trigger": "Staff reverses or voids an offline receipt with a reason; history is retained.",
+    "subject": "Offline payment reversed",
+    "body": "A payment record for {course_title} is reversed. Open your fee statement for the amount, reference and updated balance.",
+    "attachment": "Immutable statement of account PDF"
   }
 ]

@@ -14,6 +14,7 @@ import {
   Users,
   BookOpen,
   MessageCircle,
+  CreditCard,
 } from "lucide-react";
 
 const menuItems = [
@@ -21,6 +22,7 @@ const menuItems = [
   { href: "/dashboard/events", label: "Events", icon: Calendar },
   { href: "/dashboard/courses", label: "Courses", icon: BookOpen },
   { href: "/dashboard/fees", label: "Fees & payment links", icon: FileText },
+  { href: "/dashboard/payments", label: "Payments ledger", icon: CreditCard },
   { href: "/dashboard/learning", label: "Learning Studio", icon: BarChart3 },
   {
     href: "/dashboard/course-enquiries",
@@ -54,7 +56,7 @@ export function Sidebar() {
   );
 
   const groups = [
-    { title: 'Workspace', paths: ['/dashboard', '/dashboard/learning', '/dashboard/courses', '/dashboard/course-enquiries', '/dashboard/fees'] },
+    { title: 'Workspace', paths: ['/dashboard', '/dashboard/learning', '/dashboard/courses', '/dashboard/course-enquiries', '/dashboard/fees', '/dashboard/payments'] },
     { title: 'Engagement', paths: ['/dashboard/events', '/dashboard/polls', '/dashboard/materials', '/dashboard/analytics', '/dashboard/programme'] },
     { title: 'Administration', paths: ['/dashboard/admin-users', '/dashboard/users', '/dashboard/operations'] },
   ];

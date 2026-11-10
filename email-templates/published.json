@@ -103,5 +103,30 @@
     "alias": "ai4impact-course-quote-v1",
     "id": "9a2ea001-4fed-458f-80fb-b5c3172d2e63",
     "status": "published"
+  },
+  {
+    "alias": "ai4impact-fee-reminder-v1",
+    "id": "d10bd1ae-1245-4389-ae6c-7c8532062275",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-fee-statement-v1",
+    "id": "70f13648-4247-474d-a00d-a3483e42af1d",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-offline-payment-confirmed-v1",
+    "id": "ad3089f5-ec0a-4c6c-9353-5cab9650885f",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-cheque-pending-v1",
+    "id": "74a5cba1-5827-4655-922a-990168ebab51",
+    "status": "published"
+  },
+  {
+    "alias": "ai4impact-offline-payment-reversed-v1",
+    "id": "9dd7d226-5879-4099-bb05-0461ae7bc9c8",
+    "status": "published"
   }
 ]

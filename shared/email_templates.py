@@ -4,6 +4,10 @@ from html import escape
 
 
 def template_key(event_key='', category='', entity_type=''):
+    if event_key.startswith('fees:reminder:'):return 'fee-reminder'
+    if event_key.startswith('fees:statement:'):return 'fee-statement'
+    if event_key.startswith('fees:receipt:'):
+        return 'cheque-pending' if event_key.endswith(':pending') else 'offline-payment-reversed' if event_key.endswith(':reversed') else 'offline-payment-confirmed'
     if category == 'payment':
         return 'payment-confirmed' if ':paid:' in event_key else 'refund-partial' if ':partially_refunded:' in event_key else 'refund-full'
     if category == 'enrollment':

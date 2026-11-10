@@ -1,3 +1,7 @@
+variable "resend_templates_enabled" {
+  type    = bool
+  default = false
+}
 # Non-AI Programme+ API routes and durable, isolated delivery channels.
 variable "programme_notifications_enabled" {
   type    = bool
@@ -82,6 +86,7 @@ locals {
   programme_worker_environment = merge(local.lambda_env, {
     PROGRAMME_NOTIFICATIONS_ENABLED = tostring(var.programme_notifications_enabled)
     TRANSACTIONAL_EMAIL_ENABLED     = tostring(var.transactional_email_enabled)
+    RESEND_TEMPLATES_ENABLED        = tostring(var.resend_templates_enabled)
     TRANSACTIONAL_FROM_EMAIL        = "noreply@ai4impact.in"
     TRANSACTIONAL_REPLY_TO          = var.transactional_reply_to
     RESEND_API_KEY_SECRET_ARN       = aws_secretsmanager_secret.resend_api_key.arn

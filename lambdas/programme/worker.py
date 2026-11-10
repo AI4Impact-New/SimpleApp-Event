@@ -51,7 +51,7 @@ def dispatch(event, context):
         # Inbox creation and external jobs are retried by durable event ID, not a rolling time cutoff.
         cur.execute(
             """INSERT INTO learner_notifications(user_id,course_id,title,body,event_id)
-         SELECT e.user_id,e.course_id,e.title,e.body,e.id FROM notification_events e WHERE e.user_id IS NOT NULL AND e.id=ANY(%s::uuid[])
+         SELECT e.user_id,e.course_id,e.title,e.body,e.id FROM notification_events e WHERE e.user_id IS NOT NULL AND e.category<>'payment' AND e.id=ANY(%s::uuid[])
          ON CONFLICT(event_id,user_id) WHERE event_id IS NOT NULL DO NOTHING""",
             (event_ids,),
         )
@@ -175,7 +175,15 @@ def _claim(did):
                 reason = "suppressed"
             if j["category"] == "marketing" and not pref:
                 reason = "suppressed"
-        if j["course_id"] and not j["event_key"].endswith(":cancelled"):
+        if j["category"] == "payment":
+            # Superseded payment notices must not send an outdated paid summary
+            # after a later refund has already committed.
+            cur.execute("SELECT status,refunded_paise FROM payment_orders WHERE id=%s", (j["entity_id"],))
+            current = cur.fetchone()
+            state, refunded = j["event_key"].split(":")[-2:]
+            if not current or current["status"] != state or str(current["refunded_paise"]) != refunded:
+                reason = "suppressed"
+        if j["course_id"] and j["category"] not in ("payment", "enrollment") and not j["event_key"].endswith(":cancelled"):
             cur.execute(
                 "SELECT 1 FROM course_registrations WHERE user_id=%s AND course_id=%s AND status IN ('registered','completed')",
                 (j["user_id"], j["course_id"]),
@@ -421,6 +429,13 @@ def _provider(j):
                         ).decode(),
                     }
                 ]
+        if j["entity_type"] == "payment":
+            from learning import billing
+            # Snapshot is read by the normal owner-checked receipt renderer.
+            pdf = billing.invoice_pdf({"id":str(j["user_id"]),"admin":False},str(j["entity_id"]))
+            payload["attachments"] = [{"filename":"AI4Impact-payment-summary.pdf","content":base64.b64encode(pdf).decode()}]
+        from shared.email_templates import apply_template, template_key
+        apply_template(payload, template_key(j["event_key"], j.get("category", ""), j["entity_type"]), j["title"], j["body"])
         if reply:
             payload["reply_to"] = reply
         response = http.post(

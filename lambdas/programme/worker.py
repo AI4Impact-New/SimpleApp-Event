@@ -183,7 +183,7 @@ def _claim(did):
             state, refunded = j["event_key"].split(":")[-2:]
             if not current or current["status"] != state or str(current["refunded_paise"]) != refunded:
                 reason = "suppressed"
-        if j["course_id"] and j["category"] not in ("payment", "enrollment") and not j["event_key"].endswith(":cancelled"):
+        if j["course_id"] and j["category"] not in ("payment", "enrollment", "fees") and not j["event_key"].endswith(":cancelled"):
             cur.execute(
                 "SELECT 1 FROM course_registrations WHERE user_id=%s AND course_id=%s AND status IN ('registered','completed')",
                 (j["user_id"], j["course_id"]),
@@ -434,6 +434,10 @@ def _provider(j):
             # Snapshot is read by the normal owner-checked receipt renderer.
             pdf = billing.invoice_pdf({"id":str(j["user_id"]),"admin":False},str(j["entity_id"]))
             payload["attachments"] = [{"filename":"AI4Impact-payment-summary.pdf","content":base64.b64encode(pdf).decode()}]
+        if j["entity_type"] == "fee_account":
+            from learning import fee_ledger
+            pdf=fee_ledger.notification_pdf({"id":str(j["user_id"]),"admin":False},str(j["entity_id"]),j["event_key"])
+            payload["attachments"]=[{"filename":"AI4Impact-fee-statement.pdf","content":base64.b64encode(pdf).decode()}]
         from shared.email_templates import apply_template, template_key
         apply_template(payload, template_key(j["event_key"], j.get("category", ""), j["entity_type"]), j["title"], j["body"])
         if reply:

@@ -37,7 +37,9 @@ jobs:
           python -m pip_audit -r requirements.txt --ignore-vuln PYSEC-2025-183
           python -m pytest tests -q
       - name: Package Lambda functions
-        run: bash scripts/build_lambdas.sh
+        run: |
+          bash scripts/build_lambdas.sh
+          python scripts/verify_learning_bundle.py lambdas/learning.zip
       - name: Terraform validation
         working-directory: infra/terraform
         run: |
@@ -59,7 +61,7 @@ jobs:
           ADMIN_QA_PID=$!
           trap 'kill "$ADMIN_QA_PID"' EXIT
           curl --retry 30 --retry-connrefused --retry-delay 1 --fail http://localhost:3100/login > /dev/null
-          npx playwright test tests/assisted-enrollment.spec.ts tests/video-analytics.spec.ts tests/embedded-login.spec.ts tests/workspace-staff.spec.ts tests/programme.spec.ts tests/programme-live.spec.ts tests/payments.spec.ts --workers=1 --reporter=line
+          npx playwright test tests/assisted-enrollment.spec.ts tests/video-analytics.spec.ts tests/embedded-login.spec.ts tests/workspace-staff.spec.ts tests/programme.spec.ts tests/programme-live.spec.ts tests/payments.spec.ts tests/payments-ledger.spec.ts --workers=1 --reporter=line
   landing:
     runs-on: ubuntu-latest
     steps:
@@ -145,4 +147,4 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -r requirements.txt pytest
-      - run: python -m pytest tests/test_programme_integration.py tests/test_payments_integration.py tests/test_email_lifecycle.py -q
+      - run: python -m pytest tests/test_programme_integration.py tests/test_payments_integration.py tests/test_email_lifecycle.py tests/test_fee_ledger.py -q

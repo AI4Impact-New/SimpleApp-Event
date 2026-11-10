@@ -111,6 +111,19 @@ def handler(event, context):
         elif path=="/billing/catalog" and method=="GET": result=billing.catalog(actor)
         elif path=="/admin/billing/courses" and method=="GET": result=billing.catalog(actor)
         elif len(parts)==4 and parts[:3]==['admin','billing','courses'] and method=='PUT': result=billing.set_price(actor,parts[3],body)
+        elif parts[:3]==['admin','billing','ledger']:
+            from learning import fee_ledger
+            query=event.get('queryStringParameters') or {}
+            rest=parts[3:]
+            if method=='GET' and (rest==['export'] or (len(rest)==3 and rest[0]=='accounts' and rest[2]=='statement')):
+                fmt=query.get('format','csv' if rest==['export'] else 'pdf')
+                if fmt not in ('pdf','csv'):raise ApiError(400,'Choose PDF or CSV')
+                if rest==['export']:
+                    if fmt!='csv':raise ApiError(400,'Ledger export is CSV')
+                    contents=fee_ledger.csv_bytes(fee_ledger.report(actor,query)['accounts'])
+                else:contents=fee_ledger.statement(actor,rest[1],query,fmt)
+                return {'statusCode':200,'isBase64Encoded':True,'headers':{'Content-Type':'application/pdf' if fmt=='pdf' else 'text/csv; charset=utf-8','Cache-Control':'no-store','Content-Disposition':'attachment; filename="AI4Impact-fees.'+fmt+'"'},'body':base64.b64encode(contents).decode()}
+            result=fee_ledger.routes(actor,rest,method,body,query)
         elif path=="/admin/billing/orders" and method=="GET": result=billing.listing(actor,True)
         elif path=="/admin/billing/orders" and method=="POST": result=billing.create_order(actor,body,True); status=201
         elif path=="/me/purchases" and method=="GET": result=billing.listing(actor)

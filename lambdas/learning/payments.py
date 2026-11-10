@@ -78,6 +78,14 @@ def create(actor, body, as_admin=False):
         raise ApiError(400, 'Unknown order field')
     cid, rid = identifier(body.get('course_id')), identifier(body.get('request_id'))
     config = credentials()
+    # Agreed installments override public catalog pricing in the student Buy flow.
+    lookup=body.get('buyer_email') if as_admin else actor['id']
+    if isinstance(lookup,str):
+        clause='lower(u.email)=%s' if as_admin else 'a.user_id=%s'
+        plan=execute_query('SELECT a.id FROM fee_accounts a JOIN users u ON u.id=a.user_id WHERE a.course_id=%s AND a.mode=%s AND a.source_order_id IS NULL AND a.closed_at IS NULL AND '+clause,(cid,config['mode'],lookup.strip().lower() if as_admin else lookup),fetch='one')
+        if plan:
+            from learning.fee_ledger import pay_link
+            return pay_link(actor,str(plan['id']),{'request_id':rid})
     with get_db_cursor() as cur:
         if as_admin:
             email = body.get('buyer_email')
@@ -132,6 +140,10 @@ def checkout(actor, oid, as_admin=False):
         cur.execute('SELECT *,now() AS server_now FROM payment_orders WHERE id=%s FOR UPDATE',(row['id'],))
         row=cur.fetchone()
         if row['status']!='pending': return response(row)
+        if row.get('fee_account_id'):
+            cur.execute("SELECT a.total_paise+coalesce(sum(e.amount_paise) FILTER (WHERE e.kind='fee_adjustment'),0)-coalesce(sum(e.amount_paise) FILTER (WHERE e.kind<>'fee_adjustment'),0) AS remaining FROM fee_accounts a LEFT JOIN fee_entries e ON e.account_id=a.id WHERE a.id=%s GROUP BY a.id",(row['fee_account_id'],))
+            balance=cur.fetchone()
+            if balance and int(row['total_paise'])>int(balance['remaining']):raise ApiError(409,'This payment link exceeds the current outstanding balance')
         if row['expires_at']<=row['server_now']: raise ApiError(410,'Payment link expired; create a new order')
         if not row['provider_order_id']:
             existing=provider('GET','orders?receipt='+str(row['id'])+'&count=100').get('items',[])
@@ -163,6 +175,8 @@ def apply_payment(payment):
         if payment.get('amount')!=int(row['total_paise']) or payment.get('currency')!='INR':
             raise ApiError(409,'Payment amount does not match order')
         captured = payment.get('status') in ('captured','refunded') and payment.get('captured') is True
+        from learning import fee_ledger
+        fee_ledger.record_attempt(cur,row,payment)
         if not captured: return response(row)
         if row['provider_payment_id'] and row['provider_payment_id']!=payment['id']:
             raise ApiError(409,'Order already has a different payment')
@@ -173,19 +187,24 @@ def apply_payment(payment):
             completed_at=COALESCE(completed_at,now()),updated_at=now() WHERE id=%s RETURNING *''',(status,payment['id'],refunded,row['id']))
         updated=cur.fetchone()
         # Never revoke pre-existing/manual access. A refund only removes the grant owned by this order.
-        source='razorpay:'+str(row['id'])
-        if status=='refunded':
-            cur.execute("UPDATE course_registrations SET status='dropped',updated_at=now() WHERE user_id=%s AND course_id=%s AND source=%s",(row['user_id'],row['course_id'],source))
+        plan_payment=fee_ledger.linked_plan(cur,row)
+        if plan_payment:
+            fee_ledger.sync_access(cur,row['fee_account_id'])
         else:
-            cur.execute('''INSERT INTO course_registrations(id,user_id,course_id,status,source,updated_at)
-                VALUES(%s,%s,%s,'registered',%s,now()) ON CONFLICT(course_id,user_id) DO UPDATE
-                SET status=CASE WHEN course_registrations.status='completed' THEN 'completed' ELSE 'registered' END,
-                source=CASE WHEN course_registrations.status IN ('registered','completed') THEN course_registrations.source ELSE EXCLUDED.source END,
-                updated_at=now()''',(str(uuid.uuid4()),row['user_id'],row['course_id'],source))
+            source='razorpay:'+str(row['id'])
+            if status=='refunded':
+                cur.execute("UPDATE course_registrations SET status='dropped',updated_at=now() WHERE user_id=%s AND course_id=%s AND source=%s",(row['user_id'],row['course_id'],source))
+            else:
+                cur.execute('''INSERT INTO course_registrations(id,user_id,course_id,status,source,updated_at)
+                    VALUES(%s,%s,%s,'registered',%s,now()) ON CONFLICT(course_id,user_id) DO UPDATE
+                    SET status=CASE WHEN course_registrations.status='completed' THEN 'completed' ELSE 'registered' END,
+                    source=CASE WHEN course_registrations.status IN ('registered','completed') THEN course_registrations.source ELSE EXCLUDED.source END,
+                    updated_at=now()''',(str(uuid.uuid4()),row['user_id'],row['course_id'],source))
         if row['status']!=status:
             notification_id=str(uuid.uuid5(uuid.NAMESPACE_URL,'ai4impact:payment:'+str(row['id'])+':'+status))
             title='Payment confirmed' if status=='paid' else 'Refund updated'
             message=('Test payment confirmed. ' if row['mode']=='test' else 'Payment confirmed. ')+'Your course access is ready.' if status=='paid' else 'Your payment refund status is '+status.replace('_',' ')+'.'
+            if plan_payment and status=='paid':message='Your payment was received. Your installment balance and course access have been updated.'
             cur.execute('INSERT INTO learner_notifications(id,user_id,course_id,title,body) VALUES(%s,%s,%s,%s,%s) ON CONFLICT(id) DO NOTHING',(notification_id,row['user_id'],row['course_id'],title,message))
         return response(updated)
 
@@ -241,7 +260,7 @@ def webhook(event):
     payload=body.get('payload') or {}
     payment=(payload.get('payment') or {}).get('entity')
     pid=None
-    if kind in ('payment.captured','order.paid') and isinstance(payment,dict):
+    if kind in ('payment.captured','order.paid','payment.failed') and isinstance(payment,dict):
         pid=payment.get('id','')
     elif kind in ('refund.processed','refund.created'):
         pid=((payload.get('refund') or {}).get('entity') or {}).get('payment_id','')

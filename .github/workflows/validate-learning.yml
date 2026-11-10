@@ -37,7 +37,9 @@ jobs:
           python -m pip_audit -r requirements.txt --ignore-vuln PYSEC-2025-183
           python -m pytest tests -q
       - name: Package Lambda functions
-        run: bash scripts/build_lambdas.sh
+        run: |
+          bash scripts/build_lambdas.sh
+          python scripts/verify_learning_bundle.py lambdas/learning.zip
       - name: Terraform validation
         working-directory: infra/terraform
         run: |

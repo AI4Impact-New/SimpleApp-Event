@@ -86,6 +86,10 @@ def data():
             "INSERT INTO programme_educators(user_id,course_id) VALUES(%s,%s)",
             (users[3], course),
         )
+    # Baseline fixture enrollments now create lifecycle mail. Each test below
+    # exercises its own events, so remove only these fixture setup events.
+    with db.get_db_cursor() as cur:
+        cur.execute("DELETE FROM notification_events WHERE category='enrollment'")
     return {
         "admin": {"id": users[0], "admin": True},
         "student": {"id": users[1], "admin": False},

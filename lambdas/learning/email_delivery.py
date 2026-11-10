@@ -38,6 +38,8 @@ def send_quote_email(*, recipient, subject, plain, html, pdf, idempotency_key):
     if not sender or '\r' in sender or '\n' in sender: raise DeliveryError('invalid_sender',503)
     payload={'from':f'AI4Impact <{sender}>','to':[recipient],'subject':subject,'html':html,'text':plain,
              'attachments':[{'filename':'AI4Impact-pro-forma.pdf','content':base64.b64encode(pdf).decode('ascii')}]}
+    from shared.email_templates import apply_template
+    apply_template(payload, "course-quote", subject, plain)
     reply=os.environ.get('TRANSACTIONAL_REPLY_TO','')
     if reply:
         if '\r' in reply or '\n' in reply or '@' not in reply: raise DeliveryError('invalid_reply_to',503)

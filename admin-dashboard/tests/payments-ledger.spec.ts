@@ -330,3 +330,40 @@ test("mobile ledger keeps wide data inside its scroll container", async ({
   await openStudent(page);
   await expect(page.getByRole("dialog")).toBeVisible();
 });
+
+test("lost offline-payment response retries the same intent, while a new payment gets a new request ID", async ({
+  page,
+}) => {
+  await setup(page);
+  await openStudent(page);
+  const dialog = page.getByRole("dialog");
+  const ids: string[] = [];
+  await page.route(
+    "**/admin/billing/ledger/accounts/*/receipts",
+    async (route) => {
+      const b = route.request().postDataJSON();
+      ids.push(b.request_id);
+      if (ids.length === 1) return route.abort("failed");
+      await route.fulfill({ json: { id: oid, status: "cleared" } });
+    },
+  );
+  async function fillCash() {
+    await dialog.locator("select[name=method]").selectOption("cash");
+    await dialog.getByLabel("Offline amount INR").fill("10");
+  }
+  await dialog.getByRole("button", { name: "Record offline payment" }).click();
+  await fillCash();
+  await dialog.getByRole("button", { name: "Save offline payment" }).click();
+  await expect(dialog.getByRole("alert")).toBeVisible();
+  await dialog.getByRole("button", { name: "Save offline payment" }).click();
+  await expect.poll(() => ids.length).toBe(2);
+  expect(ids[0]).toBe(ids[1]);
+  await expect(
+    dialog.getByRole("button", { name: "Save offline payment" }),
+  ).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Record offline payment" }).click();
+  await fillCash();
+  await dialog.getByRole("button", { name: "Save offline payment" }).click();
+  await expect.poll(() => ids.length).toBe(3);
+  expect(ids[2]).not.toBe(ids[1]);
+});

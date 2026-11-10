@@ -1,16 +1,16 @@
 // Browser-only profile page (design: "Profile.dc.html"; loading/empty/error from "States.dc.html").
 // Presentational: the profile load, sign-out and navigation stay in ProfileScreen; certificates and purchases
 // reuse the same queries and download action as their own screens.
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Animated, Easing } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { EmptyState, ErrorState, Skeleton, useShimmer } from '@/components/web/states';
 import { useWebLayout } from '@/hooks/useWebLayout';
 import { useMyCertificates } from '@/hooks/useLearning';
 import { useMyPurchases } from '@/hooks/useBilling';
 import { useCertificateDownload } from '@/hooks/useCertificateDownload';
 import { Spinner } from '@/components/web/Spinner';
 import { VerifyEmailNotice } from '@/components/VerifyEmailNotice';
-import { apiErrorMessage } from '@/services/apiErrors';
 import type { StoredUserData } from '@/services/auth';
 import type { MyCertificate } from '@/types/learning';
 import type { DemoOrder } from '@/types/billing';
@@ -174,9 +174,9 @@ function CertificatesPanel({ name, onVerify, wide }: { name: string; onVerify?: 
           ))}
         </View>
       ) : error ? (
-        <Blank icon="cloud-offline-outline" iconColor="#b4321f" title="Could not load certificates" body="Check your connection and try again." cta="Try again" onCta={() => refetch()} />
+        <ErrorState title="Could not load certificates" error={error} onRetry={() => refetch()} />
       ) : certificates.length === 0 ? (
-        <Blank icon="ribbon-outline" title="No certificates yet" body="Complete a course to earn its certificate. It will appear here with a PDF and a verification ID." />
+        <EmptyState icon="ribbon-outline" title="No certificates yet" body="Complete a course to earn its certificate. It will appear here with a PDF and a verification ID." />
       ) : (
         <View style={styles.grid}>
           {certificates.map((c) => (
@@ -270,9 +270,9 @@ function PurchasesPanel({ onOpenOrder, wide }: { onOpenOrder?: (id: string) => v
       {isLoading ? (
         <SkeletonRows />
       ) : error ? (
-        <Blank icon="cloud-offline-outline" iconColor="#b4321f" title="Could not load purchases" body={apiErrorMessage(error, 'Failed to load purchases')} cta="Try again" onCta={() => refetch()} />
+        <ErrorState title="Could not load purchases" error={error} fallback="Failed to load purchases" onRetry={() => refetch()} />
       ) : orders.length === 0 ? (
-        <Blank icon="receipt-outline" title="No purchases yet" body="Course orders you place will be listed here." />
+        <EmptyState icon="receipt-outline" title="No purchases yet" body="Course orders you place will be listed here." />
       ) : (
         <>
           <View style={styles.card}>
@@ -433,42 +433,6 @@ function HelpPanel(props: WebProfileProps) {
 
 // ---- Shared states ----
 
-function Blank({ icon, iconColor = body, title, body: text, cta, onCta }: { icon: IconName; iconColor?: string; title: string; body: string; cta?: string; onCta?: () => void }) {
-  return (
-    <View style={styles.blank}>
-      <View style={styles.blankIcon}>
-        <Ionicons name={icon} size={18} color={iconColor} />
-      </View>
-      <Text style={styles.blankTitle}>{title}</Text>
-      <Text style={styles.blankBody}>{text}</Text>
-      {cta && onCta ? (
-        <Pressable onPress={onCta} style={(s: PressState) => [styles.btnPrimary, styles.btnSm, { marginTop: 6 }, s.hovered && styles.btnPrimaryHover]}>
-          <Text style={styles.btnPrimaryTextSm}>{cta}</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
-function useShimmer() {
-  const v = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(v, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-        Animated.timing(v, { toValue: 0, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [v]);
-  return v.interpolate({ inputRange: [0, 1], outputRange: [palette.slate150, '#eef1f5'] });
-}
-
-function Sk({ w, h, r = 6, color }: { w: number | `${number}%`; h: number; r?: number; color: Animated.AnimatedInterpolation<string> }) {
-  return <Animated.View style={{ width: w, height: h, borderRadius: r, backgroundColor: color }} />;
-}
-
 function SkeletonCard() {
   const color = useShimmer();
   return (
@@ -477,8 +441,8 @@ function SkeletonCard() {
         <Animated.View style={[styles.certPaper, { backgroundColor: color, borderWidth: 0 }]} />
       </View>
       <View style={styles.certActions}>
-        <Sk w={72} h={32} r={8} color={color} />
-        <Sk w={84} h={32} r={8} color={color} />
+        <Skeleton w={72} h={32} r={8} color={color} />
+        <Skeleton w={84} h={32} r={8} color={color} />
       </View>
     </View>
   );
@@ -491,10 +455,10 @@ function SkeletonRows() {
       {[0, 1, 2].map((k) => (
         <View key={k} style={[styles.tr, k < 2 && styles.rowDivider]}>
           <View style={[styles.colItem, { gap: 8 }]}>
-            <Sk w="70%" h={14} color={color} />
-            <Sk w={80} h={10} color={color} />
+            <Skeleton w="70%" h={14} color={color} />
+            <Skeleton w={80} h={10} color={color} />
           </View>
-          <Sk w={90} h={12} color={color} />
+          <Skeleton w={90} h={12} color={color} />
         </View>
       ))}
     </View>
@@ -509,22 +473,22 @@ export function WebProfileSkeleton() {
     <ScrollView style={styles.page} contentContainerStyle={[styles.pageContent, wide && styles.pageContentWide]} aria-busy>
       <View style={wide ? styles.aside : { gap: 16 }}>
         <View style={styles.identity}>
-          <Sk w={48} h={48} r={12} color={color} />
+          <Skeleton w={48} h={48} r={12} color={color} />
           <View style={{ flex: 1, gap: 8 }}>
-            <Sk w="70%" h={14} color={color} />
-            <Sk w="90%" h={10} color={color} />
+            <Skeleton w="70%" h={14} color={color} />
+            <Skeleton w="90%" h={10} color={color} />
           </View>
         </View>
         {wide ? (
           <View style={{ gap: 10 }}>
             {[0, 1, 2, 3].map((k) => (
-              <Sk key={k} w="100%" h={28} r={8} color={color} />
+              <Skeleton key={k} w="100%" h={28} r={8} color={color} />
             ))}
           </View>
         ) : null}
       </View>
       <View style={[styles.main, wide && styles.mainWide]}>
-        <Sk w={200} h={30} color={color} />
+        <Skeleton w={200} h={30} color={color} />
         <View style={styles.grid}>
           <SkeletonCard />
           <SkeletonCard />
@@ -618,10 +582,6 @@ const styles = StyleSheet.create({
   helpLabel: { ...text, fontSize: 14, fontWeight: '500', color: ink },
   helpSub: { ...text, marginTop: 2, fontSize: 12, color: muted },
 
-  blank: { backgroundColor: '#ffffff', borderWidth: 1, borderColor: line, borderRadius: 20, paddingVertical: 40, paddingHorizontal: 28, alignItems: 'flex-start', gap: 12 },
-  blankIcon: { width: 40, height: 40, borderRadius: 10, borderWidth: 1, borderColor: line, alignItems: 'center', justifyContent: 'center' },
-  blankTitle: { ...display, marginTop: 4, fontSize: 17, fontWeight: '600', color: ink },
-  blankBody: { ...text, fontSize: 14, lineHeight: 22, color: body },
 
   btnPrimary: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 40, paddingHorizontal: 16, borderRadius: 8, backgroundColor: palette.navy800 },
   btnPrimaryHover: { backgroundColor: palette.navy700 },

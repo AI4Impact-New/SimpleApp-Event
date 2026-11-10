@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebLeaderboards } from '@/components/web/WebLeaderboards';
 import { SafeAreaView } from '@/components/SafeAreaView';
 import { useEventAnalytics } from '@/hooks/useEvents';
 import { colors, spacing } from '@/theme/colors';
@@ -16,9 +18,26 @@ import { colors, spacing } from '@/theme/colors';
 interface LeaderboardScreenProps {
   eventId: string;
   onBack: () => void;
+  /** Browser only: switch boards, open the events list or an event. */
+  onSelect?: (eventId: string) => void;
+  onOpenEvents?: () => void;
+  onOpenEvent?: (eventId: string) => void;
 }
 
-export function LeaderboardScreen({ eventId, onBack }: LeaderboardScreenProps) {
+// Browser gets its own layout; native keeps the app screen. `isWeb` is fixed per build, so hooks stay stable.
+export function LeaderboardScreen(props: LeaderboardScreenProps) {
+  return isWeb ? (
+    <WebLeaderboards
+      eventId={props.eventId}
+      onSelect={(id) => props.onSelect?.(id)}
+      onOpenEvents={() => props.onOpenEvents?.()}
+      onOpenEvent={(id) => props.onOpenEvent?.(id)}
+      onBackToList={props.onBack}
+    />
+  ) : <NativeLeaderboardScreen {...props} />;
+}
+
+function NativeLeaderboardScreen({ eventId, onBack }: LeaderboardScreenProps) {
   const { data: analytics, isLoading, error, refetch, isRefetching } = useEventAnalytics(eventId);
 
   const topStudents = analytics?.top_students || [];

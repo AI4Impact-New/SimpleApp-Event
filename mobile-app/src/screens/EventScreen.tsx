@@ -11,6 +11,8 @@ import {
   Linking,
   RefreshControl,
 } from 'react-native';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebEventDetail } from '@/components/web/WebEventDetail';
 import { SafeAreaView } from '@/components/SafeAreaView';
 import { Ionicons } from '@expo/vector-icons';
 import { useEvent, useJoinEvent, useEventAnalytics } from '@/hooks/useEvents';
@@ -28,9 +30,26 @@ interface EventScreenProps {
   eventId: string;
   onBack: () => void;
   onPollPress?: (pollId: string) => void;
+  /** Browser only: the event's materials page and its full leaderboard. */
+  onOpenMaterials?: () => void;
+  onOpenLeaderboard?: () => void;
+  onOpenEvents?: () => void;
 }
 
-export function EventScreen({ eventId, onBack, onPollPress }: EventScreenProps) {
+// Browser gets its own layout; native keeps the app screen. `isWeb` is fixed per build, so hooks stay stable.
+export function EventScreen(props: EventScreenProps) {
+  return isWeb ? (
+    <WebEventDetail
+      eventId={props.eventId}
+      onBack={props.onOpenEvents ?? props.onBack}
+      onOpenPoll={(id) => props.onPollPress?.(id)}
+      onOpenMaterials={() => props.onOpenMaterials?.()}
+      onOpenLeaderboard={() => props.onOpenLeaderboard?.()}
+    />
+  ) : <NativeEventScreen {...props} />;
+}
+
+function NativeEventScreen({ eventId, onBack, onPollPress }: EventScreenProps) {
   const { data: event, isLoading: eventLoading, error: eventError, refetch: refetchEvent, isRefetching: eventRefetching } = useEvent(eventId);
   const { data: pollsData, isLoading: pollsLoading, refetch: refetchPolls, isRefetching: pollsRefetching } = usePolls(eventId);
   const { data: materialsData, isLoading: materialsLoading, refetch: refetchMaterials, isRefetching: materialsRefetching } = useMaterials(eventId);

@@ -32,6 +32,7 @@ const config: LinkingOptions<object>['config'] = {
       screens: {
         HomeMain: '',
         Events: 'events',
+        EventMaterials: 'events/:eventId/materials',
         Event: 'events/:eventId',
         Poll: 'polls/:pollId',
         LeaderboardHome: 'leaderboards',

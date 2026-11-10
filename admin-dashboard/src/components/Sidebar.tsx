@@ -156,6 +156,7 @@ export function Sidebar() {
                       <li key={item.href}>
                         <Link
                           href={item.href}
+                          onClick={() => setMobileOpen(false)}
                           aria-current={active ? "page" : undefined}
                           aria-label={item.label}
                           className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${active ? "bg-primary-50 text-primary-800 ring-1 ring-inset ring-primary-100" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"}`}

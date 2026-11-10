@@ -1,4 +1,13 @@
 "use client";
+import {
+  CalendarDays,
+  Briefcase,
+  MessagesSquare,
+  Settings2,
+  Plus,
+  Search,
+  X,
+} from "lucide-react";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   programme,
@@ -53,10 +62,7 @@ function Editor({
     await onSave({ ...values, request_id: request.current.id });
   };
   return (
-    <form
-      onSubmit={submit}
-      className="space-y-3 rounded-xl border bg-white p-5"
-    >
+    <form onSubmit={submit} className="space-y-5">
       <div className="grid gap-4 md:grid-cols-2">
         {fields.map((f) => (
           <label className="block text-sm font-medium" key={f.name}>
@@ -117,7 +123,156 @@ function Editor({
 function options(values: string[]) {
   return values.map((value) => ({ value, label: value.replaceAll("_", " ") }));
 }
+const sections = [
+  {
+    name: "Training",
+    icon: CalendarDays,
+    tabs: ["Sessions", "Bookings", "Educators", "Entitlements", "Credits"],
+    description: "Schedule sessions and support your learners.",
+  },
+  {
+    name: "Careers",
+    icon: Briefcase,
+    tabs: ["Jobs", "Applications", "Companies", "Internships", "Screening"],
+    description: "Manage opportunities and review applications.",
+  },
+  {
+    name: "Communications",
+    icon: MessagesSquare,
+    tabs: ["Webinars", "Announcements"],
+    description: "Reach learners with webinars and course updates.",
+  },
+  {
+    name: "Settings",
+    icon: Settings2,
+    tabs: ["Delivery"],
+    description: "Monitor notification delivery and channel controls.",
+  },
+];
+const taskCopy: Record<string, [string, string, string]> = {
+  Sessions: [
+    "New session",
+    "Schedule a group clarification or a personal support slot.",
+    "No sessions yet. Create a session to open booking for learners.",
+  ],
+  Bookings: [
+    "",
+    "Review bookings and mark attendance or cancellations.",
+    "No bookings yet. Bookings appear after learners reserve a session.",
+  ],
+  Educators: [
+    "Assign educator",
+    "Choose who can run sessions for this course.",
+    "No educators assigned to this course.",
+  ],
+  Entitlements: [
+    "Manage access",
+    "Grant or update a learner's Programme+ access.",
+    "No Programme+ access records for this course.",
+  ],
+  Credits: [
+    "Adjust credits",
+    "Add or remove learner session credits with a recorded reason.",
+    "",
+  ],
+  Jobs: [
+    "New job",
+    "Publish roles students can discover and apply for.",
+    "No jobs yet. Add a company, then create your first role.",
+  ],
+  Applications: [
+    "",
+    "Track each candidate from application to outcome.",
+    "No job applications yet.",
+  ],
+  Companies: [
+    "Add company",
+    "Maintain the companies offering roles to your learners.",
+    "No companies yet. Add a recruitment partner to get started.",
+  ],
+  Internships: [
+    "",
+    "Review internship applications and mentor feedback.",
+    "No internship applications yet.",
+  ],
+  Screening: [
+    "Configure screening",
+    "Select the published exams used for this course's screening.",
+    "",
+  ],
+  Webinars: [
+    "New webinar",
+    "Schedule webinars and control their landing-page campaigns.",
+    "No webinars yet. Create a draft campaign to get started.",
+  ],
+  Announcements: [
+    "New announcement",
+    "Send a course update to enrolled learners.",
+    "No announcements for this course.",
+  ],
+  Delivery: [
+    "",
+    "Check email and push delivery, or pause a channel when needed.",
+    "No delivery records yet.",
+  ],
+};
+const sectionLabel = (value: string) =>
+  (
+    ({
+      Entitlements: "Learner access",
+      Credits: "Session credits",
+      Delivery: "Notification delivery",
+      Internships: "Internship reviews",
+    }) as Record<string, string>
+  )[value] || value;
+function EditorDialog({
+  title,
+  close,
+  children,
+}: {
+  title: string;
+  close: () => void;
+  children: React.ReactNode;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = ref.current;
+    const previous = document.activeElement as HTMLElement | null;
+    dialog?.showModal();
+    return () => {
+      dialog?.close();
+      previous?.focus();
+    };
+  }, []);
+  return (
+    <dialog
+      ref={ref}
+      onCancel={(e) => {
+        e.preventDefault();
+        close();
+      }}
+      aria-label={title}
+      className="max-h-[90dvh] w-[min(800px,94vw)] overflow-y-auto rounded-2xl border-0 p-0 shadow-2xl backdrop:bg-slate-900/40"
+    >
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-6 py-4">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        <button
+          type="button"
+          onClick={close}
+          aria-label="Close editor"
+          className="rounded-lg p-2 hover:bg-slate-100"
+        >
+          <X size={20} />
+        </button>
+      </header>
+      <div className="p-5 sm:p-6">{children}</div>
+    </dialog>
+  );
+}
 export default function ProgrammeWorkspace() {
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("Sessions"),
     [isAdmin, setAdmin] = useState(false),
     [courses, setCourses] = useState<Row[]>([]),
@@ -260,7 +415,14 @@ export default function ProgrammeWorkspace() {
   );
   useEffect(() => {
     setError("");
-    void load().catch((e) => setError(errorMessage(e)));
+    let active = true;
+    setLoading(true);
+    void load()
+      .catch((e) => active && setError(errorMessage(e)))
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
   }, [load, version]);
   const act = async (fn: () => Promise<unknown>) => {
     setBusy(true);
@@ -269,6 +431,7 @@ export default function ProgrammeWorkspace() {
     try {
       await fn();
       setNotice("Saved successfully.");
+      setEditorOpen(false);
       setEdit(null);
       setVersion((v) => v + 1);
     } catch (e) {
@@ -280,6 +443,8 @@ export default function ProgrammeWorkspace() {
   const choose = (next: string) => {
     ++generation.current;
     setTab(next);
+    setSearch("");
+    setEditorOpen(false);
     setRows([]);
     setEdit(null);
     setCursor(null);
@@ -591,45 +756,118 @@ export default function ProgrammeWorkspace() {
     });
   const editRow = (r: Row) => {
     setEdit(r);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setEditorOpen(true);
   };
   return (
     <div className="space-y-5">
-      <header>
-        <h1 className="text-2xl font-bold">Programme+ workspace</h1>
-        <p className="mt-2 text-sm text-gray-500">
-          Manage trainer time, career opportunities and webinar campaigns. AI
-          services are not enabled.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary-700">
+            Learner experience
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Programme+ workspace
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Sessions, careers and communications, in one place.
+          </p>
+        </div>
       </header>
-      <nav className="flex flex-wrap gap-2" aria-label="Programme sections">
-        {(isAdmin
-          ? [
-              "Sessions",
-              "Bookings",
-              "Educators",
-              "Credits",
-              "Entitlements",
-              "Companies",
-              "Jobs",
-              "Applications",
-              "Internships",
-              "Screening",
-              "Webinars",
-              "Announcements",
-              "Delivery",
-            ]
-          : ["Sessions", "Bookings", "Announcements"]
-        ).map((t) => (
-          <button
-            key={t}
-            onClick={() => choose(t)}
-            className={`rounded-lg border px-3 py-2 text-sm ${tab === t ? "bg-primary-600 text-white" : "bg-white"}`}
-          >
-            {t}
-          </button>
-        ))}
+      <nav
+        className="grid grid-cols-2 gap-2 rounded-2xl border bg-white p-2 lg:grid-cols-4"
+        aria-label="Programme areas"
+      >
+        {sections
+          .filter(
+            (section) =>
+              isAdmin ||
+              section.tabs.some((t) =>
+                ["Sessions", "Bookings", "Announcements"].includes(t),
+              ),
+          )
+          .map((section) => {
+            const active = section.tabs.includes(tab);
+            const Icon = section.icon;
+            return (
+              <button
+                key={section.name}
+                aria-pressed={active}
+                onClick={() =>
+                  choose(
+                    section.tabs.find(
+                      (t) =>
+                        isAdmin ||
+                        ["Sessions", "Bookings", "Announcements"].includes(t),
+                    )!,
+                  )
+                }
+                className={`flex items-center gap-2 rounded-xl px-3 py-3 text-left transition ${active ? "bg-primary-50 text-primary-800 ring-1 ring-inset ring-primary-200" : "text-slate-600 hover:bg-slate-50"}`}
+              >
+                <Icon size={18} aria-hidden="true" className="shrink-0" />
+                <span className="font-semibold text-xs sm:text-sm">
+                  {section.name}
+                </span>
+              </button>
+            );
+          })}
       </nav>
+      <section className="rounded-2xl border bg-white p-4 sm:p-5">
+        <nav
+          className="flex gap-1 overflow-x-auto border-b pb-3"
+          aria-label="Programme sections"
+        >
+          {sections
+            .find((section) => section.tabs.includes(tab))!
+            .tabs.filter(
+              (t) =>
+                isAdmin ||
+                ["Sessions", "Bookings", "Announcements"].includes(t),
+            )
+            .map((t) => (
+              <button
+                key={t}
+                aria-pressed={tab === t}
+                onClick={() => choose(t)}
+                className={`shrink-0 rounded-lg px-3 py-2 text-sm font-medium ${tab === t ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+              >
+                {sectionLabel(t)}
+              </button>
+            ))}
+        </nav>
+        <div className="mt-5 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold">{sectionLabel(tab)}</h2>
+            <p className="mt-1 max-w-2xl text-sm text-slate-500">
+              {taskCopy[tab][1]}
+            </p>
+          </div>
+          {fields[tab] && (
+            <button
+              disabled={
+                busy ||
+                loading ||
+                ([
+                  "Sessions",
+                  "Educators",
+                  "Credits",
+                  "Entitlements",
+                  "Announcements",
+                  "Screening",
+                ].includes(tab) &&
+                  !course)
+              }
+              onClick={() => {
+                if (tab !== "Screening") setEdit(null);
+                setEditorOpen(true);
+              }}
+              className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+            >
+              <Plus size={16} />
+              {taskCopy[tab][0]}
+            </button>
+          )}
+        </div>
+      </section>
       {[
         "Sessions",
         "Bookings",
@@ -680,7 +918,7 @@ export default function ProgrammeWorkspace() {
             Load more accounts
           </button>
         )}
-      {error && (
+      {error && !editorOpen && (
         <p role="alert" className="rounded-lg bg-red-50 p-4 text-red-800">
           {error}
         </p>
@@ -697,11 +935,51 @@ export default function ProgrammeWorkspace() {
           regardless of timing.
         </p>
       )}
-      {fields[tab] && (
-        <>
-          <h2 className="font-semibold">
-            {edit ? "Edit" : "Create / update"} {tab.toLowerCase()}
-          </h2>
+      {fields[tab] && editorOpen && (
+        <EditorDialog
+          title={edit ? `Edit ${tab.toLowerCase()}` : taskCopy[tab][0]}
+          close={() => {
+            setEditorOpen(false);
+            setEdit(null);
+          }}
+        >
+          {error && (
+            <p
+              role="alert"
+              className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-800"
+            >
+              {error}
+            </p>
+          )}
+          <p className="mb-5 text-sm text-slate-500">{taskCopy[tab][1]}</p>
+          {tab === "Sessions" && !educatorOptions.length && (
+            <p className="mb-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+              No educator is assigned to this course.{" "}
+              {isAdmin ? (
+                <button
+                  type="button"
+                  onClick={() => choose("Educators")}
+                  className="font-semibold underline"
+                >
+                  Assign an educator first
+                </button>
+              ) : (
+                "Ask an administrator to assign an educator before scheduling."
+              )}
+            </p>
+          )}
+          {tab === "Jobs" && !companies.length && (
+            <p className="mb-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+              Add a company before publishing a role.{" "}
+              <button
+                type="button"
+                onClick={() => choose("Companies")}
+                className="font-semibold underline"
+              >
+                Go to companies
+              </button>
+            </p>
+          )}
           <Editor
             key={`${tab}-${course}-${edit?.id || "new"}-${version}`}
             fields={fields[tab]}
@@ -709,18 +987,36 @@ export default function ProgrammeWorkspace() {
             onSave={save}
             busy={busy}
           />
-          {edit && (
-            <button className="text-sm underline" onClick={() => setEdit(null)}>
-              Cancel editing
-            </button>
-          )}
-        </>
+        </EditorDialog>
       )}
       {tab === "Entitlements" && (
         <p className="text-sm text-gray-600">
           {rows.length} entitlements loaded. Balances are granted once per
           enrolled course; disabling access does not reset consumed credits.
         </p>
+      )}
+      {tab === "Screening" && !loading && (
+        <section className="grid gap-3 rounded-xl border bg-white p-5 sm:grid-cols-2">
+          {["aptitude_exam_id", "technical_exam_id"].map((key) => (
+            <div key={key}>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                {key === "aptitude_exam_id"
+                  ? "Aptitude exam"
+                  : "Technical exam"}
+              </p>
+              <p className="mt-2 font-medium">
+                {(exams.find((e) => e.id === edit?.[key])?.title as string) ||
+                  "Not configured"}
+              </p>
+            </div>
+          ))}
+        </section>
+      )}
+      {tab === "Credits" && (
+        <div className="rounded-xl border bg-white p-6 text-sm text-slate-600">
+          Choose <strong>Adjust credits</strong> to update a learner's balance.
+          Each adjustment requires a reason and is kept in the activity record.
+        </div>
       )}
       {tab === "Delivery" && (
         <section className="flex flex-wrap gap-3">
@@ -764,192 +1060,227 @@ export default function ProgrammeWorkspace() {
           message.
         </div>
       )}
-      <div className="space-y-3">
-        {rows.map((r) => (
-          <article
-            key={r.id || text(r, "user_id")}
-            className="rounded-xl border bg-white p-4"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="font-semibold">
-                  {text(r, "title") ||
-                    text(r, "name") ||
-                    text(r, "applicant_name") ||
-                    text(r, "email") ||
-                    text(r, "topic") ||
-                    "Record"}
-                </h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  {[
-                    text(r, "company_name"),
-                    text(r, "kind"),
-                    text(r, "status"),
-                    text(r, "educator_name"),
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-                {r.starts_at ? (
-                  <p className="mt-2 text-sm">
-                    {new Intl.DateTimeFormat(undefined, {
-                      timeZone: String(r.timezone),
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    }).format(new Date(String(r.starts_at)))}{" "}
-                    –{" "}
-                    {new Intl.DateTimeFormat(undefined, {
-                      timeZone: String(r.timezone),
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    }).format(new Date(String(r.ends_at)))}{" "}
-                    ({text(r, "timezone")})
+      {!["Credits", "Screening"].includes(tab) && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-slate-500">
+            {loading
+              ? "Loading records…"
+              : `${rows.length} ${rows.length === 1 ? "record" : "records"}${cursor ? " loaded" : ""}`}
+          </p>
+          <label className="relative block w-full sm:w-72">
+            <Search
+              size={16}
+              className="absolute left-3 top-3 text-slate-400"
+              aria-hidden="true"
+            />
+            <input
+              aria-label={`Search ${tab.toLowerCase()}`}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={`Search ${tab.toLowerCase()}…`}
+              className="w-full rounded-lg border bg-white py-2.5 pl-9 pr-3 text-sm"
+            />
+          </label>
+        </div>
+      )}
+      <div className="space-y-3" aria-busy={loading}>
+        {rows
+          .filter(
+            (r) =>
+              !search ||
+              Object.values(r).some((value) =>
+                String(value ?? "")
+                  .toLowerCase()
+                  .includes(search.toLowerCase()),
+              ),
+          )
+          .map((r) => (
+            <article
+              key={r.id || text(r, "user_id")}
+              className="rounded-xl border bg-white p-4"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-semibold">
+                    {text(r, "title") ||
+                      text(r, "name") ||
+                      text(r, "applicant_name") ||
+                      text(r, "email") ||
+                      text(r, "topic") ||
+                      "Record"}
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {[
+                      text(r, "company_name"),
+                      text(r, "kind"),
+                      text(r, "status"),
+                      text(r, "educator_name"),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </p>
-                ) : null}
-                {r.capacity ? (
-                  <p className="text-sm">
-                    {text(r, "booked") || "0"} / {text(r, "capacity")} seats
-                    booked
-                  </p>
-                ) : null}
-                {r.applicant_email ? (
-                  <p className="text-sm">{text(r, "applicant_email")}</p>
-                ) : null}
-                {r.error_code ? (
-                  <p className="text-sm text-red-700">
-                    {text(r, "error_code")}
-                  </p>
-                ) : null}
-                {tab === "Webinars" && (
-                  <p className="text-sm">
-                    {text(r, "registrations")} registrations ·{" "}
-                    {text(r, "impressions")} impressions · {text(r, "clicks")}{" "}
-                    clicks
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {["Sessions", "Companies", "Jobs", "Webinars"].includes(
-                  tab,
-                ) && (
-                  <button
-                    className="rounded-lg border px-3 py-2 text-sm"
-                    onClick={() => editRow(r)}
-                  >
-                    Edit
-                  </button>
-                )}
-                {tab === "Announcements" && text(r, "status") === "pending" && (
-                  <button
-                    disabled={busy}
-                    className="rounded-lg border px-3 py-2 text-sm"
-                    onClick={() =>
-                      void act(() =>
-                        programme.request(
-                          "PATCH",
-                          prefix + "/announcements/" + r.id,
-                          {
-                            status: "cancelled",
-                            reason: "Cancelled in Programme workspace",
-                          },
-                        ),
-                      )
-                    }
-                  >
-                    Cancel pending sends
-                  </button>
-                )}
-                {tab === "Bookings" &&
-                  text(r, "status") === "confirmed" &&
-                  ["completed", "no_show", "cancelled"].map((state) => (
+                  {r.starts_at ? (
+                    <p className="mt-2 text-sm">
+                      {new Intl.DateTimeFormat(undefined, {
+                        timeZone: String(r.timezone),
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      }).format(new Date(String(r.starts_at)))}{" "}
+                      –{" "}
+                      {new Intl.DateTimeFormat(undefined, {
+                        timeZone: String(r.timezone),
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      }).format(new Date(String(r.ends_at)))}{" "}
+                      ({text(r, "timezone")})
+                    </p>
+                  ) : null}
+                  {r.capacity ? (
+                    <p className="text-sm">
+                      {text(r, "booked") || "0"} / {text(r, "capacity")} seats
+                      booked
+                    </p>
+                  ) : null}
+                  {r.applicant_email ? (
+                    <p className="text-sm">{text(r, "applicant_email")}</p>
+                  ) : null}
+                  {r.error_code ? (
+                    <p className="text-sm text-red-700">
+                      {text(r, "error_code")}
+                    </p>
+                  ) : null}
+                  {tab === "Webinars" && (
+                    <p className="text-sm">
+                      {text(r, "registrations")} registrations ·{" "}
+                      {text(r, "impressions")} impressions · {text(r, "clicks")}{" "}
+                      clicks
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {["Sessions", "Companies", "Jobs", "Webinars"].includes(
+                    tab,
+                  ) && (
                     <button
-                      disabled={busy}
                       className="rounded-lg border px-3 py-2 text-sm"
-                      key={state}
-                      onClick={() =>
+                      onClick={() => editRow(r)}
+                    >
+                      Edit
+                    </button>
+                  )}
+                  {tab === "Announcements" &&
+                    text(r, "status") === "pending" && (
+                      <button
+                        disabled={busy}
+                        className="rounded-lg border px-3 py-2 text-sm"
+                        onClick={() =>
+                          void act(() =>
+                            programme.request(
+                              "PATCH",
+                              prefix + "/announcements/" + r.id,
+                              {
+                                status: "cancelled",
+                                reason: "Cancelled in Programme workspace",
+                              },
+                            ),
+                          )
+                        }
+                      >
+                        Cancel pending sends
+                      </button>
+                    )}
+                  {tab === "Bookings" &&
+                    text(r, "status") === "confirmed" &&
+                    ["completed", "no_show", "cancelled"].map((state) => (
+                      <button
+                        disabled={busy}
+                        className="rounded-lg border px-3 py-2 text-sm"
+                        key={state}
+                        onClick={() =>
+                          void act(() =>
+                            programme.request(
+                              "PATCH",
+                              prefix + "/bookings/" + r.id,
+                              { status: state },
+                            ),
+                          )
+                        }
+                      >
+                        {state.replace("_", " ")}
+                      </button>
+                    ))}
+                  {tab === "Applications" && (
+                    <select
+                      aria-label="Application status"
+                      className="rounded border p-2 text-sm"
+                      value={text(r, "status")}
+                      disabled={busy}
+                      onChange={(e) =>
                         void act(() =>
                           programme.request(
                             "PATCH",
-                            prefix + "/bookings/" + r.id,
-                            { status: state },
+                            prefix + "/applications/" + r.id,
+                            { status: e.target.value },
                           ),
                         )
                       }
                     >
-                      {state.replace("_", " ")}
+                      {options([
+                        "submitted",
+                        "reviewing",
+                        "shortlisted",
+                        "forwarded",
+                        "interview",
+                        "offered",
+                        "rejected",
+                        "withdrawn",
+                      ]).map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {tab === "Webinars" && (
+                    <button
+                      className="rounded-lg border px-3 py-2 text-sm"
+                      onClick={() =>
+                        void act(async () => {
+                          const response =
+                            await programme.request<ProgrammePage>(
+                              "GET",
+                              prefix + "/campaigns/" + r.id + "/registrations",
+                            );
+                          setRegistrants(response.items);
+                          setRegistrantCursor(response.next_cursor);
+                          setCampaign(r.id);
+                        })
+                      }
+                    >
+                      View registrants
                     </button>
-                  ))}
-                {tab === "Applications" && (
-                  <select
-                    aria-label="Application status"
-                    className="rounded border p-2 text-sm"
-                    value={text(r, "status")}
-                    disabled={busy}
-                    onChange={(e) =>
-                      void act(() =>
-                        programme.request(
-                          "PATCH",
-                          prefix + "/applications/" + r.id,
-                          { status: e.target.value },
-                        ),
-                      )
-                    }
-                  >
-                    {options([
-                      "submitted",
-                      "reviewing",
-                      "shortlisted",
-                      "forwarded",
-                      "interview",
-                      "offered",
-                      "rejected",
-                      "withdrawn",
-                    ]).map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {tab === "Webinars" && (
-                  <button
-                    className="rounded-lg border px-3 py-2 text-sm"
-                    onClick={() =>
-                      void act(async () => {
-                        const response = await programme.request<ProgrammePage>(
-                          "GET",
-                          prefix + "/campaigns/" + r.id + "/registrations",
-                        );
-                        setRegistrants(response.items);
-                        setRegistrantCursor(response.next_cursor);
-                        setCampaign(r.id);
-                      })
-                    }
-                  >
-                    View registrants
-                  </button>
-                )}
-                {tab === "Internships" && (
-                  <button
-                    className="rounded-lg border px-3 py-2 text-sm"
-                    onClick={() => {
-                      setReview(r);
-                      void programme
-                        .request<Row[]>(
-                          "GET",
-                          prefix + "/internships/" + r.id + "/reviews",
-                        )
-                        .then(setMentorReviews)
-                        .catch((e) => setError(errorMessage(e)));
-                    }}
-                  >
-                    Review application
-                  </button>
-                )}
+                  )}
+                  {tab === "Internships" && (
+                    <button
+                      className="rounded-lg border px-3 py-2 text-sm"
+                      onClick={() => {
+                        setReview(r);
+                        void programme
+                          .request<Row[]>(
+                            "GET",
+                            prefix + "/internships/" + r.id + "/reviews",
+                          )
+                          .then(setMentorReviews)
+                          .catch((e) => setError(errorMessage(e)));
+                      }}
+                    >
+                      Review application
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          ))}
       </div>
       {cursor && (
         <button
@@ -965,9 +1296,30 @@ export default function ProgrammeWorkspace() {
           Load more
         </button>
       )}
-      {!rows.length && tab !== "Credits" && (
-        <p className="text-sm text-gray-500">No records to show.</p>
+      {!loading && !rows.length && !["Credits", "Screening"].includes(tab) && (
+        <div className="rounded-2xl border border-dashed bg-white px-6 py-12 text-center">
+          <h3 className="font-semibold text-slate-800">{taskCopy[tab][2]}</h3>
+          <p className="mt-2 text-sm text-slate-500">
+            {fields[tab]
+              ? `Use "${taskCopy[tab][0]}" above to get started.`
+              : "Select another course or return later."}
+          </p>
+        </div>
       )}
+      {search &&
+        rows.length > 0 &&
+        !rows.some((r) =>
+          Object.values(r).some((value) =>
+            String(value ?? "")
+              .toLowerCase()
+              .includes(search.toLowerCase()),
+          ),
+        ) && (
+          <p className="rounded-xl border bg-white p-6 text-sm text-slate-500">
+            No matches in the loaded records. Try a different search
+            {cursor ? " or load more records" : ""}.
+          </p>
+        )}
       {review && (
         <div className="rounded-xl border p-4">
           <h2 className="mb-3 font-semibold">

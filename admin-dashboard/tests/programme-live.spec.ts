@@ -193,6 +193,7 @@ test("real admin sign-in and session form persist UTC and meeting privacy", asyn
   await login(page, "admin");
   await page.goto(admin + "/dashboard/programme");
   await page.getByLabel("Course", { exact: true }).selectOption(q.course_id);
+  await page.getByRole("button", { name: "New session", exact: true }).click();
   await page
     .getByLabel("Educator", { exact: true })
     .selectOption(q.accounts.teacher.profile.id);

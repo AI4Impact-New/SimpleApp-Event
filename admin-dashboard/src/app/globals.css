@@ -22,16 +22,36 @@ body {
   .container {
     @apply mx-auto px-4;
   }
-  
+
   .btn {
     @apply px-4 py-2 rounded-lg font-medium transition-colors;
   }
-  
+
   .btn-primary {
     @apply bg-primary-600 text-white hover:bg-primary-700;
   }
-  
+
   .btn-secondary {
     @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+  }
+}
+
+@layer base {
+  :where(button, a, input, select, textarea, summary):focus-visible {
+    outline: 2px solid #0d9488;
+    outline-offset: 3px;
+  }
+  button,
+  a,
+  summary {
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

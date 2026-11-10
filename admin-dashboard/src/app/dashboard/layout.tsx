@@ -1,6 +1,6 @@
-import { Navbar } from '@/components/Navbar';
-import { Sidebar } from '@/components/Sidebar';
-import { AdminGuard } from '@/components/AdminGuard';
+import { Navbar } from "@/components/Navbar";
+import { Sidebar } from "@/components/Sidebar";
+import { AdminGuard } from "@/components/AdminGuard";
 
 export default function DashboardLayout({
   children,
@@ -11,10 +11,13 @@ export default function DashboardLayout({
     <AdminGuard>
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <Navbar />
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-1 flex-col min-h-0 sm:flex-row">
           <Sidebar />
           <main className="flex-1 min-w-0 overflow-auto bg-gray-50/80">
-            <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8" data-dashboard-content>
+            <div
+              className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
+              data-dashboard-content
+            >
               {children}
             </div>
           </main>

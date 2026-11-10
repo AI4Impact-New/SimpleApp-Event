@@ -1,5 +1,12 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useId,
+} from "react";
 import QRCode from "qrcode";
 import {
   feeLedger,
@@ -44,7 +51,13 @@ function Dialog({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    ref.current?.showModal();
+    const dialog = ref.current;
+    const previous = document.activeElement as HTMLElement | null;
+    dialog?.showModal();
+    return () => {
+      dialog?.close();
+      previous?.focus();
+    };
   }, []);
   return (
     <dialog
@@ -247,8 +260,8 @@ export default function PaymentsLedger() {
         <span className="text-xs text-slate-500">
           {a.billed_paise
             ? Math.round((100 * a.paid_paise) / a.billed_paise)
-            : 0}
-          %
+            : "—"}
+          {a.billed_paise ? "%" : ""}
         </span>
       </td>
       <td className="p-3">
@@ -395,18 +408,18 @@ export default function PaymentsLedger() {
           [
             "Total billed",
             "billed_paise",
-            `${report?.totals.enrollments || 0} fee accounts`,
+            `${report?.totals.enrollments || 0} fee ${report?.totals.enrollments === 1 ? "account" : "accounts"}`,
           ],
           ["Collected", "paid_paise", "Cleared, net of refunds"],
           [
             "Outstanding",
             "outstanding_paise",
-            `${report?.totals.students_owing || 0} students owe`,
+            `${report?.totals.students_owing || 0} ${report?.totals.students_owing === 1 ? "student owes" : "students owe"}`,
           ],
           [
             "Due date missed",
             "overdue_paise",
-            `${report?.totals.overdue_students || 0} students · oldest ${report?.totals.oldest_days || 0}d`,
+            `${report?.totals.overdue_students || 0} ${report?.totals.overdue_students === 1 ? "student" : "students"} · oldest ${report?.totals.oldest_days || 0}d`,
           ],
           [
             "Failed / expired",
@@ -427,49 +440,72 @@ export default function PaymentsLedger() {
           </article>
         ))}
       </section>
-      <section className="rounded-lg border bg-white p-4">
-        <div className="flex justify-between">
-          <h2 className="text-sm font-semibold">Outstanding by age</h2>
-          <span className="text-xs text-slate-500">
-            Click a bucket to filter
+      {!loading && report?.totals.outstanding_paise === 0 ? (
+        <section className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50/50 px-5 py-4">
+          <span
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-lg text-emerald-700"
+            aria-hidden="true"
+          >
+            ✓
           </span>
-        </div>
-        <div className="mt-3 flex h-2 overflow-hidden rounded bg-slate-100">
-          {report?.aging.map((a, i) => (
-            <div
-              key={a.key}
-              className={
-                [
-                  "bg-slate-300",
-                  "bg-yellow-300",
-                  "bg-orange-400",
-                  "bg-red-400",
-                  "bg-red-800",
-                ][i]
-              }
-              style={{
-                width: `${(100 * a.amount_paise) / Math.max(1, report.totals.outstanding_paise)}%`,
-              }}
-            />
-          ))}
-        </div>
-        <div className="mt-3 grid gap-2 sm:grid-cols-5">
-          {report?.aging.map((a) => (
-            <button
-              aria-pressed={age === a.key}
-              key={a.key}
-              onClick={() => setAge(age === a.key ? "" : a.key)}
-              className={`rounded border p-3 text-left ${age === a.key ? "border-blue-600 bg-blue-50" : ""}`}
-            >
-              <div className="text-xs text-slate-500">{ageLabels[a.key]}</div>
-              <strong>{money(a.amount_paise)}</strong>
-              <div className="text-xs text-slate-500">
-                {a.students} students
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
+          <div>
+            <h2 className="text-sm font-semibold text-emerald-900">
+              No outstanding fees
+            </h2>
+            <p className="mt-0.5 text-xs text-emerald-800">
+              There is no unpaid balance in this view.
+            </p>
+          </div>
+        </section>
+      ) : (
+        <>
+          <section className="rounded-lg border bg-white p-4">
+            <div className="flex justify-between">
+              <h2 className="text-sm font-semibold">Outstanding by age</h2>
+              <span className="text-xs text-slate-500">
+                Click a bucket to filter
+              </span>
+            </div>
+            <div className="mt-3 flex h-2 overflow-hidden rounded bg-slate-100">
+              {report?.aging.map((a, i) => (
+                <div
+                  key={a.key}
+                  className={
+                    [
+                      "bg-slate-300",
+                      "bg-yellow-300",
+                      "bg-orange-400",
+                      "bg-red-400",
+                      "bg-red-800",
+                    ][i]
+                  }
+                  style={{
+                    width: `${(100 * a.amount_paise) / Math.max(1, report.totals.outstanding_paise)}%`,
+                  }}
+                />
+              ))}
+            </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-5">
+              {report?.aging.map((a) => (
+                <button
+                  aria-pressed={age === a.key}
+                  key={a.key}
+                  onClick={() => setAge(age === a.key ? "" : a.key)}
+                  className={`rounded border p-3 text-left ${age === a.key ? "border-blue-600 bg-blue-50" : ""}`}
+                >
+                  <div className="text-xs text-slate-500">
+                    {ageLabels[a.key]}
+                  </div>
+                  <strong>{money(a.amount_paise)}</strong>
+                  <div className="text-xs text-slate-500">
+                    {a.students} {a.students === 1 ? "student" : "students"}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+        </>
+      )}
       <section className="overflow-hidden rounded-lg border bg-white">
         <div className="flex flex-wrap gap-2 border-b p-3">
           <div className="flex rounded bg-slate-100 p-1">
@@ -504,40 +540,67 @@ export default function PaymentsLedger() {
               </option>
             ))}
           </select>
-          <select
-            aria-label="Trainer filter"
-            className={input}
-            value={trainer}
-            onChange={(e) => setTrainer(e.target.value)}
-          >
-            <option value="">All trainers</option>
-            {trainers.map(([id, name]) => (
-              <option key={id} value={id}>
-                {name}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Batch month"
-            className={input}
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-          >
-            <option value="">All batch months</option>
-            {months.map((m) => (
-              <option key={m}>{m}</option>
-            ))}
-          </select>
-          <select
-            aria-label="Sort ledger"
-            className={input}
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-          >
-            <option value="outstanding">Sort: Outstanding ↓</option>
-            <option value="name">Sort: Student name</option>
-            <option value="due">Sort: Next due</option>
-          </select>
+          <details className="group rounded-lg border bg-white px-3 py-2 text-sm">
+            <summary className="flex cursor-pointer list-none items-center gap-2 font-medium text-slate-600 [&::-webkit-details-marker]:hidden">
+              <ChevronRight
+                size={15}
+                className="transition-transform group-open:rotate-90"
+                aria-hidden="true"
+              />
+              Filters &amp; sort
+              {(trainer || month) && (
+                <span className="rounded-full bg-primary-50 px-2 text-xs text-primary-700">
+                  {Number(!!trainer) + Number(!!month)} active
+                </span>
+              )}
+            </summary>
+            <div className="mt-3 flex flex-wrap gap-2 border-t pt-3">
+              <select
+                aria-label="Trainer filter"
+                className={input}
+                value={trainer}
+                onChange={(e) => setTrainer(e.target.value)}
+              >
+                <option value="">All trainers</option>
+                {trainers.map(([id, name]) => (
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Batch month"
+                className={input}
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+              >
+                <option value="">All batch months</option>
+                {months.map((m) => (
+                  <option key={m}>{m}</option>
+                ))}
+              </select>
+              <select
+                aria-label="Sort ledger"
+                className={input}
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+              >
+                <option value="outstanding">Sort: Outstanding ↓</option>
+                <option value="name">Sort: Student name</option>
+                <option value="due">Sort: Next due</option>
+              </select>
+              <button
+                className={button}
+                onClick={() => {
+                  setTrainer("");
+                  setMonth("");
+                  setSort("outstanding");
+                }}
+              >
+                Reset filters
+              </button>
+            </div>
+          </details>
         </div>
         <div className="flex flex-wrap gap-2 border-b p-3">
           {[
@@ -601,6 +664,7 @@ export default function PaymentsLedger() {
                       setExpanded((e) => ({ ...e, [key]: !e[key] }))
                     }
                     footer={footer}
+                    open={open}
                     sum={sum}
                   />
                 );
@@ -618,9 +682,11 @@ export default function PaymentsLedger() {
           )}
         </div>
         <p className="border-t p-3 text-xs text-slate-500">
-          {groups.length} {view} groups · {report?.accounts.length || 0} fee
-          accounts shown. Amounts in INR only; foreign currency conversion is
-          not configured. {report?.scope}
+          {groups.length} {view} {groups.length === 1 ? "group" : "groups"} ·{" "}
+          {report?.accounts.length || 0} fee
+          {report?.accounts.length === 1 ? " account" : " accounts"} shown.
+          Amounts in INR only; foreign currency conversion is not configured.{" "}
+          {report?.scope}
         </p>
       </section>
       {(report?.attempts?.length || 0) > 0 && (
@@ -962,6 +1028,7 @@ function Group({
   expanded,
   toggle,
   footer,
+  open,
   sum,
 }: {
   name: string;
@@ -970,8 +1037,10 @@ function Group({
   expanded: boolean;
   toggle: () => void;
   footer: (a: FeeAccount) => React.ReactNode;
+  open: (a: FeeAccount) => void;
   sum: (k: keyof FeeAccount) => number;
 }) {
+  const groupId = useId();
   const next = rows
       .map((r) => r.next_due?.date)
       .filter(Boolean)
@@ -982,19 +1051,34 @@ function Group({
       <tr className="border-t bg-slate-50/50">
         <td className="p-3">
           <button
-            className="flex items-start gap-2 text-left"
+            className="group flex items-center gap-3 rounded-lg py-1 pr-3 text-left hover:text-primary-800"
             onClick={toggle}
             aria-expanded={expanded}
+            aria-label={`${expanded ? "Hide" : "Show"} students in ${name}`}
+            aria-controls={rows.map((a) => `${groupId}-${a.id}`).join(" ")}
           >
-            {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            <span
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition ${expanded ? "border-primary-200 bg-primary-50 text-primary-700" : "border-slate-200 bg-white text-slate-500 group-hover:border-primary-300"}`}
+            >
+              <ChevronRight
+                size={18}
+                aria-hidden="true"
+                className={`transition-transform ${expanded ? "rotate-90" : ""}`}
+              />
+            </span>
             <span>
               <strong className="block">{name}</strong>
+              <span className="mt-0.5 block text-xs font-medium text-primary-700">
+                {expanded
+                  ? "Hide students"
+                  : `Show ${new Set(rows.map((r) => r.user_id)).size} ${new Set(rows.map((r) => r.user_id)).size === 1 ? "student" : "students"}`}
+              </span>
               <span className="text-xs text-slate-500">{sub}</span>
             </span>
           </button>
         </td>
         <td className="p-3 text-xs text-slate-500">
-          {new Set(rows.map((r) => r.user_id)).size} students
+          {rows.length} {rows.length === 1 ? "account" : "accounts"}
         </td>
         <td className="p-3 text-right font-semibold">
           {money(sum("billed_paise"))}
@@ -1008,8 +1092,8 @@ function Group({
         <td className="p-3">
           {sum("billed_paise")
             ? Math.round((100 * sum("paid_paise")) / sum("billed_paise"))
-            : 0}
-          %
+            : "—"}
+          {sum("billed_paise") ? "%" : ""}
         </td>
         <td className="p-3">{next || "—"}</td>
         <td className="p-3 text-red-600">
@@ -1025,28 +1109,42 @@ function Group({
             ? `${overdue} overdue`
             : sum("outstanding_paise")
               ? "On track"
-              : "Settled"}
+              : rows.every((r) => r.status === "refunded")
+                ? "Refunded"
+                : "Settled"}
         </td>
         <td className="p-3">
-          <button className={button} onClick={toggle}>
-            {expanded ? "Collapse" : "Expand"}
-          </button>
+          <span className="text-xs text-slate-400">
+            {expanded ? "Students below" : ""}
+          </span>
         </td>
       </tr>
-      {expanded &&
-        rows.map((a) => (
-          <tr className="border-t" key={a.id}>
-            <td className="p-3 pl-9">
-              <strong>{a.name}</strong>
-              <p className="text-xs text-slate-500">{a.email}</p>
-            </td>
-            <td className="p-3 text-xs">
-              {a.installments.length} installments
-              {a.discount_bps > 0 && <div>{a.discount_bps / 100}% off</div>}
-            </td>
-            {footer(a)}
-          </tr>
-        ))}
+      {rows.map((a) => (
+        <tr
+          className="border-t bg-white"
+          id={`${groupId}-${a.id}`}
+          hidden={!expanded}
+          key={a.id}
+        >
+          <td className="p-3 pl-9">
+            <button
+              type="button"
+              onClick={() => open(a)}
+              aria-label={`View payment trail for ${a.name}`}
+              className="text-left font-semibold text-primary-700 hover:underline"
+            >
+              {a.name}
+            </button>
+            <p className="text-xs text-slate-500">{a.email}</p>
+          </td>
+          <td className="p-3 text-xs">
+            {a.installments.length}{" "}
+            {a.installments.length === 1 ? "installment" : "installments"}
+            {a.discount_bps > 0 && <div>{a.discount_bps / 100}% off</div>}
+          </td>
+          {footer(a)}
+        </tr>
+      ))}
     </>
   );
 }

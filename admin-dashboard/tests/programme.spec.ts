@@ -71,6 +71,7 @@ test("admin session form sends chosen-zone UTC and a stable retry key", async ({
   await expect(
     page.getByRole("heading", { name: "Programme+ workspace" }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "New session", exact: true }).click();
   await page.getByLabel("Educator", { exact: true }).selectOption(eid);
   await page.getByLabel("Title", { exact: true }).fill("Clarification");
   await page
@@ -149,7 +150,8 @@ test("job publisher includes consultancy, work mode, experience and salary field
     },
   );
   await page.goto(base + "/dashboard/programme");
-  await page.getByRole("button", { name: "Jobs", exact: true }).click();
+  await page.getByRole("button", { name: "Careers", exact: true }).click();
+  await page.getByRole("button", { name: "New job", exact: true }).click();
   await page.getByLabel("Company", { exact: true }).selectOption(company);
   await page.getByLabel("Job title", { exact: true }).fill("Data Engineer");
   await page.getByLabel("Description", { exact: true }).fill("Build pipelines");
@@ -171,4 +173,102 @@ test("job publisher includes consultancy, work mode, experience and salary field
   expect(saved?.work_mode).toBe("hybrid");
   expect(saved?.experience_max).toBe(2);
   expect(saved?.salary_min).toBe(600000);
+});
+
+test("programme is record-first, grouped, searchable and opens accessible editors", async ({
+  page,
+}) => {
+  await login(page);
+  await page.route(
+    "https://*.execute-api.ap-south-1.amazonaws.com/**",
+    async (route) => {
+      const p = new URL(route.request().url()).pathname;
+      let json: unknown = { items: [], next_cursor: null };
+      if (p === "/programme/staff/access") json = { admin: true, courses: [] };
+      else if (p === "/courses") json = [{ id: cid, title: "QA Course" }];
+      else if (p === "/users") json = { users: [] };
+      else if (p.endsWith("/educators"))
+        json = [{ user_id: eid, name: "Trainer", active: true }];
+      else if (p.endsWith("/companies"))
+        json = [{ id: company, name: "Partner company" }];
+      else if (p.endsWith("/sessions"))
+        json = {
+          items: [
+            {
+              id: eid,
+              title: "Group clarification",
+              status: "published",
+              kind: "group",
+            },
+          ],
+          next_cursor: null,
+        };
+      await route.fulfill({ json });
+    },
+  );
+  await page.goto(base + "/dashboard/programme");
+  await expect(
+    page.getByText("Group clarification", { exact: true }),
+  ).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({
+    path: test.info().outputPath("programme-desktop.png"),
+    fullPage: true,
+    animations: "disabled",
+  });
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByLabel("Educator", { exact: true })).toHaveCount(0);
+  await page.getByLabel("Search sessions").fill("unmatched");
+  await expect(
+    page.getByText("Group clarification", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText(/No matches in the loaded records/),
+  ).toBeVisible();
+  await page.getByLabel("Search sessions").fill("");
+  await page.getByRole("button", { name: "New session", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "New session" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "New session", exact: true }),
+  ).toBeFocused();
+  await page.getByRole("button", { name: "Careers", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Sessions", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Jobs", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "New job", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "New job" })).toBeVisible();
+  await page.getByRole("button", { name: "Close editor" }).click();
+  await page
+    .getByRole("button", { name: "Communications", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "New webinar", exact: true }),
+  ).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(
+    page.getByRole("navigation", { name: "Main navigation" }),
+  ).toBeHidden();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({
+    path: test.info().outputPath("programme-mobile.png"),
+    fullPage: true,
+    animations: "disabled",
+  });
+  await page.getByRole("button", { name: /^Menu/ }).click();
+  await expect(
+    page.getByRole("navigation", { name: "Main navigation" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Payments ledger", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
 });

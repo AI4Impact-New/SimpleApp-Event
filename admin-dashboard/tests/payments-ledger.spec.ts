@@ -199,9 +199,11 @@ async function openStudent(page: import("@playwright/test").Page) {
   await expect(
     page.getByText("QA-NOV26", { exact: true }).first(),
   ).toBeVisible();
-  if (await page.getByRole("button", { name: "Expand", exact: true }).count())
-    await page.getByRole("button", { name: "Expand", exact: true }).click();
-  await page.getByRole("button", { name: "Open QA Learner Ledger QA" }).click();
+  if (await page.getByRole("button", { name: /^Show students in/ }).count())
+    await page.getByRole("button", { name: /^Show students in/ }).click();
+  await page
+    .getByRole("button", { name: "View payment trail for QA Learner" })
+    .click();
   await expect(page.getByRole("dialog")).toBeVisible();
 }
 
@@ -366,4 +368,45 @@ test("lost offline-payment response retries the same intent, while a new payment
   await dialog.getByRole("button", { name: "Save offline payment" }).click();
   await expect.poll(() => ids.length).toBe(3);
   expect(ids[2]).not.toBe(ids[1]);
+});
+
+test("ledger uses one keyboard-accessible expansion control per group", async ({
+  page,
+}) => {
+  await setup(page);
+  const toggle = page.getByRole("button", {
+    name: "Show students in QA-NOV26",
+  });
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    page.getByRole("button", { name: "Expand", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Open QA Learner Ledger QA" }),
+  ).toBeHidden();
+  await toggle.focus();
+  await page.keyboard.press("Enter");
+  const hide = page.getByRole("button", { name: "Hide students in QA-NOV26" });
+  await expect(hide).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    page.getByRole("button", { name: "Open QA Learner Ledger QA" }),
+  ).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({
+    path: test.info().outputPath("ledger-expansion.png"),
+    fullPage: true,
+    animations: "disabled",
+  });
+  await page.keyboard.press("Space");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    page.getByRole("button", { name: "Open QA Learner Ledger QA" }),
+  ).toBeHidden();
+  await toggle.click();
+  const studentLink = page.getByRole("button", {
+    name: "View payment trail for QA Learner",
+  });
+  await studentLink.click();
+  await page.getByRole("button", { name: "Close dialog" }).click();
+  await expect(studentLink).toBeFocused();
 });

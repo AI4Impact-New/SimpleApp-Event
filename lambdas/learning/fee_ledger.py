@@ -99,7 +99,14 @@ def _schedule(cur, aid, asof):
     return cur.fetchall()
 
 
-def _row(cur, a, asof, prefetched_totals=None, prefetched_schedule=None):
+def _row(
+    cur,
+    a,
+    asof,
+    prefetched_totals=None,
+    prefetched_schedule=None,
+    prefetched_credits=None,
+):
     if prefetched_totals is None:
         cur.execute(
             "SELECT kind,coalesce(sum(amount_paise),0) AS amount FROM fee_entries WHERE account_id=%s AND effective_at<%s GROUP BY kind",
@@ -119,11 +126,25 @@ def _row(cur, a, asof, prefetched_totals=None, prefetched_schedule=None):
             else _schedule(cur, a["id"], asof)
         )
     ]
-    credit = max(0, int(a["total_paise"]) - billed)
-    for l in reversed(lines):
-        reduction = min(credit, int(l["amount_paise"]))
-        l["adjusted_amount_paise"] = int(l["amount_paise"]) - reduction
-        credit -= reduction
+    if prefetched_credits is None:
+        cur.execute(
+            "SELECT coalesce(i.number,1) AS number,-sum(e.amount_paise) AS amount FROM fee_entries e LEFT JOIN payment_orders p ON p.id=e.payment_order_id LEFT JOIN fee_installments i ON i.id=p.fee_installment_id WHERE e.account_id=%s AND e.kind='fee_adjustment' AND e.effective_at<%s GROUP BY coalesce(i.number,1) ORDER BY number",
+            (a["id"], cutoff(asof)),
+        )
+        credits = cur.fetchall()
+    else:
+        credits = prefetched_credits
+    for line in lines:
+        line["adjusted_amount_paise"] = int(line["amount_paise"])
+    for item in credits:
+        remaining = max(0, int(item["amount"]))
+        start = max(0, int(item["number"]) - 1)
+        # Follow the refunded payment's starting installment; historical paid
+        # prefixes stay stable across schedule versions. Wrap for cancellation.
+        for index in [*range(start, len(lines)), *range(0, min(start, len(lines)))]:
+            reduction = min(remaining, lines[index]["adjusted_amount_paise"])
+            lines[index]["adjusted_amount_paise"] -= reduction
+            remaining -= reduction
     available = max(0, paid)
     overdue = 0
     oldest = 0
@@ -230,6 +251,14 @@ def report(actor, query):
             (account_ids, cutoff(asof)),
         )
         references = {str(item["account_id"]): item["refs"] for item in cur.fetchall()}
+        cur.execute(
+            "SELECT e.account_id,coalesce(i.number,1) AS number,-sum(e.amount_paise) AS amount FROM fee_entries e LEFT JOIN payment_orders p ON p.id=e.payment_order_id LEFT JOIN fee_installments i ON i.id=p.fee_installment_id WHERE e.account_id=ANY(%s::uuid[]) AND e.kind='fee_adjustment' AND e.effective_at<%s GROUP BY e.account_id,coalesce(i.number,1) ORDER BY number",
+            (account_ids, cutoff(asof)),
+        )
+        fee_credits = {}
+        for item in cur.fetchall():
+            fee_credits.setdefault(str(item["account_id"]), []).append(item)
+
         rows = []
         search = str(query.get("search", "")).strip().lower()
         for a in accounts:
@@ -257,6 +286,7 @@ def report(actor, query):
                     asof,
                     sums.get(str(a["id"]), {}),
                     schedules.get(str(a["id"]), []),
+                    fee_credits.get(str(a["id"]), []),
                 )
             )
         if query.get("age"):
@@ -545,7 +575,7 @@ def create_account(actor, body):
             ("fee-account:" + uid + cid + m,),
         )
         cur.execute(
-            "SELECT id FROM fee_accounts WHERE user_id=%s AND course_id=%s AND mode=%s AND source_order_id IS NULL",
+            "SELECT id FROM fee_accounts WHERE user_id=%s AND course_id=%s AND mode=%s AND source_order_id IS NULL AND closed_at IS NULL",
             (uid, cid, m),
         )
         if cur.fetchone():
@@ -583,6 +613,10 @@ def edit_plan(actor, aid, body):
         if mark[2] is not None:
             return mark[2]
         a = own(cur, actor, aid, True)
+        if a["closed_at"]:
+            raise ApiError(
+                409, "This fee obligation is cancelled; create a new agreement instead"
+            )
         if a["source_order_id"]:
             raise ApiError(
                 409, "A completed retail checkout cannot be converted into a new debt"
@@ -646,11 +680,12 @@ def sync_access(cur, aid):
     collected = int(cur.fetchone()["n"])
     source = "fee-account:" + str(aid)
     schedule = _row(cur, a, today())["installments"]
+    first = next((line for line in schedule if line["adjusted_amount_paise"] > 0), None)
     access_ready = bool(
-        collected > 0
-        and schedule
-        and schedule[0]["adjusted_amount_paise"] > 0
-        and schedule[0]["outstanding_paise"] == 0
+        not a["closed_at"]
+        and collected > 0
+        and first
+        and first["outstanding_paise"] == 0
     )
     if access_ready:
         cur.execute(

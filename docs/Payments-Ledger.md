@@ -36,9 +36,11 @@ Migration 024 creates the fee, installment, receipt, audit, statement-snapshot a
 
 The provider webhook should include `payment.failed` for prompt failed-attempt tracking; pending-order reconciliation also learns failed attempts from authoritative provider reads. Expired local checkouts are labeled expired, not assumed to be confirmed provider failures.
 
-### Pending business decision before activation
+### Confirmed refund and messaging policy
 
-Refund accounting policy is awaiting confirmation: whether refund amounts reduce the agreed obligation (a full refund cancels it) or reopen an outstanding balance. Do not activate the ledger against live balances until this is confirmed and tested. No live financial mutation or production migration has been performed for this feature while the decision is pending.
+Refunds reduce the agreed fee and the associated paid installment, without creating fresh arrears. Returning all collected funds cancels remaining unpaid dues and closes the agreement; a new agreement may be created later. Returning an overpayment credit does not reduce the agreed fee a second time. Refunds and fee reductions are separate non-destructive ledger entries and remain idempotent. Access follows the first remaining nonzero installment; independent manual grants are preserved.
+
+Email reminders are included. The owner confirmed email first; WhatsApp/SMS are intentionally deferred until a provider is chosen. No provider setup is required to activate email.
 
 ### Validation
 

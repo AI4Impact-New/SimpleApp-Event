@@ -9,9 +9,9 @@ CREATE TABLE IF NOT EXISTS fee_accounts (
  mode text NOT NULL CHECK(mode IN ('test','live')),currency text NOT NULL DEFAULT 'INR' CHECK(currency='INR'),
  marked_price_paise bigint NOT NULL CHECK(marked_price_paise>=0),discount_bps integer NOT NULL CHECK(discount_bps BETWEEN 0 AND 10000),
  total_paise bigint NOT NULL CHECK(total_paise>0),billed_on date NOT NULL,source_order_id uuid UNIQUE REFERENCES payment_orders(id),
- version integer NOT NULL DEFAULT 1,created_by uuid REFERENCES users(id),created_at timestamptz NOT NULL DEFAULT now()
+ version integer NOT NULL DEFAULT 1,closed_at timestamptz,created_by uuid REFERENCES users(id),created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS fee_account_plan_unique ON fee_accounts(user_id,course_id,mode) WHERE source_order_id IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS fee_account_plan_unique ON fee_accounts(user_id,course_id,mode) WHERE source_order_id IS NULL AND closed_at IS NULL;
 CREATE TABLE IF NOT EXISTS fee_plans (
  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),account_id uuid NOT NULL REFERENCES fee_accounts(id),version integer NOT NULL,
  effective_on date NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),created_by uuid REFERENCES users(id),UNIQUE(account_id,version)
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS fee_payment_attempts (
 );
 
 CREATE OR REPLACE FUNCTION fee_sync_razorpay() RETURNS trigger LANGUAGE plpgsql AS $$
-DECLARE aid uuid; plan uuid; paid_when timestamptz; seen_refund bigint; delta bigint;
+DECLARE aid uuid; plan uuid; paid_when timestamptz; seen_refund bigint; delta bigint; billed bigint; collected bigint; fee_credit bigint;
 BEGIN
  IF NEW.status NOT IN ('paid','partially_refunded','refunded') OR NEW.provider_payment_id IS NULL THEN RETURN NEW; END IF;
  aid:=NEW.fee_account_id;
@@ -68,8 +68,19 @@ BEGIN
  SELECT coalesce(-sum(amount_paise),0) INTO seen_refund FROM fee_entries WHERE payment_order_id=NEW.id AND kind='refund';
  delta:=NEW.refunded_paise-seen_refund;
  IF delta>0 THEN
+  SELECT greatest(0,a.total_paise+coalesce(sum(e.amount_paise) FILTER(WHERE e.kind='fee_adjustment'),0)),coalesce(sum(e.amount_paise) FILTER(WHERE e.kind<>'fee_adjustment'),0)
+  INTO billed,collected FROM fee_accounts a LEFT JOIN fee_entries e ON e.account_id=a.id WHERE a.id=aid GROUP BY a.id;
+  -- Return overpayment credit first; only the fee portion reduces the obligation.
+  fee_credit:=least(billed,greatest(0,delta-greatest(0,collected-billed)));
+  -- Returning all collected funds cancels any remaining unpaid obligation.
+  IF NEW.status='refunded' AND collected-delta=0 THEN fee_credit:=billed; END IF;
   INSERT INTO fee_entries(account_id,kind,amount_paise,source_key,payment_order_id,reference,effective_at,note)
   VALUES(aid,'refund',-delta,'razorpay:refund:'||NEW.provider_payment_id||':'||NEW.refunded_paise,NEW.id,NEW.provider_payment_id,NEW.updated_at,'Verified cumulative refund; recorded at reconciliation time') ON CONFLICT(source_key) DO NOTHING;
+  IF fee_credit>0 THEN
+   INSERT INTO fee_entries(account_id,kind,amount_paise,source_key,payment_order_id,reference,effective_at,note)
+   VALUES(aid,'fee_adjustment',-fee_credit,'razorpay:fee-credit:'||NEW.provider_payment_id||':'||NEW.refunded_paise,NEW.id,NEW.provider_payment_id,NEW.updated_at,'Refund reduces agreed fee; all collected funds returned cancels remaining dues') ON CONFLICT(source_key) DO NOTHING;
+  END IF;
+  IF NEW.status='refunded' AND collected-delta=0 THEN UPDATE fee_accounts SET closed_at=coalesce(closed_at,NEW.updated_at) WHERE id=aid; END IF;
  END IF;
  RETURN NEW;
 END $$;
@@ -111,7 +122,7 @@ BEGIN
  IF TG_OP='UPDATE' AND NEW.status IS NOT DISTINCT FROM OLD.status AND NEW.refunded_paise IS NOT DISTINCT FROM OLD.refunded_paise THEN RETURN NEW; END IF;
  prefix := CASE WHEN NEW.mode='test' THEN '[TEST] ' ELSE '' END;
  heading := prefix||CASE NEW.status WHEN 'paid' THEN 'Payment confirmed' WHEN 'partially_refunded' THEN 'Partial refund confirmed' ELSE 'Refund confirmed' END;
- message := prefix||'Course: '||NEW.course_title||E'\nOrder reference: '||NEW.id||E'\nOrder total: INR '||to_char(NEW.total_paise::numeric/100,'FM9999999990.00')||E'\n'||CASE NEW.status WHEN 'paid' THEN CASE WHEN NEW.fee_account_id IS NOT NULL AND EXISTS(SELECT 1 FROM fee_accounts a WHERE a.id=NEW.fee_account_id AND a.source_order_id IS NULL) THEN 'Your payment was received. Access is available after the first installment is fully cleared.' ELSE 'Your course access is ready.' END ELSE 'Total refunded: INR '||to_char(NEW.refunded_paise::numeric/100,'FM9999999990.00')||'. '||CASE NEW.status WHEN 'refunded' THEN 'Access granted by this payment has been removed; separate manual grants are preserved.' ELSE 'Your course access remains active.' END END||CASE WHEN NEW.mode='test' THEN E'\nTest transaction only. No real money was collected or refunded.' ELSE '' END;
+ message := prefix||'Course: '||NEW.course_title||E'\nOrder reference: '||NEW.id||E'\nOrder total: INR '||to_char(NEW.total_paise::numeric/100,'FM9999999990.00')||E'\n'||CASE NEW.status WHEN 'paid' THEN CASE WHEN NEW.fee_account_id IS NOT NULL AND EXISTS(SELECT 1 FROM fee_accounts a WHERE a.id=NEW.fee_account_id AND a.source_order_id IS NULL) THEN 'Your payment was received. Access is available after the first installment is fully cleared.' ELSE 'Your course access is ready.' END ELSE 'Total refunded: INR '||to_char(NEW.refunded_paise::numeric/100,'FM9999999990.00')||'. '||CASE NEW.status WHEN 'refunded' THEN CASE WHEN NEW.fee_account_id IS NOT NULL AND EXISTS(SELECT 1 FROM fee_accounts a WHERE a.id=NEW.fee_account_id AND a.source_order_id IS NULL) THEN 'Your fee agreement and installment balance have been updated. Remaining dues are cancelled when all collected funds are refunded; independent manual grants are preserved.' ELSE 'Access granted by this payment has been removed; separate manual grants are preserved.' END ELSE 'Your course access remains active.' END END||CASE WHEN NEW.mode='test' THEN E'\nTest transaction only. No real money was collected or refunded.' ELSE '' END;
  INSERT INTO notification_events(event_key,user_id,course_id,category,title,body,entity_type,entity_id,expires_at)
  VALUES('payment:'||NEW.id||':'||NEW.status||':'||NEW.refunded_paise,NEW.user_id,NEW.course_id,'payment',heading,left(message,2000),'payment',NEW.id,now()+interval '7 days') ON CONFLICT(event_key) DO NOTHING;
  RETURN NEW;

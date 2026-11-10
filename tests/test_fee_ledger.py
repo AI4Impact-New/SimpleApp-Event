@@ -408,3 +408,138 @@ def test_failed_attempt_is_visible_without_counting_it_as_collected(
     r = fees.report(d["admin"], {"mode": "test"})
     assert r["totals"]["failed_attempts"] == 1 and r["totals"]["paid_paise"] == 0
     assert registration(d) is None
+
+
+@pytest.fixture
+def capture(account, monkeypatch):
+    d, aid, _ = account
+    monkeypatch.setattr(payments, "credentials", lambda: {"mode": "test"})
+
+    def make(amount=3000):
+        order = rid()
+        pid = "pay_" + uuid.uuid4().hex
+        provider_order = "order_" + uuid.uuid4().hex
+        installment = fees.detail(d["admin"], aid)["next_due"]["id"]
+        execute_query(
+            "INSERT INTO payment_orders(id,request_id,user_id,course_id,course_title,buyer_name,buyer_email,marked_price_paise,discount_bps,discount_paise,total_paise,mode,provider_order_id,fee_account_id,fee_installment_id) VALUES(%s,%s,%s,%s,'QA Course','QA','person1@example.invalid',%s,0,0,%s,'test',%s,%s,%s)",
+            (
+                order,
+                rid(),
+                d["student"]["id"],
+                d["course"],
+                amount,
+                amount,
+                provider_order,
+                aid,
+                installment,
+            ),
+            fetch="none",
+        )
+        payment = {
+            "id": pid,
+            "order_id": provider_order,
+            "amount": amount,
+            "currency": "INR",
+            "status": "captured",
+            "captured": True,
+        }
+        return payment
+
+    return d, aid, make
+
+
+def test_partial_refund_reduces_paid_installment_without_new_arrears(capture):
+    d, aid, make = capture
+    p = make()
+    payments.apply_payment(p)
+    payments.apply_payment({**p, "amount_refunded": 1000})
+    payments.apply_payment({**p, "amount_refunded": 1000})
+    r = fees.detail(d["admin"], aid)
+    assert (
+        r["billed_paise"],
+        r["paid_paise"],
+        r["outstanding_paise"],
+        r["overdue_paise"],
+    ) == (8000, 2000, 6000, 0)
+    assert (
+        r["installments"][0]["adjusted_amount_paise"] == 2000
+        and r["next_due"]["number"] == 2
+    )
+    assert registration(d)["status"] == "registered"
+    report = fees.report(d["admin"], {"mode": "test"})
+    assert (
+        report["totals"]["billed_paise"] == 8000
+        and report["totals"]["overdue_paise"] == 0
+    )
+    assert (
+        execute_query(
+            "SELECT count(*) AS n FROM fee_entries WHERE account_id=%s AND kind='fee_adjustment'",
+            (aid,),
+            fetch="one",
+        )["n"]
+        == 1
+    )
+
+
+def test_returning_first_installment_cancels_remaining_obligation(capture, account):
+    d, aid, make = capture
+    p = make()
+    payments.apply_payment(p)
+    payments.apply_payment({**p, "amount_refunded": 3000, "status": "refunded"})
+    r = fees.detail(d["admin"], aid)
+    assert (r["billed_paise"], r["paid_paise"], r["outstanding_paise"]) == (0, 0, 0)
+    assert (
+        r["closed_at"]
+        and r["status"] == "refunded"
+        and registration(d)["status"] == "dropped"
+    )
+    body = account[2]
+    new = fees.create_account(d["admin"], {**body, "request_id": rid()})
+    assert new["id"] != aid
+
+
+def test_refund_across_installments_and_manual_grant_preservation(capture):
+    d, aid, make = capture
+    p = make(9000)
+    payments.apply_payment(p)
+    payments.apply_payment({**p, "amount_refunded": 5000})
+    r = fees.detail(d["admin"], aid)
+    assert (
+        r["billed_paise"] == 4000
+        and r["paid_paise"] == 4000
+        and r["outstanding_paise"] == 0
+    )
+    assert (
+        r["installments"][0]["adjusted_amount_paise"] == 0
+        and r["installments"][1]["adjusted_amount_paise"] == 4000
+    )
+    assert registration(d)["status"] == "registered"
+    execute_query(
+        "UPDATE course_registrations SET source='admin' WHERE user_id=%s AND course_id=%s",
+        (d["student"]["id"], d["course"]),
+        fetch="none",
+    )
+    payments.apply_payment({**p, "amount_refunded": 9000, "status": "refunded"})
+    assert (
+        fees.detail(d["admin"], aid)["outstanding_paise"] == 0
+        and registration(d)["status"] == "registered"
+    )
+
+
+def test_returning_overpayment_does_not_reduce_fee_twice(capture):
+    d, aid, make = capture
+    first = make(9000)
+    second = make(9000)
+    payments.apply_payment(first)
+    payments.apply_payment(second)
+    assert fees.detail(d["admin"], aid)["credit_paise"] == 9000
+    payments.apply_payment({**second, "amount_refunded": 9000, "status": "refunded"})
+    r = fees.detail(d["admin"], aid)
+    assert (
+        r["billed_paise"] == 9000
+        and r["paid_paise"] == 9000
+        and r["credit_paise"] == 0
+        and r["closed_at"] is None
+    )
+    payments.apply_payment({**first, "amount_refunded": 9000, "status": "refunded"})
+    assert fees.detail(d["admin"], aid)["billed_paise"] == 0

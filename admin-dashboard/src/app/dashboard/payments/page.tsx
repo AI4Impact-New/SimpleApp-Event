@@ -380,6 +380,13 @@ export default function PaymentsLedger() {
           in Asia/Kolkata. Payment actions are disabled.
         </p>
       )}
+      {!!report?.totals.credit_paise && (
+        <p className="rounded border border-blue-200 bg-blue-50 p-3 text-sm">
+          Customer credit from excess collections:{" "}
+          {money(report.totals.credit_paise)}. Open the payment trail to review
+          the corresponding transactions.
+        </p>
+      )}
       <section
         aria-label="Ledger totals"
         className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5"

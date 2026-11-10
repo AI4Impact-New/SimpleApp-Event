@@ -82,7 +82,7 @@ def create(actor, body, as_admin=False):
     lookup=body.get('buyer_email') if as_admin else actor['id']
     if isinstance(lookup,str):
         clause='lower(u.email)=%s' if as_admin else 'a.user_id=%s'
-        plan=execute_query('SELECT a.id FROM fee_accounts a JOIN users u ON u.id=a.user_id WHERE a.course_id=%s AND a.mode=%s AND a.source_order_id IS NULL AND '+clause,(cid,config['mode'],lookup.strip().lower() if as_admin else lookup),fetch='one')
+        plan=execute_query('SELECT a.id FROM fee_accounts a JOIN users u ON u.id=a.user_id WHERE a.course_id=%s AND a.mode=%s AND a.source_order_id IS NULL AND a.closed_at IS NULL AND '+clause,(cid,config['mode'],lookup.strip().lower() if as_admin else lookup),fetch='one')
         if plan:
             from learning.fee_ledger import pay_link
             return pay_link(actor,str(plan['id']),{'request_id':rid})

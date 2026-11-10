@@ -1,18 +1,17 @@
 // Browser-only inbox (design: "Inbox.dc.html"): filters + message list on the left, reading pane on the right.
 // Narrow browsers get the list alone; opening a message goes to the NotificationDetail screen as on native.
 // Presentational over the same queries as NotificationsScreen: the server owns what is in the inbox and read state.
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Animated, Easing } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { EmptyState, ErrorState, Skeleton, useShimmer } from '@/components/web/states';
 import { useWebLayout } from '@/hooks/useWebLayout';
 import { useMarkNotificationRead, useMyLearning, useNotifications } from '@/hooks/useLearning';
-import { apiErrorMessage } from '@/services/apiErrors';
 import type { LearnerNotification } from '@/types/learning';
 import { colors, fonts, palette } from '@/theme/colors';
 import { formatLocalDateTime } from '@/utils/datetime';
 
 type PressState = { pressed: boolean; hovered?: boolean };
-type IconName = keyof typeof Ionicons.glyphMap;
 type Filter = 'all' | 'unread' | 'course' | 'general';
 
 const ink = palette.navy850;
@@ -83,18 +82,11 @@ export function WebInbox({ onOpenNotification, onOpenCourse }: WebInboxProps) {
     content = <InboxSkeleton wide={wide} />;
   } else if (error) {
     content = (
-      <Blank
-        icon="cloud-offline-outline"
-        iconColor="#b4321f"
-        title="Could not load your inbox"
-        body={apiErrorMessage(error, 'Check your connection and try again.')}
-        cta={isFetching ? 'Retrying…' : 'Try again'}
-        onCta={() => refetch()}
-      />
+      <ErrorState title="Could not load your inbox" error={error} onRetry={() => refetch()} retrying={isFetching} />
     );
   } else if (notifications.length === 0) {
     content = (
-      <Blank
+      <EmptyState
         icon="mail-outline"
         title="No messages yet"
         body="Course updates, live class reminders and certificates will show up here."
@@ -208,50 +200,14 @@ function Reader({ item, from, onOpenCourse }: { item: LearnerNotification; from:
   );
 }
 
-function Blank({ icon, iconColor = body, title, body: text, cta, onCta }: { icon: IconName; iconColor?: string; title: string; body: string; cta?: string; onCta?: () => void }) {
-  return (
-    <View style={styles.blank}>
-      <View style={styles.blankIcon}>
-        <Ionicons name={icon} size={18} color={iconColor} />
-      </View>
-      <Text style={styles.blankTitle}>{title}</Text>
-      <Text style={styles.blankBody}>{text}</Text>
-      {cta && onCta ? (
-        <Pressable onPress={onCta} style={(s: PressState) => [styles.btnPrimary, styles.btnSm, s.hovered && styles.btnPrimaryHover]}>
-          <Text style={styles.btnPrimaryTextSm}>{cta}</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
-function useShimmer() {
-  const v = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(v, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-        Animated.timing(v, { toValue: 0, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [v]);
-  return v.interpolate({ inputRange: [0, 1], outputRange: [palette.slate150, '#eef1f5'] });
-}
-
-function Sk({ w, h, color }: { w: number | `${number}%`; h: number; color: Animated.AnimatedInterpolation<string> }) {
-  return <Animated.View style={{ width: w, height: h, borderRadius: 4, backgroundColor: color }} />;
-}
-
 function InboxSkeleton({ wide }: { wide: boolean }) {
   const color = useShimmer();
   const rows = [0, 1, 2, 3, 4].map((k) => (
     <View key={k} style={[styles.row, { gap: 12 }]}>
       <View style={{ flex: 1, gap: 8 }}>
-        <Sk w={120} h={10} color={color} />
-        <Sk w="80%" h={14} color={color} />
-        <Sk w="95%" h={10} color={color} />
+        <Skeleton w={120} h={10} color={color} />
+        <Skeleton w="80%" h={14} color={color} />
+        <Skeleton w="95%" h={10} color={color} />
       </View>
     </View>
   ));
@@ -261,10 +217,10 @@ function InboxSkeleton({ wide }: { wide: boolean }) {
         <>
           <View style={styles.listPane}>{rows}</View>
           <View style={[styles.reader, { gap: 16 }]}>
-            <Sk w={200} h={12} color={color} />
-            <Sk w="60%" h={24} color={color} />
-            <Sk w="90%" h={14} color={color} />
-            <Sk w="80%" h={14} color={color} />
+            <Skeleton w={200} h={12} color={color} />
+            <Skeleton w="60%" h={24} color={color} />
+            <Skeleton w="90%" h={14} color={color} />
+            <Skeleton w="80%" h={14} color={color} />
           </View>
         </>
       ) : (
@@ -331,10 +287,6 @@ const styles = StyleSheet.create({
   meta: { ...text, fontSize: 13, color: muted },
   full: { ...text, fontSize: 15, lineHeight: 26, color: palette.slate700 },
 
-  blank: { backgroundColor: '#ffffff', borderWidth: 1, borderColor: line, borderRadius: 20, paddingVertical: 40, paddingHorizontal: 28, alignItems: 'flex-start', gap: 12 },
-  blankIcon: { width: 40, height: 40, borderRadius: 10, borderWidth: 1, borderColor: line, alignItems: 'center', justifyContent: 'center' },
-  blankTitle: { ...display, marginTop: 4, fontSize: 17, fontWeight: '600', color: ink },
-  blankBody: { ...text, fontSize: 14, lineHeight: 22, color: body },
 
   btnPrimary: {
     alignSelf: 'flex-start',
@@ -348,7 +300,5 @@ const styles = StyleSheet.create({
     backgroundColor: palette.navy800,
   },
   btnPrimaryHover: { backgroundColor: palette.navy700 },
-  btnSm: { height: 36, paddingHorizontal: 14, gap: 6, marginTop: 6 },
   btnPrimaryText: { ...text, fontSize: 14, fontWeight: '600', color: '#ffffff' },
-  btnPrimaryTextSm: { ...text, fontSize: 13, fontWeight: '600', color: '#ffffff' },
 });

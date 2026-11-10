@@ -32,6 +32,7 @@ const config: LinkingOptions<object>['config'] = {
       screens: {
         HomeMain: '',
         Events: 'events',
+        EventMaterials: 'events/:eventId/materials',
         Event: 'events/:eventId',
         Poll: 'polls/:pollId',
         LeaderboardHome: 'leaderboards',
@@ -60,6 +61,14 @@ const config: LinkingOptions<object>['config'] = {
         VerifyCertificate: 'certificates/verify',
         Purchases: 'purchases',
         Checkout: 'purchases/:orderId',
+      },
+    },
+    Programme: {
+      path: 'programme-plus',
+      initialRouteName: 'ProgrammeMain',
+      screens: {
+        ProgrammeMain: '',
+        ProgrammeCheckout: 'register',
       },
     },
     Inbox: {

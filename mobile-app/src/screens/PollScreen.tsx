@@ -10,6 +10,8 @@ import {
   Alert,
   RefreshControl,
 } from 'react-native';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebPoll } from '@/components/web/WebPoll';
 import { SafeAreaView } from '@/components/SafeAreaView';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePoll, usePollResults, useCastVote } from '@/hooks/usePolls';
@@ -19,6 +21,8 @@ import { colors, spacing, borderRadius } from '@/theme/colors';
 interface PollScreenProps {
   pollId: string;
   onBack: () => void;
+  /** Browser only: the poll's event page (breadcrumb target, also after a deep link). */
+  onOpenEvent?: (eventId: string) => void;
 }
 
 function getErrorMessage(error: any): string {
@@ -27,7 +31,12 @@ function getErrorMessage(error: any): string {
   return 'Failed to submit your answer.';
 }
 
-export function PollScreen({ pollId, onBack }: PollScreenProps) {
+// Browser gets its own layout; native keeps the app screen. `isWeb` is fixed per build, so hooks stay stable.
+export function PollScreen(props: PollScreenProps) {
+  return isWeb ? <WebPoll pollId={props.pollId} onBack={props.onBack} onOpenEvent={props.onOpenEvent} /> : <NativePollScreen {...props} />;
+}
+
+function NativePollScreen({ pollId, onBack }: PollScreenProps) {
   const queryClient = useQueryClient();
   const { data: poll, isLoading: pollLoading, refetch: refetchPoll, isRefetching: pollRefetching } = usePoll(pollId);
   const { data: results, isLoading: resultsLoading, refetch: refetchResults, isRefetching: resultsRefetching } = usePollResults(pollId);

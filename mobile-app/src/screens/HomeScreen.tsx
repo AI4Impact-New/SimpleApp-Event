@@ -40,6 +40,7 @@ interface HomeScreenProps {
   onPlayLecture?: (lecture: LearningClass) => void;
   /** Web dashboard: open My Learning. */
   onOpenLearning?: () => void;
+  onOpenProgrammePlus?: () => void;
 }
 
 /** Most recently useful unfinished course: registered (not completed), most progress first. */
@@ -68,6 +69,7 @@ export function HomeScreen({
   onCoursePress,
   onPlayLecture,
   onOpenLearning,
+  onOpenProgrammePlus,
 }: HomeScreenProps) {
   const [name, setName] = useState<string | null>(null);
   const learning = useMyLearning();
@@ -213,6 +215,7 @@ export function HomeScreen({
         onLeaderboardPress={onLeaderboardPress}
         onExploreCourses={onExploreCourses}
         onCoursePress={onCoursePress}
+        onOpenProgrammePlus={() => onOpenProgrammePlus?.()}
       />
     );
   }

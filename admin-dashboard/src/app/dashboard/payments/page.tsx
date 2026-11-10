@@ -13,7 +13,8 @@ import { ChevronDown, ChevronRight, Download, X } from "lucide-react";
 const input = "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm";
 const button =
   "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium disabled:opacity-50 hover:bg-slate-50";
-const primary = button + " bg-slate-900 text-white hover:bg-slate-800";
+const primary =
+  "rounded-md border border-slate-900 bg-slate-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50 hover:bg-slate-800";
 const indiaToday = () =>
   new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
 const amount = (value: FormDataEntryValue | null) => {

@@ -12,6 +12,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import { colors, fonts, layout, palette, spacing } from '@/theme/colors';
 import { formatDuration, formatLocalDate } from '@/utils/datetime';
 import { formatPaise } from '@/utils/money';
+import { LearnerIdCard } from '@/components/LearnerIdCard';
 
 type PressState = { pressed: boolean; hovered?: boolean };
 
@@ -43,6 +44,7 @@ export interface WebHomeDashboardProps {
   onLeaderboardPress: () => void;
   onExploreCourses: () => void;
   onCoursePress: (courseId: string) => void;
+  onOpenProgrammePlus: () => void;
 }
 
 function greetingFor(date: Date) {
@@ -100,7 +102,10 @@ export function WebHomeDashboard(props: WebHomeDashboardProps) {
     { icon: 'mail-outline', label: 'Inbox', badge: unread || undefined, onPress: props.onOpenInbox },
     { icon: 'podium-outline', label: 'Leaderboards', onPress: props.onLeaderboardPress },
     { icon: 'calendar-outline', label: 'Events', onPress: props.onOpenEvents },
+    { icon: 'sparkles-outline', label: 'Programme+', onPress: props.onOpenProgrammePlus },
   ];
+  // Learner card subtitle: the course in progress (or the first enrolled course).
+  const cardCourse = (continueCourse ?? myCourses[0])?.title ?? null;
 
   return (
     <ScrollView
@@ -111,7 +116,7 @@ export function WebHomeDashboard(props: WebHomeDashboardProps) {
     >
       <View style={wide ? styles.shell : undefined}>
       {wide ? (
-        <SideNav items={nav} courses={myCourses} onCoursePress={props.onContinueCourse} onAllCourses={props.onOpenLearning} />
+        <SideNav name={name} courseTitle={cardCourse} items={nav} courses={myCourses} onCoursePress={props.onContinueCourse} onAllCourses={props.onOpenLearning} />
       ) : null}
       <View style={[styles.main, wide && styles.mainWide]}>
       {/* Greeting + headline stats */}
@@ -131,6 +136,7 @@ export function WebHomeDashboard(props: WebHomeDashboardProps) {
         ) : null}
       </View>
 
+      {!wide ? <LearnerIdCard name={name} courseTitle={cardCourse} /> : null}
       {!wide ? <ShortcutPills items={nav} /> : null}
 
       {/* Continue learning */}
@@ -221,11 +227,15 @@ type SideItem = {
 };
 
 function SideNav({
+  name,
+  courseTitle,
   items,
   courses,
   onCoursePress,
   onAllCourses,
 }: {
+  name: string | null;
+  courseTitle: string | null;
   items: SideItem[];
   courses: MyLearningCourse[];
   onCoursePress: (courseId: string) => void;
@@ -233,7 +243,10 @@ function SideNav({
 }) {
   const shown = courses.slice(0, 4);
   return (
-    <View style={styles.side} role="navigation" aria-label="Dashboard shortcuts">
+    <View style={styles.side}>
+      {/* Identity, not navigation: keep the card outside the shortcuts landmark. */}
+      <LearnerIdCard name={name} courseTitle={courseTitle} />
+      <View style={styles.sideNav} role="navigation" aria-label="Dashboard shortcuts">
       <View style={styles.sideGroup}>
         {items.map((item) => (
           <Pressable key={item.label} onPress={item.onPress} style={(s: PressState) => [styles.sideItem, s.hovered && styles.sideItemHover]}>
@@ -272,6 +285,7 @@ function SideNav({
           {courses.length > shown.length ? <TextLink label={`All ${courses.length} courses`} onPress={onAllCourses} icon /> : null}
         </View>
       ) : null}
+      </View>
     </View>
   );
 }
@@ -534,6 +548,7 @@ const styles = StyleSheet.create({
     top: 24,
     paddingTop: 4,
   },
+  sideNav: { gap: 28 },
   sideGroup: { gap: 2 },
   sideItem: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 40, paddingHorizontal: 12, borderRadius: 8 },
   sideItemHover: { backgroundColor: palette.slate100 },

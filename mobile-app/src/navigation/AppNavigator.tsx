@@ -1,5 +1,5 @@
 // App Navigator
-// Tabs: Home · Courses · My Learning · Inbox · Profile. Events, QR and leaderboards live under Home.
+// Tabs: Home · Courses · My Learning · Programme+ · Inbox · Profile. Events, QR and leaderboards live under Home.
 import React, { useState, useEffect, useCallback } from 'react';
 import { NavigationContainer, createNavigationContainerRef, NavigationState, PartialState } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
@@ -38,6 +38,8 @@ import { NotificationDetailScreen } from '@/screens/NotificationDetailScreen';
 import { CheckoutScreen } from '@/screens/CheckoutScreen';
 import { PurchasesScreen } from '@/screens/PurchasesScreen';
 import { VerifyCertificateScreen } from '@/screens/VerifyCertificateScreen';
+import { ProgrammePlusScreen } from '@/screens/ProgrammePlusScreen';
+import { ProgrammePlusCheckoutScreen } from '@/screens/ProgrammePlusCheckoutScreen';
 import { useCourseExams, useLearningHome, useNotifications } from '@/hooks/useLearning';
 import type { Exam } from '@/types/learning';
 import { webLinking, takeReturnAction, setLinkingSignedIn } from '@/navigation/linking';
@@ -123,6 +125,8 @@ const SCREEN_TITLES: Record<string, string> = {
   Certificates: 'My certificates',
   VerifyCertificate: 'Verify certificate',
   Purchases: 'Purchases',
+  ProgrammeMain: 'Programme+',
+  ProgrammeCheckout: 'Register for Programme+',
   InboxMain: 'Inbox',
   NotificationDetail: 'Message',
   ProfileMain: 'Profile',
@@ -405,6 +409,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                       })
                     }
                     onOpenLearning={() => navigation.navigate('Learning', { screen: 'MyLearningMain' })}
+                    onOpenProgrammePlus={() => navigation.navigate('Programme', { screen: 'ProgrammeMain' })}
                   />
                 )}
               </Stack.Screen>
@@ -600,6 +605,27 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                     onOpenLearning={(courseId) => openCourseLearning(navigation, courseId)}
                   />
                 )}
+              </Stack.Screen>
+            </Stack.Navigator>
+          )}
+        </Tab.Screen>
+
+        <Tab.Screen
+          name="Programme"
+          options={{
+            tabBarLabel: 'Programme+',
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons name={focused ? 'sparkles' : 'sparkles-outline'} size={size ?? 24} color={color} />
+            ),
+          }}
+        >
+          {() => (
+            <Stack.Navigator screenOptions={{ headerShown: false }} screenLayout={webScreenLayout}>
+              <Stack.Screen name="ProgrammeMain">
+                {({ navigation }: any) => <ProgrammePlusScreen onRegister={() => navigation.navigate('ProgrammeCheckout')} />}
+              </Stack.Screen>
+              <Stack.Screen name="ProgrammeCheckout">
+                {({ navigation }: any) => <ProgrammePlusCheckoutScreen onBack={() => navigation.goBack()} />}
               </Stack.Screen>
             </Stack.Navigator>
           )}

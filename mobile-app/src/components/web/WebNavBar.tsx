@@ -12,7 +12,7 @@ import { colors, fonts, layout, palette, spacing } from '@/theme/colors';
 
 // Routes shown as text links; the rest (Inbox, Profile) sit on the right as account controls.
 // "Events" is not a tab: it is a page inside the Home stack, linked here like the design's top nav.
-const PRIMARY_ROUTES = ['Home', 'Learning', 'Courses', 'Events'];
+const PRIMARY_ROUTES = ['Home', 'Learning', 'Courses', 'Events', 'Programme'];
 const WEB_LABELS: Record<string, string> = { Learning: 'My learning', Events: 'Events' };
 // Home-stack pages that belong to the Events section (highlight "Events" instead of "Home").
 const EVENT_SCREENS = new Set(['Events', 'Event', 'Poll', 'LeaderboardHome', 'LeaderboardDetail']);

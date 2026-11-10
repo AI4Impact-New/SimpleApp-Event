@@ -62,6 +62,14 @@ const config: LinkingOptions<object>['config'] = {
         Checkout: 'purchases/:orderId',
       },
     },
+    Programme: {
+      path: 'programme-plus',
+      initialRouteName: 'ProgrammeMain',
+      screens: {
+        ProgrammeMain: '',
+        ProgrammeCheckout: 'register',
+      },
+    },
     Inbox: {
       path: 'inbox',
       initialRouteName: 'InboxMain',

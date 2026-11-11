@@ -24,7 +24,7 @@ type Student = Person & {
 type Roster = { items: Student[]; next: string | null };
 
 const endpoint = "/admin/batches";
-const input = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm";
+const input = "max-w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm";
 const button =
   "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-50";
 const primary =
@@ -168,6 +168,7 @@ export default function BatchesPage() {
       <label className="flex max-w-md flex-col gap-1 text-sm font-medium">
         Course
         <select
+          aria-label="Course"
           className={input}
           value={course}
           disabled={busy || !!editor}
@@ -271,7 +272,7 @@ export default function BatchesPage() {
             ))}
           </div>
         </aside>
-        <section className={panel} aria-label="Student roster">
+        <section className={panel + " min-w-0"} aria-label="Student roster">
           <div className="flex flex-wrap justify-between gap-3">
             <div className="min-w-0">
               <h2 className="break-words text-xl font-semibold">
@@ -358,6 +359,7 @@ export default function BatchesPage() {
                 <label className="flex flex-col gap-1 text-sm font-medium">
                   Move {selectedStudents.length} selected
                   <select
+                    aria-label={`Move ${selectedStudents.length} selected`}
                     className={input}
                     value={destination}
                     disabled={busy}

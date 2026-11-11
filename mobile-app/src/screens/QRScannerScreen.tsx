@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from '@/components/SafeAreaView';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useQueryClient } from '@tanstack/react-query';
 import { ensureCameraPermission } from '@/utils/cameraPermission';
 import { api } from '@/services/api';
 import { colors, spacing } from '@/theme/colors';
@@ -20,6 +21,7 @@ interface QRScannerScreenProps {
 }
 
 export function QRScannerScreen({ onScanSuccess, onBack }: QRScannerScreenProps) {
+  const queryClient = useQueryClient();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -61,6 +63,7 @@ export function QRScannerScreen({ onScanSuccess, onBack }: QRScannerScreenProps)
       
       // Try to join the event
       await api.joinEvent(eventId);
+      queryClient.invalidateQueries({ queryKey: ['attendance'] });
       
       Alert.alert(
         'Success',

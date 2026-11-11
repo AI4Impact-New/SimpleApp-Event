@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -104,8 +105,7 @@ export default function PaymentsLedger() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({}),
     [selected, setSelected] = useState(""),
     [detail, setDetail] = useState<FeeDetail | null>(null),
-    [create, setCreate] = useState(false),
-    [newBatch, setNewBatch] = useState(false);
+    [create, setCreate] = useState(false);
   const [plan, setPlan] = useState<{ amount: string; date: string }[]>([]);
   const requestIds = useRef(new Map<string, string>());
   const request = (key: string, payload: Record<string, unknown>) => {
@@ -357,9 +357,9 @@ export default function PaymentsLedger() {
           >
             New fee plan
           </button>
-          <button className={button} onClick={() => setNewBatch(true)}>
-            New batch
-          </button>
+          <Link className={button} href="/dashboard/batches">
+            Manage batches
+          </Link>
         </div>
       </div>
       {problem && (
@@ -820,11 +820,13 @@ export default function PaymentsLedger() {
                 Batch
                 <select name="batch_id" className={input + " w-full"}>
                   <option value="">Unassigned</option>
-                  {report?.batches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.code}
-                    </option>
-                  ))}
+                  {report?.batches
+                    .filter((b) => !b.archived_at)
+                    .map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.code}
+                      </option>
+                    ))}
                 </select>
               </label>
               <label>
@@ -869,72 +871,6 @@ export default function PaymentsLedger() {
             <PlanEditor plan={plan} setPlan={setPlan} />
             <button className={primary} disabled={busy}>
               Create agreed fee plan
-            </button>
-          </form>
-        </Dialog>
-      )}
-      {newBatch && (
-        <Dialog
-          error={problem}
-          title="Create batch"
-          close={() => setNewBatch(false)}
-        >
-          <form
-            className="space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const f = new FormData(e.currentTarget);
-              void run(async () => {
-                await feeLedger.batch(
-                  request("batch", {
-                    code: f.get("code"),
-                    course_id: f.get("course_id"),
-                    starts_on: f.get("starts_on"),
-                    trainer_email: f.get("trainer_email"),
-                  }),
-                );
-                setNewBatch(false);
-              }, "Batch created.");
-            }}
-          >
-            <label className="block">
-              Batch code
-              <input
-                name="code"
-                maxLength={100}
-                required
-                className={input + " w-full"}
-              />
-            </label>
-            <label className="block">
-              Course
-              <select name="course_id" required className={input + " w-full"}>
-                {report?.courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block">
-              Trainer email (optional)
-              <input
-                name="trainer_email"
-                type="email"
-                className={input + " w-full"}
-              />
-            </label>
-            <label className="block">
-              Batch starts
-              <input
-                name="starts_on"
-                type="date"
-                required
-                className={input + " w-full"}
-              />
-            </label>
-            <button className={primary} disabled={busy}>
-              Create batch
             </button>
           </form>
         </Dialog>

@@ -18,6 +18,7 @@ import {
   X,
   Sparkles,
 } from "lucide-react";
+const batchesOnly = process.env.NEXT_PUBLIC_BATCHES_DEV === "true";
 const groups = [
   {
     title: "Workspace",
@@ -25,6 +26,7 @@ const groups = [
       { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
       { href: "/dashboard/learning", label: "Learning Studio", icon: BookOpen },
       { href: "/dashboard/courses", label: "Courses", icon: BookOpen },
+      { href: "/dashboard/batches", label: "Batches", icon: Users },
       { href: "/dashboard/programme", label: "Programme+", icon: Sparkles },
     ],
   },
@@ -76,6 +78,7 @@ export function Sidebar() {
   const [educator, setEducator] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => {
+    if (batchesOnly) return;
     let live = true;
     void import("@/services/programme")
       .then(({ programme }) => programme.access())
@@ -133,11 +136,12 @@ export function Sidebar() {
       >
         <nav aria-label="Main navigation" className="space-y-6">
           {groups.map((group) => {
-            const items = group.items.filter(
-              (item) =>
-                admin ||
-                (educator && item.href === "/dashboard/programme") ||
-                item.href === "/dashboard/course-enquiries",
+            const items = group.items.filter((item) =>
+              batchesOnly
+                ? admin && item.href === "/dashboard/batches"
+                : admin ||
+                  (educator && item.href === "/dashboard/programme") ||
+                  item.href === "/dashboard/course-enquiries",
             );
             if (!items.length) return null;
             return (

@@ -91,6 +91,10 @@ def handler(event, context):
         if parts[0]=='programme' or parts[:2]==['admin','programme']:
             from programme import api as programme_api
             return _response(200,programme_api.dispatch(actor,path,method,body,event.get('queryStringParameters')))
+        if parts[:2] == ["admin", "batches"]:
+            from learning import batches
+            return _response(201 if len(parts) == 2 and method == "POST" else 200,
+                             batches.dispatch(actor, parts[2:], method, body, event.get("queryStringParameters") or {}))
         result, status = None, 200
         if len(parts)>=4 and parts[:2]==['admin','enquiries'] and parts[3]=='assisted':
             eid=identifier(parts[2]);suffix=parts[4] if len(parts)>4 else ''

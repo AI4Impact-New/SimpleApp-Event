@@ -26,6 +26,7 @@ const groups = [
       { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
       { href: "/dashboard/learning", label: "Learning Studio", icon: BookOpen },
       { href: "/dashboard/courses", label: "Courses", icon: BookOpen },
+      { href: "/dashboard/batches", label: "Batches & trainers", icon: Users },
       { href: "/dashboard/programme", label: "Programme+", icon: Sparkles },
     ],
   },

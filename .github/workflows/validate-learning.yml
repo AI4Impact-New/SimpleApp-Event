@@ -147,4 +147,4 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -r requirements.txt pytest
-      - run: python -m pytest tests/test_programme_integration.py tests/test_payments_integration.py tests/test_email_lifecycle.py tests/test_fee_ledger.py -q
+      - run: python -m pytest tests/test_programme_integration.py tests/test_payments_integration.py tests/test_email_lifecycle.py tests/test_fee_ledger.py tests/test_course_batches.py -q

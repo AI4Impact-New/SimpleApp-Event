@@ -1,6 +1,6 @@
 import type { FooterColumn } from "@/components/navigation/Footer";
 import type { NavLink } from "@/components/navigation/NavBar";
-import { POLICY_LINKS } from "@/content/legal";
+import { COMPANY_NAME, POLICY_LINKS } from "@/content/legal";
 
 export type Track = {
   id: string;
@@ -263,7 +263,7 @@ export const TRACK_FAMILIES: { family: Track["family"]; eyebrow: string; title: 
 export const FOOTER_COPY = {
   tagline: "Learn AI. Build real systems. Create impact.",
   note: "Issued by the AI4Impact Institute of Applied AI (IIAA) in academic collaboration with XYZ University. Final wording is subject to the approved collaboration language.",
-  legal: "© 2026 AI4Impact. Professional certificates are not academic degrees. Career support does not guarantee employment.",
+  legal: `© 2026 ${COMPANY_NAME} AI4Impact is a brand owned and managed by ${COMPANY_NAME} Professional certificates are not academic degrees. Career support does not guarantee employment.`,
   legalRight: "Learner data is handled in line with the DPDP Act 2023.",
   policies: POLICY_LINKS,
 };

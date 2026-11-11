@@ -768,12 +768,15 @@ export default function PaymentsLedger() {
             onSubmit={(e) => {
               e.preventDefault();
               const f = new FormData(e.currentTarget);
+              const batch = f.get("batch_id");
               void run(async () => {
                 const r = await feeLedger.create(
                   request("account", {
                     buyer_email: f.get("email"),
                     course_id: f.get("course_id"),
-                    batch_id: f.get("batch_id") || null,
+                    ...(batch
+                      ? { batch_id: batch === "unassigned" ? null : batch }
+                      : {}),
                     mode: report?.mode || "test",
                     marked_price_paise: amount(f.get("price")),
                     discount_bps: Math.round(Number(f.get("discount")) * 100),
@@ -819,7 +822,8 @@ export default function PaymentsLedger() {
               <label>
                 Batch
                 <select name="batch_id" className={input + " w-full"}>
-                  <option value="">Unassigned</option>
+                  <option value="">Use student's current batch</option>
+                  <option value="unassigned">Unassigned</option>
                   {report?.batches
                     .filter((b) => !b.archived_at)
                     .map((b) => (

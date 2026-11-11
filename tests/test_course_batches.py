@@ -134,24 +134,28 @@ def test_course_boundary_and_existing_enrollment_only(data):
 
 def test_fee_plan_defaults_to_students_batch(data):
     batch = create(data)
-    student = next(
-        s for s in roster(data) if str(s["user_id"]) == data["student"]["id"]
-    )
-    assignment(data, str(batch["id"]), [student])
-    agreement = fee_ledger.create_account(
-        data["admin"],
-        {
-            "request_id": str(uuid4()),
-            "user_id": data["student"]["id"],
-            "course_id": data["course"],
-            "mode": "test",
-            "marked_price_paise": 10000,
-            "installments": [{"amount_paise": 10000, "due_on": "2026-11-11"}],
-        },
-    )
-    with get_db_cursor() as cur:
-        cur.execute("SELECT batch_id FROM fee_accounts WHERE id=%s", (agreement["id"],))
-        assert cur.fetchone()["batch_id"] == batch["id"]
+    assignment(data, str(batch["id"]), roster(data))
+    for person, selection, expected in (
+        (data["student"], {}, batch["id"]),
+        (data["other"], {"batch_id": None}, None),
+    ):
+        agreement = fee_ledger.create_account(
+            data["admin"],
+            {
+                "request_id": str(uuid4()),
+                "user_id": person["id"],
+                "course_id": data["course"],
+                "mode": "test",
+                "marked_price_paise": 10000,
+                "installments": [{"amount_paise": 10000, "due_on": "2026-11-11"}],
+                **selection,
+            },
+        )
+        with get_db_cursor() as cur:
+            cur.execute(
+                "SELECT batch_id FROM fee_accounts WHERE id=%s", (agreement["id"],)
+            )
+            assert cur.fetchone()["batch_id"] == expected
 
 
 def test_concurrent_transfers_allow_one_destination(data):

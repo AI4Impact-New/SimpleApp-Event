@@ -564,7 +564,7 @@ def create_account(actor, body):
         if not exists or not cur.fetchone():
             raise ApiError(404, "Student or course not found")
         bid = identifier(body["batch_id"]) if body.get("batch_id") else None
-        if not bid:
+        if "batch_id" not in body:
             cur.execute(
                 """SELECT b.id FROM course_registrations r JOIN fee_batches b ON b.id=r.batch_id
                    WHERE r.course_id=%s AND r.user_id=%s AND r.status IN ('registered','completed')

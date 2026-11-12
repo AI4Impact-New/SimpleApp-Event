@@ -485,3 +485,33 @@ test('course checkout restriction is visible inline in the browser', async ({ pa
  await page.getByRole('button',{name:'Checkout',exact:true}).click();
  await expect(page.getByRole('alert')).toContainText('authorized test accounts only');
 });
+
+test('student portal counts video playback, offers an extension and signs out after two idle hours', async ({ page }) => {
+  await seed(page);
+  await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**', route => route.fulfill({
+    json: new URL(route.request().url()).pathname === '/users/me'
+      ? { id: cid, name: 'Original learner', email: 'qa@example.invalid', user_type: 'professional', designation: 'Engineer', company: 'QA' }
+      : [],
+  }));
+  await page.route('https://cognito-idp.*.amazonaws.com/**', route => route.abort());
+  await page.clock.install();
+  await page.goto('/');
+  await expect(page.getByRole('tab', { name: /My learning/i })).toBeVisible();
+  await page.clock.fastForward(110 * 60_000);
+  await page.evaluate(() => {
+    const video = document.createElement('video');
+    Object.defineProperties(video, { paused: { value: false }, readyState: { value: 3 } });
+    document.body.append(video);
+    video.dispatchEvent(new Event('timeupdate'));
+    video.remove();
+  });
+  await page.clock.fastForward(6 * 60_000);
+  await expect(page.getByRole('button', { name: 'Stay logged in' })).toBeHidden();
+  await page.clock.fastForward(109 * 60_000 + 1000);
+  await expect(page.getByRole('button', { name: 'Stay logged in' })).toBeVisible();
+  await page.getByRole('button', { name: 'Stay logged in' }).click();
+  await expect(page.getByRole('button', { name: 'Stay logged in' })).toBeHidden();
+  await page.clock.fastForward(120 * 60_000 + 1000);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('auth_id_token'))).toBeNull();
+  await expect(page.getByRole('tab', { name: /My learning/i })).toHaveCount(0);
+});

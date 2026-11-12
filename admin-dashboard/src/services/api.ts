@@ -1,7 +1,7 @@
 // API service
 // Base URL must NOT include /api — API Gateway routes are /events, /polls, etc. directly.
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { isIdToken } from '@/utils/jwt';
+import { authService } from '@/services/auth';
 import { CreateAdminUserInput } from '@/types/user';
 
 const rawUrl = process.env.NEXT_PUBLIC_API_URL || 'https://ke8dywmhil.execute-api.ap-south-1.amazonaws.com';
@@ -29,16 +29,11 @@ class ApiService {
     });
 
     // Add auth token to requests
-    this.client.interceptors.request.use((config) => {
+    this.client.interceptors.request.use(async (config) => {
       if (typeof window !== 'undefined') {
-        const token =
-          localStorage.getItem('auth_id_token') ||
-          localStorage.getItem('auth_token');
-        if (token && isIdToken(token)) {
-          config.headers.Authorization = `Bearer ${token}`;
-        } else if (token && !isIdToken(token)) {
-          this.clearLocalAuth();
-        }
+        const token = await authService.getUsableToken();
+        if (token) config.headers.Authorization = `Bearer ${token}`;
+        else if (authService.getToken()) this.clearLocalAuth();
       }
       return config;
     });

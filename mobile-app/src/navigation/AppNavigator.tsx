@@ -1,3 +1,5 @@
+import { StudentIdleSession } from "@/components/web/StudentIdleSession";
+import { browserSessionExpired, STUDENT_IDLE_KEY, STUDENT_IDLE_MS } from "@/utils/browserIdle";
 // App Navigator
 // Tabs: Home · Courses · My Learning · Programme+ · Inbox · Profile. Events, QR and leaderboards live under Home.
 import React, { useState, useEffect, useCallback } from 'react';
@@ -820,7 +822,14 @@ export function AppNavigator() {
           await unregisterPush();
         });
         // Before any per-user store is read (push registration, exam resume)
-        return authService.repairStoredUserId().then(() => authService.isAuthenticated());
+        return (async () => {
+          if (isWeb && browserSessionExpired(STUDENT_IDLE_KEY, STUDENT_IDLE_MS)) {
+            if (await authService.getToken()) await authService.clearStorage();
+            return false;
+          }
+          await authService.repairStoredUserId();
+          return authService.isAuthenticated();
+        })();
       })
       .then((authenticated) => {
         if (!cancelled) setIsAuthenticated(!!authenticated);
@@ -872,7 +881,7 @@ export function AppNavigator() {
       documentTitle={documentTitle}
       linking={isWeb ? webLinking : undefined}
     >
-      {isAuthenticated ? <SignedIn onLogout={handleLogout} /> : <AuthStack onLoginSuccess={handleLoginSuccessStable} />}
+      {isAuthenticated ? <><SignedIn onLogout={handleLogout} />{isWeb && <StudentIdleSession />}</> : <AuthStack onLoginSuccess={handleLoginSuccessStable} />}
     </NavigationContainer>
   );
 }

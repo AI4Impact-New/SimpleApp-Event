@@ -1,4 +1,5 @@
 'use client';
+import { STAFF_IDLE_KEY, writeBrowserActivity } from "../../../../mobile-app/src/utils/browserIdle";
 
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -37,6 +38,7 @@ function LoginForm() {
     const session=await fetchAuthSession(), token=session.tokens?.idToken?.toString();
     if(!token)throw new Error('Session unavailable');
     localStorage.setItem('auth_token',token);localStorage.setItem('auth_id_token',token);
+    writeBrowserActivity(STAFF_IDLE_KEY);
     const user=getCurrentUserFromToken(token);
     if(user)localStorage.setItem('current_user',JSON.stringify(user));
     if(params?.get('portal')==='student'&&!sessionStorage.getItem('post_login_path'))sessionStorage.setItem('post_login_path','/student');

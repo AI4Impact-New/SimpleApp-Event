@@ -1,4 +1,6 @@
 "use client";
+import { browserSessionExpired, STAFF_IDLE_KEY, STAFF_IDLE_MS } from "../../../../mobile-app/src/utils/browserIdle";
+import { authService } from "@/services/auth";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchAuthSession } from "aws-amplify/auth";
@@ -9,6 +11,7 @@ export default function WelcomePage() {
   const router = useRouter();
   const [error, setError] = useState("");
   useEffect(() => {
+    if (browserSessionExpired(STAFF_IDLE_KEY, STAFF_IDLE_MS)) { void authService.logout(); return; }
     fetchAuthSession().then((session) => {
       const token = session.tokens?.idToken?.toString();
       if (!token) { sessionStorage.setItem("post_login_path", "/welcome"); router.replace("/login"); return; }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Select } from '@/components/ui/Select';
 import { Loader2 } from 'lucide-react';
 import { useUsers } from '@/hooks/useUsers';
 import { CognitoUser } from '@/types/user';
@@ -51,7 +52,7 @@ export default function UsersPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-700">Access Filter</label>
-            <select
+            <Select
               value={accessFilter}
               onChange={(e) => setAccessFilter(e.target.value as (typeof ACCESS_OPTIONS)[number])}
               className="w-full rounded-lg border border-gray-300 px-3 py-2.5 focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
@@ -61,11 +62,11 @@ export default function UsersPage() {
                   {option}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-700">Profile Type</label>
-            <select
+            <Select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as (typeof TYPE_OPTIONS)[number])}
               className="w-full rounded-lg border border-gray-300 px-3 py-2.5 focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
@@ -75,7 +76,7 @@ export default function UsersPage() {
                   {option}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         </div>
       </section>

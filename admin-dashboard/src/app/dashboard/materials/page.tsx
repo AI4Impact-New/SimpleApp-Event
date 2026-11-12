@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Select } from '@/components/ui/Select';
 import { useEvents } from '@/hooks/useEvents';
 import { useMaterials, useDeleteMaterial } from '@/hooks/useMaterials';
 import { MaterialUploader, MaterialListItem } from '@/components/MaterialUploader';
@@ -48,7 +49,7 @@ export default function MaterialsPage() {
           Select Event
         </label>
         <p className="mb-3 text-sm text-gray-500">Pick an event to upload files or view its materials.</p>
-        <select
+        <Select
           id="materials-event-select"
           value={selectedEvent}
           onChange={(e) => setSelectedEvent(e.target.value)}
@@ -60,7 +61,7 @@ export default function MaterialsPage() {
               {event.name}
             </option>
           ))}
-        </select>
+        </Select>
       </section>
 
       {selectedEvent ? (

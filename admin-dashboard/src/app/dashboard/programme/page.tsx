@@ -8,6 +8,7 @@ import {
   Search,
   X,
 } from "lucide-react";
+import { Select } from '@/components/ui/Select';
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   programme,
@@ -80,7 +81,7 @@ function Editor({
                 }
               />
             ) : f.options ? (
-              <select
+              <Select
                 aria-label={f.label}
                 className={input}
                 required={!f.optional}
@@ -95,7 +96,7 @@ function Editor({
                     {o.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             ) : (
               <input
                 aria-label={f.label}
@@ -879,7 +880,7 @@ export default function ProgrammeWorkspace() {
       ].includes(tab) && (
         <label className="block max-w-lg text-sm font-medium">
           Course
-          <select
+          <Select
             aria-label="Course"
             className={input}
             value={course}
@@ -893,7 +894,7 @@ export default function ProgrammeWorkspace() {
                 {c.label}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       )}
       {isAdmin &&
@@ -1210,7 +1211,7 @@ export default function ProgrammeWorkspace() {
                       </button>
                     ))}
                   {tab === "Applications" && (
-                    <select
+                    <Select
                       aria-label="Application status"
                       className="rounded border p-2 text-sm"
                       value={text(r, "status")}
@@ -1239,7 +1240,7 @@ export default function ProgrammeWorkspace() {
                           {o.label}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   )}
                   {tab === "Webinars" && (
                     <button
@@ -1495,7 +1496,7 @@ export default function ProgrammeWorkspace() {
               <span>
                 {text(r, "name")} · {text(r, "email")} · {text(r, "status")}
               </span>
-              <select
+              <Select
                 aria-label="Registration status"
                 value={text(r, "status")}
                 onChange={(e) =>
@@ -1527,7 +1528,7 @@ export default function ProgrammeWorkspace() {
                     {o.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           ))}
         </section>

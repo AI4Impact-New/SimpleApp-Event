@@ -1,89 +1,61 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { EventEditor, EventFormValues } from '@/components/EventEditor';
 import { useEvents, useCreateEvent, useUpdateEvent, useEvent } from '@/hooks/useEvents';
 import { EventCard } from '@/components/EventCard';
 import { Plus, Loader2, Calendar, QrCode, Users } from 'lucide-react';
 import { Modal } from '@/components/Modal';
-import { CreateEventInput, Event, UpdateEventInput } from '@/types/event';
+import { Event } from '@/types/event';
 import { fromIstInputToUtcIso, toIstInputValue } from '@/utils/datetime';
 import QRCode from 'qrcode';
+
+const toForm = (event?: Event): EventFormValues => ({
+  name: event?.name ?? '',
+  description: event?.description ?? '',
+  location: event?.location ?? '',
+  event_type: event?.event_type ?? 'offline',
+  start_time: toIstInputValue(event?.start_time),
+  end_time: toIstInputValue(event?.end_time),
+  max_attendees: event ? event.max_attendees : 100,
+  visibility: event?.visibility ?? 'global',
+  status: event?.status ?? 'draft',
+});
 
 export default function EventsPage() {
   const { data: events, isLoading } = useEvents();
   const createEvent = useCreateEvent();
   const updateEvent = useUpdateEvent();
-  const [showModal, setShowModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  // null = list view; 'new' = create form; an Event = edit form. The form replaces the list on the page.
+  const [editor, setEditor] = useState<'new' | Event | null>(null);
+  const editingEvent = editor && editor !== 'new' ? editor : null;
+  const { data: editingEventDetail } = useEvent(editingEvent?.id ?? '');
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [qrPayload, setQrPayload] = useState('');
   const [qrEventName, setQrEventName] = useState('');
   const [submitError, setSubmitError] = useState<string>('');
-  const [formData, setFormData] = useState<CreateEventInput & { visibility?: 'private' | 'global' }>({
-    name: '',
-    description: '',
-    location: '',
-    event_type: 'offline',
-    start_time: '',
-    end_time: '',
-    max_attendees: 100,
-    visibility: 'global',
-  });
-  const [editFormData, setEditFormData] = useState<UpdateEventInput & { name: string }>({
-    name: '',
-    description: '',
-    location: '',
-    event_type: 'offline',
-    start_time: '',
-    end_time: '',
-    status: 'draft',
-    max_attendees: undefined,
-    visibility: 'global',
-  });
 
-  const { data: editingEventDetail } = useEvent(editingEvent?.id ?? '');
+  const openEditor = (target: 'new' | Event) => { setSubmitError(''); setEditor(target); };
 
-  useEffect(() => {
-    if (!editingEventDetail || !editingEvent) return;
-    setEditFormData({
-      name: editingEventDetail.name,
-      description: editingEventDetail.description ?? '',
-      location: editingEventDetail.location ?? '',
-      event_type: editingEventDetail.event_type ?? 'offline',
-      start_time: toIstInputValue(editingEventDetail.start_time),
-      end_time: toIstInputValue(editingEventDetail.end_time),
-      status: editingEventDetail.status ?? 'draft',
-      max_attendees: editingEventDetail.max_attendees,
-      visibility: editingEventDetail.visibility ?? 'global',
-    });
-  }, [editingEventDetail, editingEvent]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const save = async (values: EventFormValues) => {
     setSubmitError('');
-
-    if (formData.start_time && formData.end_time && formData.end_time < formData.start_time) {
-      setSubmitError('End time must be after start time.');
-      return;
-    }
-
+    const common = {
+      name: values.name,
+      description: values.description.trim() || undefined,
+      location: values.location.trim() || undefined,
+      event_type: values.event_type,
+      start_time: fromIstInputToUtcIso(values.start_time),
+      end_time: fromIstInputToUtcIso(values.end_time),
+      max_attendees: values.max_attendees ? Math.max(1, values.max_attendees) : undefined,
+      visibility: values.visibility,
+    };
     try {
-      await createEvent.mutateAsync({
-        ...formData,
-        start_time: fromIstInputToUtcIso(formData.start_time),
-        end_time: fromIstInputToUtcIso(formData.end_time),
-        description: formData.description?.trim() || undefined,
-        location: formData.location?.trim() || undefined,
-        max_attendees: formData.max_attendees ? Math.max(1, formData.max_attendees) : undefined,
-        visibility: formData.visibility ?? 'global',
-      });
-      setShowModal(false);
-      resetForm();
+      if (editingEvent) await updateEvent.mutateAsync({ id: editingEvent.id, data: { ...common, status: values.status } });
+      else await createEvent.mutateAsync(common);
+      setEditor(null);
     } catch (error: any) {
-      const message = error?.response?.data?.message || error?.message || 'Failed to create event';
-      setSubmitError(message);
+      setSubmitError(error?.response?.data?.message || error?.message || (editingEvent ? 'Failed to update event' : 'Failed to create event'));
     }
   };
 
@@ -105,66 +77,17 @@ export default function EventsPage() {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      location: '',
-      event_type: 'offline',
-      start_time: '',
-      end_time: '',
-      max_attendees: 100,
-      visibility: 'global',
-    });
-  };
-
-  const handleEditClick = (event: Event) => {
-    setEditingEvent(event);
-    setEditFormData({
-      name: event.name,
-      description: event.description ?? '',
-      location: event.location ?? '',
-      event_type: event.event_type ?? 'offline',
-      start_time: toIstInputValue(event.start_time),
-      end_time: toIstInputValue(event.end_time),
-      status: event.status ?? 'draft',
-      max_attendees: event.max_attendees,
-      visibility: event.visibility ?? 'global',
-    });
-    setShowEditModal(true);
-    setSubmitError('');
-  };
-
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingEvent) return;
-    setSubmitError('');
-    if (editFormData.start_time && editFormData.end_time && editFormData.end_time < editFormData.start_time) {
-      setSubmitError('End time must be after start time.');
-      return;
-    }
-    try {
-      await updateEvent.mutateAsync({
-        id: editingEvent.id,
-        data: {
-          name: editFormData.name,
-          description: editFormData.description?.trim() || undefined,
-          location: editFormData.location?.trim() || undefined,
-          event_type: editFormData.event_type,
-          start_time: fromIstInputToUtcIso(editFormData.start_time),
-          end_time: fromIstInputToUtcIso(editFormData.end_time),
-          status: editFormData.status,
-          max_attendees: editFormData.max_attendees ? Math.max(1, editFormData.max_attendees) : undefined,
-          visibility: editFormData.visibility,
-        },
-      });
-      setShowEditModal(false);
-      setEditingEvent(null);
-    } catch (error: any) {
-      const message = error?.response?.data?.message || error?.message || 'Failed to update event';
-      setSubmitError(message);
-    }
-  };
+  if (editor) return (
+    <EventEditor
+      key={editingEventDetail ? `detail-${editingEventDetail.id}` : editingEvent?.id ?? 'new'}
+      initial={toForm(editingEventDetail ?? editingEvent ?? undefined)}
+      editing={!!editingEvent}
+      busy={createEvent.isPending || updateEvent.isPending}
+      error={submitError}
+      onCancel={() => { setEditor(null); setSubmitError(''); }}
+      onSubmit={values => void save(values)}
+    />
+  );
 
   return (
     <div className="space-y-6">
@@ -174,13 +97,15 @@ export default function EventsPage() {
             <p className="mt-1 text-sm text-gray-500">Create and manage your events</p>
           </div>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => openEditor('new')}
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-primary-700"
           >
             <Plus size={18} aria-hidden />
             Create Event
           </button>
       </header>
+
+      {submitError && <p role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-800">{submitError}</p>}
 
       {isLoading ? (
         <div className="flex items-center justify-center rounded-xl border border-gray-200 bg-white py-20 shadow-sm">
@@ -193,7 +118,7 @@ export default function EventsPage() {
               key={event.id}
               event={event}
               onQRClick={() => handleQRClick(event)}
-              onEdit={() => handleEditClick(event)}
+              onEdit={() => openEditor(event)}
             />
           ))}
         </div>
@@ -223,7 +148,7 @@ export default function EventsPage() {
                 </li>
               </ul>
               <button
-                onClick={() => setShowModal(true)}
+                onClick={() => openEditor('new')}
                 className="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-primary-700"
               >
                 <Plus size={20} aria-hidden />
@@ -232,282 +157,6 @@ export default function EventsPage() {
             </div>
           </div>
         </div>
-      )}
-
-      {showModal && (
-        <Modal onClose={() => setShowModal(false)}>
-          <div className="p-6 sm:p-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Create Event</h2>
-            <p className="text-sm text-gray-500 mb-6">Add a new event for students to join</p>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Event Name *</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="e.g. Annual Tech Workshop"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
-                <textarea
-                  value={formData.description || ''}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
-                  rows={3}
-                  placeholder="Brief description of the event"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Location</label>
-                  <input
-                    type="text"
-                    value={formData.location || ''}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="Venue or link"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Event Type</label>
-                  <select
-                    value={formData.event_type}
-                    onChange={(e) => setFormData({ ...formData, event_type: e.target.value as CreateEventInput['event_type'] })}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="offline">Offline</option>
-                    <option value="online">Online</option>
-                    <option value="hybrid">Hybrid</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Start Time</label>
-                  <input
-                    type="datetime-local"
-                    value={formData.start_time || ''}
-                    onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">End Time</label>
-                  <input
-                    type="datetime-local"
-                    value={formData.end_time || ''}
-                    onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Max Attendees</label>
-                  <input
-                    type="number"
-                    value={formData.max_attendees ?? ''}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        max_attendees: e.target.value === '' ? undefined : Math.max(1, parseInt(e.target.value, 10) || 1),
-                      })
-                    }
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 max-w-[180px]"
-                    min={1}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Visibility</label>
-                  <select
-                    value={formData.visibility ?? 'global'}
-                    onChange={(e) => setFormData({ ...formData, visibility: e.target.value as 'global' | 'private' })}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="global">Global (listed for everyone)</option>
-                    <option value="private">Private (QR only)</option>
-                  </select>
-                </div>
-              </div>
-
-              {submitError && (
-                <p className="text-sm text-red-600">{submitError}</p>
-              )}
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={createEvent.isPending}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors"
-                >
-                  {createEvent.isPending && <Loader2 size={18} className="animate-spin" />}
-                  Create Event
-                </button>
-              </div>
-            </form>
-          </div>
-        </Modal>
-      )}
-
-      {showEditModal && editingEvent && (
-        <Modal onClose={() => { setShowEditModal(false); setEditingEvent(null); setSubmitError(''); }}>
-          <div className="p-6 sm:p-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Edit Event</h2>
-            <p className="text-sm text-gray-500 mb-6">Update event details</p>
-
-            <form onSubmit={handleEditSubmit} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Event Name *</label>
-                <input
-                  type="text"
-                  value={editFormData.name}
-                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="e.g. Annual Tech Workshop"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
-                <textarea
-                  value={editFormData.description ?? ''}
-                  onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
-                  rows={3}
-                  placeholder="Brief description of the event"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Location</label>
-                  <input
-                    type="text"
-                    value={editFormData.location ?? ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="Venue or link"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Event Type</label>
-                  <select
-                    value={editFormData.event_type ?? 'offline'}
-                    onChange={(e) => setEditFormData({ ...editFormData, event_type: e.target.value as Event['event_type'] })}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="offline">Offline</option>
-                    <option value="online">Online</option>
-                    <option value="hybrid">Hybrid</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Start Time</label>
-                  <input
-                    type="datetime-local"
-                    value={editFormData.start_time ?? ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, start_time: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">End Time</label>
-                  <input
-                    type="datetime-local"
-                    value={editFormData.end_time ?? ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, end_time: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
-                  <select
-                    value={editFormData.status ?? 'draft'}
-                    onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value as Event['status'] })}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                    <option value="ongoing">Ongoing</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Max Attendees</label>
-                  <input
-                    type="number"
-                    value={editFormData.max_attendees ?? ''}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        max_attendees: e.target.value === '' ? undefined : Math.max(1, parseInt(e.target.value, 10) || 1),
-                      })
-                    }
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 max-w-[140px]"
-                    min={1}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Visibility</label>
-                  <select
-                    value={editFormData.visibility ?? 'global'}
-                    onChange={(e) => setEditFormData({ ...editFormData, visibility: e.target.value as 'global' | 'private' })}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="global">Global</option>
-                    <option value="private">Private</option>
-                  </select>
-                </div>
-              </div>
-
-              {submitError && (
-                <p className="text-sm text-red-600">{submitError}</p>
-              )}
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => { setShowEditModal(false); setEditingEvent(null); setSubmitError(''); }}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={updateEvent.isPending}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors"
-                >
-                  {updateEvent.isPending && <Loader2 size={18} className="animate-spin" />}
-                  Save changes
-                </button>
-              </div>
-            </form>
-          </div>
-        </Modal>
       )}
 
       {showQRModal && (

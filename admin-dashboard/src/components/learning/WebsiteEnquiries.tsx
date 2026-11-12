@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Select } from '@/components/ui/Select';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Mail, Phone, Loader2 } from "lucide-react";
 import api from "@/services/api";
@@ -80,7 +81,7 @@ function LeadRow({ lead }: { lead: Lead }) {
       <td className="min-w-64 px-4 py-4">
         <label className="block text-xs font-medium text-gray-600">
           Follow-up status
-          <select
+          <Select
             aria-label={`Status for ${lead.name}`}
             className="mt-1 w-full rounded-lg border p-2 text-sm"
             value={status}
@@ -94,7 +95,7 @@ function LeadRow({ lead }: { lead: Lead }) {
                 {value}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="mt-3 block text-xs font-medium text-gray-600">
           Marketing notes
@@ -178,7 +179,7 @@ export function WebsiteEnquiries() {
       <div className="flex flex-wrap gap-3">
         <label className="text-sm">
           Type
-          <select
+          <Select
             aria-label="Filter enquiry type"
             className="ml-2 rounded-lg border p-2"
             value={kind}
@@ -190,11 +191,11 @@ export function WebsiteEnquiries() {
             <option value="">All types</option>
             <option value="guidance">Career guidance</option>
             <option value="employer">Employer hiring</option>
-          </select>
+          </Select>
         </label>
         <label className="text-sm">
           Status
-          <select
+          <Select
             aria-label="Filter website enquiries"
             className="ml-2 rounded-lg border p-2"
             value={status}
@@ -207,7 +208,7 @@ export function WebsiteEnquiries() {
             {statuses.map((s) => (
               <option key={s}>{s}</option>
             ))}
-          </select>
+          </Select>
         </label>
         <input
           aria-label="Search website enquiries"

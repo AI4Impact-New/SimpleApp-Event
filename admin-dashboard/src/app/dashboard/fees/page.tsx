@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
+import { Select } from '@/components/ui/Select';
 import { billing, money, Price, Order } from "@/services/billing";
 import { errorMessage } from "@/services/learning";
 const input = "rounded-lg border border-gray-300 px-3 py-2 w-full";
@@ -163,7 +164,7 @@ export default function Fees() {
         >
           <label className="text-sm">
             Course
-            <select
+            <Select
               aria-label="Payment link course"
               className={input}
               value={course}
@@ -174,7 +175,7 @@ export default function Fees() {
                   {p.title}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="text-sm">
             Student email

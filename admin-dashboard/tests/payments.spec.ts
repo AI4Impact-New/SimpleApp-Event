@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import { pick } from './select';
 const cid='00000000-0000-0000-0000-000000000001';
 const oid='00000000-0000-0000-0000-000000000002';
 test('admin distinguishes test payments from demo orders and creates buyer checkout links',async({page})=>{
@@ -18,7 +19,7 @@ test('admin distinguishes test payments from demo orders and creates buyer check
  await expect(page.getByRole('heading',{name:'Orders & receipts'})).toBeVisible();
  await expect(page.getByRole('cell').filter({hasText:'paid · test'})).toContainText('pay_QA');
  await expect(page.getByRole('cell').filter({hasText:'demo_completed · legacy demo'})).toBeVisible();
- await page.getByLabel('Payment link course').selectOption(cid);
+ await pick(page.getByLabel('Payment link course'), cid);
  await page.locator('input[type=email]').fill('qa@example.invalid');
  await page.getByRole('button',{name:'Create payment link',exact:true}).click();
  await expect(page.getByLabel('Generated payment link')).toHaveValue(order.checkout_url);

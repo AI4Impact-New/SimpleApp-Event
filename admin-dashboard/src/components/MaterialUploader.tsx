@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { Select } from '@/components/ui/Select';
 import { useCreateMaterial } from '@/hooks/useMaterials';
 import { Upload, Loader2, FileText, Download, Trash2 } from 'lucide-react';
 import { CreateMaterialResponse } from '@/types/material';
@@ -147,7 +148,7 @@ export function MaterialUploader({ eventId, onSuccess }: MaterialUploaderProps) 
         <label className="block text-sm font-medium text-gray-700 mb-1">
           File Type (MIME)
         </label>
-        <select
+        <Select
           value={fileType}
           onChange={(e) => setFileType(e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -159,7 +160,7 @@ export function MaterialUploader({ eventId, onSuccess }: MaterialUploaderProps) 
           <option value="application/vnd.openxmlformats-officedocument.wordprocessingml.document">Word (New)</option>
           <option value="video/mp4">Video</option>
           <option value="application/zip">ZIP Archive</option>
-        </select>
+        </Select>
       </div>
 
       <button

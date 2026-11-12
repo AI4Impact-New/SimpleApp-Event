@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { pick } from './select';
 const aid = "00000000-0000-0000-0000-000000000081",
   cid = "00000000-0000-0000-0000-000000000082",
   oid = "00000000-0000-0000-0000-000000000083";
@@ -240,7 +241,7 @@ test("agreed fee plan posts paise and the selected installment dates", async ({
   await page.getByRole("button", { name: "New fee plan" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Student email").fill("qa@example.invalid");
-  await dialog.getByLabel("Fee plan course").selectOption(cid);
+  await pick(dialog.getByLabel("Fee plan course"), cid);
   await dialog.locator("input[name=price]").fill("100.01");
   await dialog.getByLabel("Installment 1 amount").fill("100.01");
   await dialog
@@ -265,7 +266,7 @@ test("pending cheque is shown separately and requires an explicit clearance acti
   await openStudent(page);
   await page.getByRole("button", { name: "Record offline payment" }).click();
   const dialog = page.getByRole("dialog");
-  await dialog.locator("select[name=method]").selectOption("cheque");
+  await pick(dialog.locator("[data-name=method]"), "cheque");
   await dialog.getByLabel("Offline amount INR").fill("30");
   await dialog.locator("input[name=reference]").fill("CHEQUE-QA-1");
   await dialog.getByRole("button", { name: "Save offline payment" }).click();
@@ -350,7 +351,7 @@ test("lost offline-payment response retries the same intent, while a new payment
     },
   );
   async function fillCash() {
-    await dialog.locator("select[name=method]").selectOption("cash");
+    await pick(dialog.locator("[data-name=method]"), "cash");
     await dialog.getByLabel("Offline amount INR").fill("10");
   }
   await dialog.getByRole("button", { name: "Record offline payment" }).click();

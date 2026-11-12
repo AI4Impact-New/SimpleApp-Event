@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Select } from '@/components/ui/Select';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import type {
   Course,
@@ -233,14 +234,14 @@ export function CourseForm({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Status</label>
-              <select
+              <Select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}
                 className={inputCls}
               >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
-              </select>
+              </Select>
             </div>
             <div>
               <label className={labelCls}>Display order</label>
@@ -291,7 +292,7 @@ export function CourseForm({
                   className={inputCls + ' flex-1 min-w-[200px]'}
                   placeholder="Class title"
                 />
-                <select
+                <Select
                   value={cl.class_type}
                   onChange={(e) => updateClass(i, 'class_type', e.target.value as ClassType)}
                   className={inputCls + ' w-36'}
@@ -299,7 +300,7 @@ export function CourseForm({
                   <option value="recorded">Recorded</option>
                   <option value="online">Online</option>
                   <option value="in_person">In person</option>
-                </select>
+                </Select>
                 <input
                   type="number"
                   value={cl.duration_minutes ?? ''}
@@ -393,14 +394,14 @@ export function CourseForm({
                 </div>
                 {(phase.phase_items ?? []).map((item, ii) => (
                   <div key={ii} className="flex gap-2 mb-2">
-                    <select
+                    <Select
                       value={item.item_type}
                       onChange={(e) => updatePhaseItem(pi, ii, 'item_type', e.target.value)}
                       className={inputCls + ' w-40'}
                     >
                       <option value="what_you_learn">What you&apos;ll learn</option>
                       <option value="outcome">Outcome</option>
-                    </select>
+                    </Select>
                     <input
                       type="text"
                       value={item.text}

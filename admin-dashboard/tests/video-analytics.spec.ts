@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { pick } from './select';
 const cid = '00000000-0000-0000-0000-000000000001';
 const vid = '00000000-0000-0000-0000-000000000002';
 test('video summaries, learner resume, refresh and retry remain distinct', async ({ page }) => {
@@ -22,7 +23,7 @@ test('video summaries, learner resume, refresh and retry remain distinct', async
   await page.getByRole('button',{name:'Learners',exact:true}).click();
   const panel = page.getByRole('region',{name:'Video viewing analytics'});
   await expect(panel.getByText('Total credited watch time: 11.5 minutes')).toBeVisible();
-  await panel.getByLabel('Per-learner video progress').selectOption(vid);
+  await pick(panel.getByLabel('Per-learner video progress'), vid);
   const row = panel.getByRole('row').filter({hasText:'Rewound learner'});
   await expect(row.getByText('1.5',{exact:true})).toBeVisible();
   await expect(row.getByText('15.0%',{exact:true})).toBeVisible();

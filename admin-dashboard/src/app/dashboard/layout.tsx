@@ -13,7 +13,7 @@ export default function DashboardLayout({
         <Navbar />
         <div className="flex flex-1 flex-col min-h-0 sm:flex-row">
           <Sidebar />
-          <main className="flex-1 min-w-0 overflow-auto bg-gray-50/80">
+          <main className="flex-1 min-w-0 overflow-x-clip bg-gray-50/80">
             <div
               className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
               data-dashboard-content

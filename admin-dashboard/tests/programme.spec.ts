@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { pick } from './select';
 import { zonedInputToIso } from "../src/services/programme";
 const base = process.env.QA_ADMIN_URL || "http://localhost:3100";
 const cid = "00000000-0000-4000-8000-000000000001",
@@ -72,7 +73,7 @@ test("admin session form sends chosen-zone UTC and a stable retry key", async ({
     page.getByRole("heading", { name: "Programme+ workspace" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "New session", exact: true }).click();
-  await page.getByLabel("Educator", { exact: true }).selectOption(eid);
+  await pick(page.getByLabel("Educator", { exact: true }), eid);
   await page.getByLabel("Title", { exact: true }).fill("Clarification");
   await page
     .getByLabel("Starts in selected time zone")
@@ -152,22 +153,21 @@ test("job publisher includes consultancy, work mode, experience and salary field
   await page.goto(base + "/dashboard/programme");
   await page.getByRole("button", { name: "Careers", exact: true }).click();
   await page.getByRole("button", { name: "New job", exact: true }).click();
-  await page.getByLabel("Company", { exact: true }).selectOption(company);
+  await pick(page.getByLabel("Company", { exact: true }), company);
   await page.getByLabel("Job title", { exact: true }).fill("Data Engineer");
   await page.getByLabel("Description", { exact: true }).fill("Build pipelines");
   await page.getByLabel("Location", { exact: true }).fill("Hyderabad");
   await page
     .getByLabel("Recruitment / consultancy partner")
     .fill("QA Consulting");
-  await page.getByLabel("Work mode", { exact: true }).selectOption("hybrid");
-  await page
-    .getByLabel("Employment type", { exact: true })
-    .selectOption("full_time");
+  await pick(page.getByLabel("Work mode", { exact: true }), "hybrid");
+  await pick(page
+    .getByLabel("Employment type", { exact: true }), "full_time");
   await page.getByLabel("Maximum experience (years)").fill("2");
   await page.getByLabel("Minimum annual salary").fill("600000");
   await page.getByLabel("Maximum annual salary").fill("900000");
   await page.getByLabel("Application deadline").fill("2027-02-01T17:00");
-  await page.getByLabel("Status", { exact: true }).selectOption("published");
+  await pick(page.getByLabel("Status", { exact: true }), "published");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect.poll(() => saved?.partner).toBe("QA Consulting");
   expect(saved?.work_mode).toBe("hybrid");

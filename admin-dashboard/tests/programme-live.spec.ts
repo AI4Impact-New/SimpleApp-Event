@@ -1,4 +1,5 @@
 import { test, expect, APIRequestContext, Page } from "@playwright/test";
+import { pick } from './select';
 import fs from "node:fs";
 import crypto from "node:crypto";
 const config = process.env.QA_LIVE_CONFIG;
@@ -192,17 +193,15 @@ test("real admin sign-in and session form persist UTC and meeting privacy", asyn
 }) => {
   await login(page, "admin");
   await page.goto(admin + "/dashboard/programme");
-  await page.getByLabel("Course", { exact: true }).selectOption(q.course_id);
+  await pick(page.getByLabel("Course", { exact: true }), q.course_id);
   await page.getByRole("button", { name: "New session", exact: true }).click();
-  await page
-    .getByLabel("Educator", { exact: true })
-    .selectOption(q.accounts.teacher.profile.id);
+  await pick(page
+    .getByLabel("Educator", { exact: true }), q.accounts.teacher.profile.id);
   const t = times();
   const day = t.starts_at.slice(0, 10);
   const title = prefix() + " UI session " + id().slice(0, 6);
-  await page
-    .getByLabel("Session type", { exact: true })
-    .selectOption("handholding");
+  await pick(page
+    .getByLabel("Session type", { exact: true }), "handholding");
   await page.getByLabel("Title", { exact: true }).fill(title);
   await page.getByLabel("Starts in selected time zone").fill(day + "T15:00");
   await page.getByLabel("Ends in selected time zone").fill(day + "T15:30");
@@ -222,7 +221,7 @@ test("real admin sign-in and session form persist UTC and meeting privacy", asyn
   expect(s.starts_at).toContain("T09:30:00");
   await expect(page.getByText(title, { exact: true })).toBeVisible();
   await page.reload();
-  await page.getByLabel("Course", { exact: true }).selectOption(q.course_id);
+  await pick(page.getByLabel("Course", { exact: true }), q.course_id);
   await expect(page.getByText(title, { exact: true })).toBeVisible();
   const rows = await call(
     request,

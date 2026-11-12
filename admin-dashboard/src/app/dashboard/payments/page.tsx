@@ -7,6 +7,7 @@ import {
   useState,
   useId,
 } from "react";
+import { Select } from '@/components/ui/Select';
 import QRCode from "qrcode";
 import {
   feeLedger,
@@ -318,7 +319,7 @@ export default function PaymentsLedger() {
               onChange={(e) => setAsOf(e.target.value)}
             />
           </label>
-          <select
+          <Select
             aria-label="Payment mode"
             className={input}
             value={mode}
@@ -329,7 +330,7 @@ export default function PaymentsLedger() {
             </option>
             <option value="test">Test</option>
             <option value="live">Live</option>
-          </select>
+          </Select>
           <button
             className={button}
             disabled={!report || busy}
@@ -527,7 +528,7 @@ export default function PaymentsLedger() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <select
+          <Select
             aria-label="Course filter"
             className={input}
             value={course}
@@ -539,7 +540,7 @@ export default function PaymentsLedger() {
                 {c.title}
               </option>
             ))}
-          </select>
+          </Select>
           <details className="group rounded-lg border bg-white px-3 py-2 text-sm">
             <summary className="flex cursor-pointer list-none items-center gap-2 font-medium text-slate-600 [&::-webkit-details-marker]:hidden">
               <ChevronRight
@@ -555,7 +556,7 @@ export default function PaymentsLedger() {
               )}
             </summary>
             <div className="mt-3 flex flex-wrap gap-2 border-t pt-3">
-              <select
+              <Select
                 aria-label="Trainer filter"
                 className={input}
                 value={trainer}
@@ -567,8 +568,8 @@ export default function PaymentsLedger() {
                     {name}
                   </option>
                 ))}
-              </select>
-              <select
+              </Select>
+              <Select
                 aria-label="Batch month"
                 className={input}
                 value={month}
@@ -578,8 +579,8 @@ export default function PaymentsLedger() {
                 {months.map((m) => (
                   <option key={m}>{m}</option>
                 ))}
-              </select>
-              <select
+              </Select>
+              <Select
                 aria-label="Sort ledger"
                 className={input}
                 value={sort}
@@ -588,7 +589,7 @@ export default function PaymentsLedger() {
                 <option value="outstanding">Sort: Outstanding ↓</option>
                 <option value="name">Sort: Student name</option>
                 <option value="due">Sort: Next due</option>
-              </select>
+              </Select>
               <button
                 className={button}
                 onClick={() => {
@@ -802,7 +803,7 @@ export default function PaymentsLedger() {
               </label>
               <label>
                 Course
-                <select
+                <Select
                   aria-label="Fee plan course"
                   name="course_id"
                   required
@@ -814,18 +815,18 @@ export default function PaymentsLedger() {
                       {c.title}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               <label>
                 Batch
-                <select name="batch_id" className={input + " w-full"}>
+                <Select name="batch_id" className={input + " w-full"}>
                   <option value="">Unassigned</option>
                   {report?.batches.map((b) => (
                     <option key={b.id} value={b.id}>
                       {b.code}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               <label>
                 Billing date
@@ -908,13 +909,13 @@ export default function PaymentsLedger() {
             </label>
             <label className="block">
               Course
-              <select name="course_id" required className={input + " w-full"}>
+              <Select name="course_id" required className={input + " w-full"}>
                 {report?.courses.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.title}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             <label className="block">
               Trainer email (optional)
@@ -1413,14 +1414,14 @@ function FeePanel({
         >
           <label>
             Method
-            <select name="method" className={input + " w-full"}>
+            <Select name="method" className={input + " w-full"}>
               <option value="bank">Bank transfer received</option>
               <option value="offline_upi">
                 Offline UPI (outside Razorpay)
               </option>
               <option value="cash">Cash received</option>
               <option value="cheque">Cheque - pending clearance</option>
-            </select>
+            </Select>
           </label>
           <label>
             Amount (INR)

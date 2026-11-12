@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { pick } from './select';
 
 test('a website enquiry saves only student-profile fields, including after reopening', async ({ page }) => {
   const lead = {
@@ -46,7 +47,7 @@ test('a website enquiry saves only student-profile fields, including after reope
   await dialog.getByRole('button', { name: 'Close student workspace' }).click();
   await page.getByRole('button', { name: 'Open student workspace' }).click();
   await expect(dialog.getByLabel('City', { exact: true })).toHaveValue('Example');
-  await dialog.getByLabel('Profile type').selectOption('professional');
+  await pick(dialog.getByLabel('Profile type'), 'professional');
   await dialog.getByLabel('Designation', { exact: true }).fill('Engineer');
   await dialog.getByLabel('Company', { exact: true }).fill('Example Company');
   await dialog.getByRole('button', { name: 'Save student details' }).click();

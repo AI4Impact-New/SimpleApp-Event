@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Select } from '@/components/ui/Select';
 import { useEvents, useEventAnalytics } from '@/hooks/useEvents';
 import { Users, TrendingUp, Vote, FileText, Loader2, BarChart3 } from 'lucide-react';
 
@@ -21,7 +22,7 @@ export default function AnalyticsPage() {
           Select Event
         </label>
         <p className="mb-3 text-sm text-gray-500">Choose an event to view attendance, engagement, and leaderboard.</p>
-        <select
+        <Select
           id="analytics-event-select"
           value={selectedEvent}
           onChange={(e) => setSelectedEvent(e.target.value)}
@@ -33,7 +34,7 @@ export default function AnalyticsPage() {
               {event.name}
             </option>
           ))}
-        </select>
+        </Select>
       </section>
 
       {selectedEvent ? (

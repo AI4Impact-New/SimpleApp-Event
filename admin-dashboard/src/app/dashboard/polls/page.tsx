@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Select } from '@/components/ui/Select';
 import { useEvents } from '@/hooks/useEvents';
 import { usePolls, usePollResults } from '@/hooks/usePolls';
 import { useMaterials } from '@/hooks/useMaterials';
@@ -23,6 +24,15 @@ export default function PollsPage() {
   const results = Array.isArray(pollResults?.results) ? pollResults.results : [];
   const totalVotes = results.reduce((sum: number, r: any) => sum + r.votes, 0);
 
+  if (showModal && selectedEvent) return (
+    <PollForm
+      eventId={selectedEvent}
+      eventName={Array.isArray(events) ? events.find((event: any) => event.id === selectedEvent)?.name : undefined}
+      onCancel={() => setShowModal(false)}
+      onSuccess={() => setShowModal(false)}
+    />
+  );
+
   return (
     <div className="space-y-6">
       <header>
@@ -35,7 +45,7 @@ export default function PollsPage() {
           Select Event
         </label>
         <p className="mb-3 text-sm text-gray-500">Pick an event to view its polls and create new ones.</p>
-        <select
+        <Select
           id="polls-event-select"
           value={selectedEvent}
           onChange={(e) => setSelectedEvent(e.target.value)}
@@ -47,7 +57,7 @@ export default function PollsPage() {
               {event.name}
             </option>
           ))}
-        </select>
+        </Select>
       </section>
 
       {!selectedEvent ? (
@@ -125,16 +135,6 @@ export default function PollsPage() {
         </div>
           )}
         </>
-      )}
-
-      {showModal && selectedEvent && (
-        <Modal onClose={() => setShowModal(false)}>
-          <div className="p-6 sm:p-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Create Poll</h2>
-            <p className="text-sm text-gray-500 mb-6">Add a question and options for this event</p>
-            <PollForm eventId={selectedEvent} onSuccess={() => setShowModal(false)} />
-          </div>
-        </Modal>
       )}
 
       {selectedPoll && pollResults && (

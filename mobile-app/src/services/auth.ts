@@ -1,3 +1,5 @@
+import { Platform } from "react-native";
+import { browserSessionExpired, STUDENT_IDLE_KEY, STUDENT_IDLE_MS, writeBrowserActivity } from "@/utils/browserIdle";
 // Authentication service using AWS Amplify (Cognito)
 import {
   signIn,
@@ -130,6 +132,10 @@ class AuthService {
       let message = 'Login failed. Please try again.';
       let needsConfirmation = false;
       if (/already a signed in user|already signed in/i.test(msg) || /already a signed in user|already signed in/i.test(underlyingMsg)) {
+        if (Platform.OS === "web" && browserSessionExpired(STUDENT_IDLE_KEY, STUDENT_IDLE_MS)) {
+          await this.clearStorage();
+          return { success: false, error: "Your session expired. Please sign in again." };
+        }
         try {
           const session = await fetchAuthSession();
           const idToken = session.tokens?.idToken?.toString();
@@ -276,6 +282,7 @@ class AuthService {
     const userData = await this.buildUserData(user?.userId ?? '', user?.signInDetails?.loginId ?? email);
     await SecureStore.setItemAsync(USER_KEY, JSON.stringify(userData));
 
+    if (Platform.OS === "web") writeBrowserActivity(STUDENT_IDLE_KEY);
     return { success: true, user: userData };
   }
 
@@ -351,6 +358,7 @@ class AuthService {
     // A request made by beforeSignOut can 401 and land back here; don't recurse.
     if (this.signingOut) return;
     this.signingOut = true;
+    if (Platform.OS === "web") writeBrowserActivity(STUDENT_IDLE_KEY, 0);
     try {
       await this.beforeSignOut?.();
     } catch (_) {

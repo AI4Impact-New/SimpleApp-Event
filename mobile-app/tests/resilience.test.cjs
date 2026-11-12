@@ -31,7 +31,7 @@ for(const status of [500,404])test('push rotation handles old-device removal '+s
 test('profile data never replaces the stored Cognito user id that keys per-user stores',async()=>{
  const store={user_data:JSON.stringify({id:'cognito-sub',email:'a@example.com'})};
  const secure={getItemAsync:async k=>store[k]??null,setItemAsync:async(k,v)=>{store[k]=v},deleteItemAsync:async k=>{delete store[k]}};
- const {authService}=load('services/auth.ts',{'aws-amplify/auth':{},'@/utils/secureStorage':secure});
+ const {authService}=load('services/auth.ts',{'react-native':{Platform:{OS:'ios'}},'@/utils/browserIdle':{},'aws-amplify/auth':{},'@/utils/secureStorage':secure});
  const next=await authService.updateStoredUserData({id:'database-user-id',name:'A'});
  assert.equal(next.id,'cognito-sub');assert.equal(next.name,'A');assert.equal(JSON.parse(store.user_data).id,'cognito-sub');
 });
@@ -63,7 +63,7 @@ test('exam requests calculate server clock offset and tolerate a missing Date he
 
 test('password recovery distinguishes missing verification from other invalid parameters',async()=>{
  let message='Cannot reset password for the user as there is no registered/verified email or phone_number';
- const {authService}=load('services/auth.ts',{'aws-amplify/auth':{resetPassword:async()=>{throw Object.assign(new Error(message),{name:'InvalidParameterException'})}},'@/utils/secureStorage':{}},{Error});
+ const {authService}=load('services/auth.ts',{'react-native':{Platform:{OS:'ios'}},'@/utils/browserIdle':{},'aws-amplify/auth':{resetPassword:async()=>{throw Object.assign(new Error(message),{name:'InvalidParameterException'})}},'@/utils/secureStorage':{}},{Error});
  assert.match((await authService.requestPasswordReset('qa@example.invalid')).error,/open Profile and verify your email/);
  message='Invalid username format';
  const other=await authService.requestPasswordReset('bad');

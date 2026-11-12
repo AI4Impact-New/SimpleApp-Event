@@ -14,8 +14,10 @@ export type Policy = {
   sections: PolicySection[];
 };
 
+export const COMPANY_NAME = "Samagyaan Data Solutions Pvt. Ltd.";
+const COMPANY_CIN = "U74999TG2018PTC125732";
+const GRIEVANCE_OFFICER = { name: "B G Vishalakshini Devi", phone: "+91 90003 88630" };
 export const SUPPORT_EMAIL = "support@ai4impact.in";
-const PRIVACY_EMAIL = "privacy@ai4impact.in";
 const SECURITY_EMAIL = "security@ai4impact.in";
 
 export const POLICY_LINKS: PolicyLink[] = [
@@ -34,6 +36,7 @@ export const TERMS: Policy = {
       id: "acceptance",
       title: "Acceptance of these terms",
       blocks: [
+        `AI4Impact is a brand owned and managed by ${COMPANY_NAME}, a company incorporated in India with Corporate Identity Number (CIN) ${COMPANY_CIN} ("Samagyaan", "we", "us" or "our"). These Terms of Use form a legally binding agreement between you and Samagyaan.`,
         'By accessing the AI4Impact website, learner portal, live sessions or any related service (together, the "Platform"), you agree to these Terms of Use, our Privacy Policy and our Refund Policy. If you do not agree, please do not use the Platform.',
         "If you use the Platform on behalf of an employer or another organisation, you confirm that you are authorised to accept these terms on its behalf.",
       ],
@@ -93,15 +96,15 @@ export const TERMS: Policy = {
       id: "intellectual-property",
       title: "Intellectual property",
       blocks: [
-        "All Platform content, including curriculum, videos, code templates, datasets and brand assets, belongs to AI4Impact or its licensors. You receive a limited, non-exclusive, non-transferable licence to use it only for your own learning.",
-        "You keep ownership of the original work you create in projects and capstones. You grant AI4Impact a non-exclusive licence to show anonymised or attributed excerpts for showcase and quality purposes, and you can opt out by writing to us.",
+        `All Platform content, including curriculum, videos, code templates, datasets and brand assets, and the AI4Impact name and logo, belongs to ${COMPANY_NAME} or its licensors. You receive a limited, non-exclusive, non-transferable licence to use it only for your own learning.`,
+        "You keep ownership of the original work you create in projects and capstones. You grant Samagyaan a non-exclusive licence to show anonymised or attributed excerpts for showcase and quality purposes, and you can opt out by writing to us.",
       ],
     },
     {
       id: "fees",
       title: "Fees and payments",
       blocks: [
-        "Programme fees, taxes and any instalment options are shown at checkout. Payments are processed by third-party payment gateways. Refunds are governed by our Refund Policy.",
+        `Programme fees, taxes and any instalment options are shown at checkout. All payments are received and invoices are issued by ${COMPANY_NAME} Payments are processed by third-party payment gateways. Refunds are governed by our Refund Policy.`,
       ],
     },
     {
@@ -109,7 +112,7 @@ export const TERMS: Policy = {
       title: "Disclaimers and limitation of liability",
       blocks: [
         'The Platform is provided "as is". We work to keep it accurate and available, but we do not promise uninterrupted or error-free service.',
-        "To the extent permitted by law, AI4Impact's total liability for any claim connected with the Platform is limited to the fees you paid for the programme the claim relates to.",
+        "To the extent permitted by law, Samagyaan’s total liability for any claim connected with the Platform is limited to the fees you paid for the programme the claim relates to.",
       ],
     },
     {
@@ -124,6 +127,15 @@ export const TERMS: Policy = {
       title: "Governing law and disputes",
       blocks: [
         "These terms are governed by the laws of India. We will first try to resolve any dispute amicably. Disputes that cannot be resolved are subject to the exclusive jurisdiction of the courts of Hyderabad, Telangana.",
+      ],
+    },
+    {
+      id: "grievance",
+      title: "Grievance redressal",
+      blocks: [
+        "In line with the Information Technology Act, 2000 and the rules made under it, you can raise any complaint about the Platform, its content or these terms with our Grievance Officer.",
+        `Grievance Officer: ${GRIEVANCE_OFFICER.name}, ${COMPANY_NAME} Phone: ${GRIEVANCE_OFFICER.phone}. Email: ${SUPPORT_EMAIL}.`,
+        "We acknowledge complaints within 24 hours and aim to resolve them within 15 days of receipt.",
       ],
     },
     {
@@ -145,7 +157,7 @@ export const PRIVACY: Policy = {
       id: "scope",
       title: "Who we are and what this covers",
       blocks: [
-        'AI4Impact ("we", "us") is the Data Fiduciary for personal data processed through our website, learner portal, live sessions, webinars and enrolment flows. This policy explains our practices in line with the Digital Personal Data Protection Act, 2023 (DPDP Act) and applicable Indian law.',
+        `${COMPANY_NAME} (CIN ${COMPANY_CIN}, "Samagyaan", "we", "us"), which owns and manages the AI4Impact brand, is the Data Fiduciary for personal data processed through our website, learner portal, live sessions, webinars and enrolment flows. This policy explains our practices in line with the Digital Personal Data Protection Act, 2023 (DPDP Act) and applicable Indian law.`,
       ],
     },
     {
@@ -242,14 +254,16 @@ export const PRIVACY: Policy = {
       id: "children",
       title: "Children",
       blocks: [
-        "Our programmes are meant for adults. We do not knowingly process children's data without verifiable parental consent.",
+        "Our programmes are meant for adults. We do not knowingly process children’s data without verifiable parental consent.",
       ],
     },
     {
       id: "grievance-officer",
       title: "Grievance Officer",
       blocks: [
-        `For privacy questions, requests or complaints, contact our Grievance Officer at ${PRIVACY_EMAIL}. We acknowledge requests within 72 hours and aim to resolve them within 30 days.`,
+        "For privacy questions, requests to exercise your rights, or complaints about how your personal data is handled, contact our Grievance Officer.",
+        `Grievance Officer: ${GRIEVANCE_OFFICER.name}, ${COMPANY_NAME} Phone: ${GRIEVANCE_OFFICER.phone}. Email: ${SUPPORT_EMAIL}.`,
+        "We acknowledge requests within 72 hours and aim to resolve them within 30 days. If you are not satisfied with our response, you can approach the Data Protection Board of India.",
       ],
     },
   ],
@@ -264,7 +278,8 @@ export const REFUND: Policy = {
       id: "overview",
       title: "Overview",
       blocks: [
-        "We want you to join a career track with confidence. This policy applies to all AI4Impact career tracks and Programme+ add-ons bought directly from ai4impact.in. Purchases made through an employer, a scholarship or a financing partner may follow the terms of that arrangement.",
+        `We want you to join a career track with confidence. This policy applies to all AI4Impact career tracks and Programme+ add-ons bought directly from ai4impact.in. Refunds are processed and paid by ${COMPANY_NAME}, the company that owns and manages AI4Impact and issues all programme invoices. Purchases made through an employer, a scholarship or a financing partner may follow the terms of that arrangement.`,
+        `If you disagree with a refund decision, you can escalate it to our Grievance Officer, ${GRIEVANCE_OFFICER.name}, at ${GRIEVANCE_OFFICER.phone} or ${SUPPORT_EMAIL}.`,
       ],
     },
     {
@@ -306,7 +321,7 @@ export const REFUND: Policy = {
       id: "instalments",
       title: "Instalments and financing",
       blocks: [
-        "If you paid in instalments, the refund is calculated on the total programme fee, and any instalments still due are cancelled. For loans or no-cost EMI through a financing partner, the refund is sent to the partner. The partner's own cancellation terms, including any interest already charged, apply.",
+        "If you paid in instalments, the refund is calculated on the total programme fee, and any instalments still due are cancelled. For loans or no-cost EMI through a financing partner, the refund is sent to the partner. The partner’s own cancellation terms, including any interest already charged, apply.",
       ],
     },
     {
@@ -333,7 +348,7 @@ export const REFUND: Policy = {
       id: "cancellation-by-us",
       title: "If we cancel or reschedule",
       blocks: [
-        "If AI4Impact cancels a cohort, or delays its start by more than 30 days, you can choose a full refund or a free move to another cohort.",
+        "If Samagyaan cancels an AI4Impact cohort, or delays its start by more than 30 days, you can choose a full refund or a free move to another cohort.",
       ],
     },
   ],
@@ -348,7 +363,7 @@ export const ISMS: Policy = {
       id: "purpose",
       title: "Purpose",
       blocks: [
-        "AI4Impact handles personal, academic and financial information for learners, trainers, academic partners and employers. This policy sets out how our Information Security Management System (ISMS) protects that information from unauthorised access, loss, alteration or disruption.",
+        `${COMPANY_NAME} ("Samagyaan"), which owns and manages AI4Impact, handles personal, academic and financial information for learners, trainers, academic partners and employers. This policy sets out how the Samagyaan Information Security Management System (ISMS) protects that information from unauthorised access, loss, alteration or disruption.`,
       ],
     },
     {
@@ -393,7 +408,7 @@ export const ISMS: Policy = {
       id: "roles",
       title: "Roles and responsibilities",
       blocks: [
-        "Senior leadership owns this policy and provides the resources for the ISMS. The Information Security Officer runs the ISMS day to day, coordinates risk management and reports on performance. Every person in scope is responsible for following security policies and reporting incidents promptly.",
+        "The senior leadership of Samagyaan owns this policy and provides the resources for the ISMS. The Information Security Officer runs the ISMS day to day, coordinates risk management and reports on performance. Every person in scope is responsible for following security policies and reporting incidents promptly.",
       ],
     },
     {
@@ -407,7 +422,7 @@ export const ISMS: Policy = {
       id: "responsible-disclosure",
       title: "Responsible disclosure",
       blocks: [
-        `If you believe you have found a security vulnerability in the AI4Impact Platform, please report it to ${SECURITY_EMAIL}. Include enough detail for us to reproduce it. Please do not access other users' data or disrupt the service. We will acknowledge reports within 2 business days.`,
+        `If you believe you have found a security vulnerability in the AI4Impact Platform, please report it to ${SECURITY_EMAIL}. Include enough detail for us to reproduce it. Please do not access other users’ data or disrupt the service. We will acknowledge reports within 2 business days.`,
       ],
     },
     {

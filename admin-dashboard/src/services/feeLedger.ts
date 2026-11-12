@@ -86,6 +86,7 @@ export type FeeDetail = FeeAccount & {
   }[];
 };
 export type Batch = {
+  archived_at?: string | null;
   id: string;
   course_id: string;
   code: string;

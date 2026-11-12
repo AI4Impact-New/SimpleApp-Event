@@ -15,7 +15,7 @@ export default function HomePage() {
     // independently validate the session and role on every request.
     const active = token && isIdToken(token) && expires * 1000 > Date.now();
     const destination = active && isAdminFromToken(token)
-      ? '/dashboard'
+      ? (process.env.NEXT_PUBLIC_BATCHES_DEV === 'true' ? '/dashboard/batches' : '/dashboard')
       : active && isMarketingFromToken(token)
         ? '/dashboard/course-enquiries'
         : '/login';

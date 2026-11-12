@@ -564,12 +564,22 @@ def create_account(actor, body):
         if not exists or not cur.fetchone():
             raise ApiError(404, "Student or course not found")
         bid = identifier(body["batch_id"]) if body.get("batch_id") else None
+        if "batch_id" not in body:
+            cur.execute(
+                """SELECT b.id FROM course_registrations r JOIN fee_batches b ON b.id=r.batch_id
+                   WHERE r.course_id=%s AND r.user_id=%s AND r.status IN ('registered','completed')
+                     AND b.archived_at IS NULL""",
+                (cid, uid),
+            )
+            assigned = cur.fetchone()
+            bid = assigned["id"] if assigned else None
         if bid:
             cur.execute(
-                "SELECT 1 FROM fee_batches WHERE id=%s AND course_id=%s", (bid, cid)
+                "SELECT 1 FROM fee_batches WHERE id=%s AND course_id=%s AND archived_at IS NULL FOR SHARE",
+                (bid, cid),
             )
             if not cur.fetchone():
-                raise ApiError(400, "Batch does not belong to this course")
+                raise ApiError(400, "Choose an active batch for this course")
         cur.execute(
             "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
             ("fee-account:" + uid + cid + m,),

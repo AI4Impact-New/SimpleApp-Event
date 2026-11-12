@@ -1,4 +1,5 @@
 'use client';
+import { STAFF_IDLE_KEY, writeBrowserActivity } from "../../../../mobile-app/src/utils/browserIdle";
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -48,6 +49,7 @@ export default function CallbackPage() {
         if (typeof window !== 'undefined') {
           localStorage.setItem('auth_token', idToken);
           localStorage.setItem('auth_id_token', idToken);
+          writeBrowserActivity(STAFF_IDLE_KEY);
           const user = getCurrentUserFromToken(idToken);
           if (user) {
             localStorage.setItem('current_user', JSON.stringify(user));

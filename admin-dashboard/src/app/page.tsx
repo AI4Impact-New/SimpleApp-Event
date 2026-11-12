@@ -3,23 +3,30 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { decodeJwtPayload, isIdToken, isAdminFromToken, isMarketingFromToken } from '@/utils/jwt';
+import { isAdminFromToken, isMarketingFromToken } from '@/utils/jwt';
+import { authService } from '@/services/auth';
+import { browserSessionExpired, STAFF_IDLE_KEY, STAFF_IDLE_MS } from '../../../mobile-app/src/utils/browserIdle';
 
 export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_id_token') || localStorage.getItem('auth_token');
-    const expires = token ? Number(decodeJwtPayload(token)?.exp || 0) : 0;
-    // Choose the destination before visiting a protected page. Backend APIs
-    // independently validate the session and role on every request.
-    const active = token && isIdToken(token) && expires * 1000 > Date.now();
-    const destination = active && isAdminFromToken(token)
-      ? '/dashboard'
-      : active && isMarketingFromToken(token)
-        ? '/dashboard/course-enquiries'
-        : '/login';
-    router.replace(destination);
+    let active = true;
+    if (authService.getToken() && browserSessionExpired(STAFF_IDLE_KEY, STAFF_IDLE_MS)) {
+      void authService.logout();
+      return;
+    }
+    void authService.getUsableToken().then(token => {
+      if (!active) return;
+      const destination = token && isAdminFromToken(token)
+        ? '/dashboard'
+        : token && isMarketingFromToken(token)
+          ? '/dashboard/course-enquiries'
+          : '/login';
+      router.replace(destination);
+    });
+    return () => { active = false; };
+
   }, [router]);
 
   return (

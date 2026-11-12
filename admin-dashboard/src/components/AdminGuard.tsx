@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { authService } from "@/services/auth";
+import { StaffIdleSession } from "./StaffIdleSession";
+import { browserSessionExpired, STAFF_IDLE_KEY, STAFF_IDLE_MS } from "../../../mobile-app/src/utils/browserIdle";
 import {
   isIdToken,
   isAdminFromToken,
@@ -20,33 +23,45 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   const [allowed, setAllowed] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const token =
-      localStorage.getItem("auth_id_token") ||
-      localStorage.getItem("auth_token");
-    if (!token) {
-      router.replace("/login");
-      return;
+    let active = true;
+    async function authorize() {
+      if (browserSessionExpired(STAFF_IDLE_KEY, STAFF_IDLE_MS) && authService.getToken()) {
+        setAllowed(null);
+        await authService.logout();
+        return;
+      }
+      const current = authService.getToken();
+      const expiresAt = Number(decodeJwtPayload(current || "")?.exp || 0) * 1000;
+      const token = current && isIdToken(current) && expiresAt > Date.now()
+        ? current
+        : await authService.getUsableToken();
+      if (!active) return;
+      if (!token || !isIdToken(token)) {
+        authService.clearAuthStorage();
+        router.replace("/login");
+        return;
+      }
+      const admin = isAdminFromToken(token);
+      const marketing = isMarketingFromToken(token);
+      if (path === "/dashboard/programme" && !admin) {
+        try {
+          const { programme } = await import("@/services/programme");
+          const access = await programme.access();
+          if (active) setAllowed(access.admin || access.courses.length > 0);
+        } catch {
+          if (active) setAllowed(false);
+        }
+        return;
+      }
+      if (!admin && marketing && path !== "/dashboard/course-enquiries") {
+        setAllowed(null);
+        router.replace("/dashboard/course-enquiries");
+        return;
+      }
+      setAllowed(admin || (marketing && path === "/dashboard/course-enquiries"));
     }
-    const expires = Number(decodeJwtPayload(token)?.exp || 0);
-    if (!isIdToken(token) || expires * 1000 <= Date.now()) {
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("auth_id_token");
-      router.replace("/login");
-      return;
-    }
-    if(path==='/dashboard/programme'&&!isAdminFromToken(token)){
-      let live=true;void import('@/services/programme').then(({programme})=>programme.access()).then(r=>{if(live)setAllowed(r.admin||r.courses.length>0);}).catch(()=>{if(live)setAllowed(false);});
-      return ()=>{live=false;};
-    }
-    const admin = isAdminFromToken(token),
-      marketing = isMarketingFromToken(token);
-    if (!admin && marketing && path !== "/dashboard/course-enquiries") {
-      setAllowed(null);
-      router.replace("/dashboard/course-enquiries");
-      return;
-    }
-    setAllowed(admin || (marketing && path === "/dashboard/course-enquiries"));
+    void authorize();
+    return () => { active = false; };
   }, [router, path]);
 
   if (allowed === null) {
@@ -72,5 +87,5 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         </a>
       </div>
     );
-  return <>{children}</>;
+  return <>{children}<StaffIdleSession /></>;
 }

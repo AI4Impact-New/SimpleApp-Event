@@ -81,3 +81,32 @@ for (const scenario of [
     expect(paths.filter(path => path !== '/').every(path => path === scenario.destination)).toBeTruthy();
   });
 }
+
+test('staff idle warning can extend the session and expires it after one hour', async ({ page, context }) => {
+  const key = 'ai4impact.staff.lastActivity';
+  const now = Date.now();
+  const payload = Buffer.from(JSON.stringify({
+    token_use: 'id', sub: 'idle-qa', 'cognito:groups': ['Admins'], exp: Math.floor(now / 1000) + 86400,
+  })).toString('base64url');
+  await context.route('https://*.execute-api.ap-south-1.amazonaws.com/**', route => route.fulfill({ json: [] }));
+  await page.addInitScript(({ token, key, now }) => {
+    if (sessionStorage.getItem('idle-qa-seeded')) return;
+    sessionStorage.setItem('idle-qa-seeded', 'true');
+    localStorage.setItem('auth_id_token', token);
+    localStorage.setItem(key, String(now));
+  }, { token: `test.${payload}.test`, key, now });
+  await page.clock.install({ time: new Date(now) });
+  await page.goto(base + '/dashboard');
+  await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
+
+  await page.clock.fastForward(55 * 60_000 + 1000);
+  await expect(page.getByRole('dialog', { name: 'Still working?' })).toBeVisible();
+  await page.getByRole('button', { name: 'Stay logged in' }).click();
+  await expect(page.getByRole('dialog', { name: 'Still working?' })).toBeHidden();
+
+  await page.clock.fastForward(6 * 60_000);
+  await expect(page).toHaveURL(base + '/dashboard');
+  await page.clock.fastForward(54 * 60_000);
+  await expect(page).toHaveURL(base + '/login');
+  expect(await page.evaluate(() => localStorage.getItem('auth_id_token'))).toBeNull();
+});

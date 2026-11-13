@@ -72,7 +72,7 @@ def allowed_test_buyer(email, config):
 
 
 def create(actor, body, as_admin=False):
-    from learning.billing import amounts
+    from learning.billing import checkout_amounts
     if as_admin: admin(actor)
     if set(body)-({'course_id','request_id','buyer_email'} if as_admin else {'course_id','request_id'}):
         raise ApiError(400, 'Unknown order field')
@@ -108,15 +108,15 @@ def create(actor, body, as_admin=False):
             cur.execute("SELECT * FROM courses WHERE id=%s AND archived=false AND status='published' FOR SHARE",(cid,))
             course = cur.fetchone()
             if not course: raise ApiError(404,'Published course not found')
-            price = amounts(int(course['marked_price_paise']),course['discount_bps'])
+            price = checkout_amounts(int(course['marked_price_paise']),course['discount_bps'])
             if price['total_paise']<100: raise ApiError(400,'This course does not require online payment')
             cur.execute("SELECT 1 FROM course_registrations WHERE user_id=%s AND course_id=%s AND status IN ('registered','completed')",(buyer['id'],cid))
             if cur.fetchone(): raise ApiError(409,'You already have access to this course')
             cur.execute('''INSERT INTO payment_orders(id,request_id,user_id,course_id,course_title,buyer_name,buyer_email,
-                marked_price_paise,discount_bps,discount_paise,total_paise,mode,created_by)
-                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *''',
+                marked_price_paise,discount_bps,discount_paise,total_paise,mode,created_by,gst_bps,gst_paise)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *''',
                 (str(uuid.uuid4()),rid,buyer['id'],cid,course['title'],buyer['name'] or 'Learner',buyer['email'],
-                 price['marked_price_paise'],price['discount_bps'],price['discount_paise'],price['total_paise'],config['mode'],actor['id']))
+                 price['marked_price_paise'],price['discount_bps'],price['discount_paise'],price['total_paise'],config['mode'],actor['id'],price['gst_bps'],price['gst_paise']))
             row = cur.fetchone()
     # Persist receipt before the external call. A retry can recover an order whose response was lost.
     return checkout(actor,str(row['id']),as_admin=as_admin)

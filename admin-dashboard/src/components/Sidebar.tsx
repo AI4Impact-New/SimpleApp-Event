@@ -17,6 +17,7 @@ import {
   Menu,
   X,
   Sparkles,
+  UserPlus,
 } from "lucide-react";
 const groups = [
   {
@@ -36,6 +37,11 @@ const groups = [
         href: "/dashboard/course-enquiries",
         label: "Course Enquiries",
         icon: MessageCircle,
+      },
+      {
+        href: "/dashboard/onboarding",
+        label: "Student onboarding",
+        icon: UserPlus,
       },
       {
         href: "/dashboard/fees",
@@ -137,7 +143,8 @@ export function Sidebar() {
               (item) =>
                 admin ||
                 (educator && item.href === "/dashboard/programme") ||
-                item.href === "/dashboard/course-enquiries",
+                item.href === "/dashboard/course-enquiries" ||
+                item.href === "/dashboard/onboarding",
             );
             if (!items.length) return null;
             return (

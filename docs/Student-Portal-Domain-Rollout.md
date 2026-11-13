@@ -6,24 +6,30 @@ Canonical student login: **https://learn.ai4impact.in/login**. Published privacy
 
 Authoritative nameservers for `ai4impact.in` are GoDaddy (`ns05.domaincontrol.com`, `ns06.domaincontrol.com`). There is no Route 53 hosted zone in the application account, so AWS access cannot publish these records.
 
-Add/update these CNAMEs in GoDaddy, TTL 600:
+Add/update these CNAMEs in GoDaddy, TTL 1800 (30 minutes, GoDaddy minimum):
 
 | Host/name (GoDaddy appends ai4impact.in) | Target |
 | --- | --- |
-| `learn` | `d1zeh5kddbwwvo.cloudfront.net` |
+| `learn` | `d3m5uzmpvashck.cloudfront.net` |
 | `_432ceaf584cbb6d0b4e85ee8be389429.learn` | `_39ed1858707b652d94d3888b553512bd.wzccmgtwzk.acm-validations.aws` |
 
-At preparation time the routing record points to a different distribution and certificate verification is missing. The expected values above come from the student app's existing Amplify domain association. Re-read that association if someone recreates it before changing DNS.
+On 6 November 2026 AWS rejected retries of the expired/failed attachment. The first owner-approved recreation failed while the old routing CNAME was still published. For the clean retry, the owner removed only `learn`; its absence was confirmed on both authoritative servers and public resolvers while the certificate-validation record remained intact. The owner-approved clean recreation reached `PENDING_DEPLOYMENT` without an error and issued the routing target above.
 
-The existing association was imported into `aws_amplify_domain_association.student` using ID `d26ztc5gxt79re/learn.ai4impact.in`; the scoped Terraform plan has no changes. DNS remains externally managed.
+The new destination passed HTTPS/HTTP 200 checks on four returned edge addresses and a Playwright login-form/privacy-link check using a test-only hostname resolver override. These preflight checks do not prove public DNS readiness. Publish the new `learn` CNAME and verify normal public HTTPS and AWS completion before changing any links. The app, main branch, existing Amplify login and published links remain intact. Re-read the association before future DNS changes; recreating an attachment can change the routing target.
 
-After DNS is published, retry verification if the association remains FAILED:
+The association is tracked in `aws_amplify_domain_association.student` using ID `d26ztc5gxt79re/learn.ai4impact.in`. Recreating it preserves this Terraform resource ID. DNS remains externally managed.
+
+After DNS is published, an ordinary verification retry can be attempted with:
 
 ```sh
 aws --profile jm --region ap-south-1 amplify update-domain-association \
   --app-id d26ztc5gxt79re --domain-name learn.ai4impact.in \
   --sub-domain-settings '[{"branchName":"main","prefix":""}]'
 ```
+
+If AWS rejects this with an expired/unsuccessful verification error and explicitly requires re-adding the domain, do not repeatedly retry or change other domains. Recreating the failed attachment needs owner approval because a new routing CNAME may be issued.
+
+If the recreated association instead reports an incorrectly configured DNS record pointing to another CloudFront distribution, update GoDaddy to the newly issued `learn` target first and then retry the existing association. Do not repeatedly recreate it; that can issue yet another target.
 
 Then verify DNS, Amplify AVAILABLE status, HTTPS with a valid certificate, `/login`, direct lecture URLs, and static assets. The route must serve the student portal, not the marketing site.
 

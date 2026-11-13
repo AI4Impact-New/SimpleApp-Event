@@ -28,7 +28,6 @@ export function GuidanceSection({ title = DEFAULT_TITLE }: { title?: ReactNode }
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [reference, setReference] = useState("");
   const retry = useRef<{ signature: string; id: string } | null>(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -48,7 +47,7 @@ export function GuidanceSection({ title = DEFAULT_TITLE }: { title?: ReactNode }
       }
       const result = await response.json();
       if (!result.id) throw new Error("Your request was not confirmed. Please try again.");
-      setReference(result.id); setSent(true);
+      setSent(true);
     } catch (cause) { setError(cause instanceof TypeError ? "Unable to connect. Check your connection and try again." : cause instanceof Error ? cause.message : "Please try again."); }
     finally { setBusy(false); }
   }
@@ -85,7 +84,6 @@ export function GuidanceSection({ title = DEFAULT_TITLE }: { title?: ReactNode }
               <span className="text-(length:--fs-sm) leading-(--lh-body) text-(--text-on-dark-body)">
                 We&apos;ll be in touch to schedule your call.
               </span>
-              <span className="break-all text-xs text-(--text-on-dark-muted)">Reference: {reference}</span>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-(--space-5)">

@@ -210,6 +210,12 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
             <Row label={`Discount (${order.discount_bps / 100}%)`} value={`− ${formatPaise(order.discount_paise)}`} />
           ) : null}
           <View style={styles.divider} />
+          {Boolean(order.gst_bps) && (
+            <>
+              <Row label="Taxable course fee" value={formatPaise(order.marked_price_paise - order.discount_paise)} />
+              <Row label={`GST (${(order.gst_bps ?? 0) / 100}%)`} value={formatPaise(order.gst_paise ?? 0)} />
+            </>
+          )}
           <Row label="Total" value={formatPaise(order.total_paise)} bold />
           <Text style={styles.muted}>{order.demo ? 'No tax is calculated on demo orders.' : 'Displayed total is the amount payable. Receipt is not a GST tax invoice.'}</Text>
         </View>

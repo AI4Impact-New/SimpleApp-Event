@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import type { ReactNode } from "react";
 import { Eyebrow } from "@/components/core/Eyebrow";
 
 type CheckCardProps = {
@@ -9,13 +10,17 @@ type CheckCardProps = {
   footer: string;
   highlighted?: boolean;
   eyebrowVariant?: "sentence" | "mono";
+  /** Extra content under the footer, e.g. the certificate verifier. */
+  children?: ReactNode;
+  id?: string;
 };
 
 /** Checklist card. Highlighted variant = 2px teal border. */
-export function CheckCard({ eyebrow, title, subtitle, items, footer, highlighted = false, eyebrowVariant }: CheckCardProps) {
+export function CheckCard({ eyebrow, title, subtitle, items, footer, highlighted = false, eyebrowVariant, children, id }: CheckCardProps) {
   return (
     <div
-      className={`flex min-w-0 flex-col rounded-(--radius-3xl) bg-(--surface-card) px-(--space-6) pt-(--space-6) pb-(--space-5) ${highlighted ? "border-2 border-(--border-accent)" : "border border-(--border-default)"}`}
+      id={id}
+      className={`flex min-w-0 scroll-mt-(--space-24) flex-col rounded-(--radius-3xl) bg-(--surface-card) px-(--space-6) pt-(--space-6) pb-(--space-5) ${highlighted ? "border-2 border-(--border-accent)" : "border border-(--border-default)"}`}
     >
       <Eyebrow tone="muted" variant={eyebrowVariant} line={false}>
         {eyebrow}
@@ -38,6 +43,7 @@ export function CheckCard({ eyebrow, title, subtitle, items, footer, highlighted
       <p className="mt-(--space-6) border-t border-(--border-default) pt-(--space-5) text-(length:--fs-2xs) font-medium leading-(--lh-snug) text-(--text-strong)">
         {footer}
       </p>
+      {children}
     </div>
   );
 }

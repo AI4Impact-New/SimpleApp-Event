@@ -161,7 +161,6 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Career tracks", href: "/courses" },
   { label: "Programme+", href: "/programme-plus" },
   { label: "Certification", href: "/certification" },
-  { label: "Verify certificate", href: "/verify" },
   { label: "Trainers", href: "/trainers" },
   { label: "Hire from us", href: "/hire-from-us" },
 ];
@@ -179,6 +178,14 @@ export type Trainer = {
   assignments: string[];
   /** Weekly clarification topics on the profile page. */
   topics: string[];
+  /** Optional long-form profile; the profile page falls back to `subtitle` when absent. */
+  photo?: { src: string; alt: string };
+  company?: string;
+  intro?: string;
+  bio?: { title: string; paragraphs: string[] };
+  expertise?: { title: string; body: string }[];
+  credentials?: string[];
+  approach?: string;
 };
 
 export const TRAINERS: Trainer[] = [
@@ -216,12 +223,45 @@ export const TRAINERS: Trainer[] = [
     topics: ["Statistics", "Model evaluation", "Feature engineering", "Explainability"],
   },
   {
-    slug: "puneet-nischal",
-    name: "Puneet Nischal",
-    initials: "PN",
-    subtitle: "LLM applications, RAG and agentic systems",
+    slug: "tarun-kesavan",
+    name: "Tarun Kesavan Menon",
+    initials: "TK",
+    role: "Lead Trainer · Generative AI & Agentic Systems Engineer",
+    subtitle: "Lead AI Engineer at PayIntelli, building LLM, RAG and multi-agent systems for fintech",
     assignments: ["Lead trainer · GENAI", "Lead trainer · FDE"],
     topics: ["RAG pipelines", "Prompt design", "Agent workflows", "LLM evaluation"],
+    photo: {
+      src: "/trainers/tarun-kesavan.jpg",
+      alt: "Portrait of Tarun Kesavan Menon wearing a navy blue blazer",
+    },
+    company: "Lead AI Engineer, PayIntelli",
+    intro:
+      "Building intelligent systems for the real world, and helping the next generation of engineers learn how to do the same.",
+    bio: {
+      title: "From building AI products to building AI talent.",
+      paragraphs: [
+        "Tarun Kesavan Menon is the Lead AI Engineer at PayIntelli, an Intelligence Layer for Modern Commerce, where he works on advanced AI-driven products for the financial technology ecosystem. His work spans Generative AI, multi-agent systems, Large Language Models (LLMs), Retrieval-Augmented Generation (RAG) and cloud AI infrastructure.",
+        "At PayIntelli, he has contributed to DeepSearch, a multi-agent conversational AI platform for B2B financial institutions, integrating Claude and multiple AI providers with intelligent fallback architecture.",
+        "Previously, at Hexagon AB (R&D), Tarun helped build enterprise RAG solutions deployed across European offices, reducing documentation lookup time by 80%. He also worked on applied AI projects involving computer vision, geospatial data and video analytics.",
+      ],
+    },
+    expertise: [
+      { title: "Generative AI & LLMs", body: "LLM applications, prompt engineering and model integration" },
+      { title: "Agentic AI", body: "Multi-agent architectures and intelligent workflows" },
+      { title: "RAG & Conversational AI", body: "Production-grade retrieval and enterprise knowledge systems" },
+      { title: "Cloud AI Engineering", body: "AWS Bedrock, Azure AI and scalable infrastructure" },
+      { title: "Applied Machine Learning", body: "Deep learning, computer vision and model deployment" },
+      { title: "AI Product Development", body: "Taking ideas from requirements to deployed applications" },
+    ],
+    credentials: [
+      "AWS Certified Solutions Architect – Associate",
+      "AWS Certified AI Practitioner",
+      "AWS Certified Cloud Practitioner",
+      "Azure AI Fundamentals",
+      "Red Hat Certified Enterprise Developer",
+    ],
+    approach:
+      "Move beyond AI theory. Understand the foundations, build working systems, connect the components and learn what it takes to deploy intelligent applications in real-world environments.",
   },
   {
     slug: "ritesh",
@@ -240,7 +280,7 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
     links: [
       { label: "Programme+", href: "/programme-plus" },
       { label: "Certification", href: "/certification" },
-      { label: "Verify a certificate", href: "/verify" },
+      { label: "Verify a certificate", href: "/certification#verify" },
       { label: "Trainers", href: "/trainers" },
     ],
   },

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TrackCard } from "@/components/cards/TrackCard";
+import { TrainerAvatar } from "@/components/cards/TrainerAvatar";
 import { trackMeta } from "@/components/cards/TrackGrid";
 import { Badge } from "@/components/core/Badge";
 import { Card } from "@/components/core/Card";
@@ -46,18 +47,26 @@ export default async function TrainerPage({ params }: PageProps<"/trainers/[slug
             <span aria-current="page">{trainer.name}</span>
           </nav>
           <div className="mt-(--space-8) flex flex-wrap items-center gap-(--space-6)">
-            <span
-              aria-hidden
-              className="flex size-(--space-24) shrink-0 items-center justify-center rounded-(--radius-xl) border-2 border-(--border-dark-strong) font-(family-name:--font-display) text-(length:--fs-h3) font-bold leading-none text-(--text-on-dark)"
-            >
-              {trainer.initials}
-            </span>
+            <TrainerAvatar
+              initials={trainer.initials}
+              photo={trainer.photo}
+              alt={trainer.photo?.alt}
+              width={160}
+              height={176}
+              className={`rounded-(--radius-xl) border-2 border-(--border-dark-strong) ${trainer.photo ? "h-[11rem] w-[10rem]" : "size-(--space-24) text-(length:--fs-h3) text-(--text-on-dark)"}`}
+            />
             <div className="flex min-w-0 flex-col items-start gap-(--space-3)">
               <h1 className="font-(family-name:--font-display) text-(length:--fs-h3) font-bold leading-(--lh-tight) tracking-(--ls-display) text-(--text-on-dark) sm:text-(length:--fs-h2)">
                 {trainer.name}
               </h1>
               {trainer.role ? (
                 <p className="text-(length:--fs-sm) leading-(--lh-snug) text-(--text-on-dark-body)">{trainer.role}</p>
+              ) : null}
+              {trainer.company ? (
+                <p className="text-(length:--fs-sm) font-semibold leading-(--lh-snug) text-(--text-on-dark-accent)">{trainer.company}</p>
+              ) : null}
+              {trainer.intro ? (
+                <p className="max-w-xl text-(length:--fs-body) leading-(--lh-body) text-(--text-on-dark-body)">{trainer.intro}</p>
               ) : null}
               <ul aria-label="Teaches" className="flex flex-wrap gap-(--space-2)">
                 {courses.map((c) => (
@@ -77,11 +86,21 @@ export default async function TrainerPage({ params }: PageProps<"/trainers/[slug
         <div className="grid items-start gap-(--space-10) lg:grid-cols-[1.4fr_1fr]">
           <div>
             <h2 className="font-(family-name:--font-display) text-(length:--fs-h4) font-bold leading-(--lh-snug) tracking-(--ls-heading) text-(--text-strong)">
-              About
+              {trainer.bio?.title ?? "About"}
             </h2>
-            <p className="mt-(--space-5) max-w-xl text-(length:--fs-body) leading-(--lh-body) text-(--text-body)">
-              {trainer.subtitle}
-            </p>
+            {(trainer.bio?.paragraphs ?? [trainer.subtitle]).map((p) => (
+              <p key={p} className="mt-(--space-5) max-w-2xl text-(length:--fs-body) leading-(--lh-body) text-(--text-body)">
+                {p}
+              </p>
+            ))}
+            {trainer.approach ? (
+              <div className="mt-(--space-8) max-w-2xl rounded-(--radius-xl) border-l-2 border-(--teal-500) bg-(--surface-alt) p-(--space-5)">
+                <h3 className="text-(length:--fs-sm) font-semibold leading-(--lh-snug) text-(--text-strong)">
+                  {firstName}&apos;s approach to learning
+                </h3>
+                <p className="mt-(--space-2) text-(length:--fs-sm) leading-(--lh-body) text-(--text-body)">{trainer.approach}</p>
+              </div>
+            ) : null}
           </div>
           <Card className="p-(--space-6)">
             <h3 className="flex items-center gap-(--space-3) font-(family-name:--font-display) text-(length:--fs-h5) font-semibold leading-(--lh-snug) text-(--text-strong)">
@@ -100,6 +119,39 @@ export default async function TrainerPage({ params }: PageProps<"/trainers/[slug
             </ul>
           </Card>
         </div>
+
+        {trainer.expertise?.length ? (
+          <>
+            <h2 className="mt-(--space-20) font-(family-name:--font-display) text-(length:--fs-h4) font-bold leading-(--lh-snug) tracking-(--ls-heading) text-(--text-strong)">
+              What {firstName} brings to the classroom
+            </h2>
+            <ul className="mt-(--space-8) grid gap-(--space-4) sm:grid-cols-2 lg:grid-cols-3">
+              {trainer.expertise.map(({ title, body }) => (
+                <li key={title}>
+                  <Card className="h-full p-(--space-5)">
+                    <h3 className="text-(length:--fs-sm) font-semibold leading-(--lh-snug) text-(--text-strong)">{title}</h3>
+                    <p className="mt-(--space-1) text-(length:--fs-xs) leading-(--lh-body) text-(--text-body)">{body}</p>
+                  </Card>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+
+        {trainer.credentials?.length ? (
+          <>
+            <h2 className="mt-(--space-20) font-(family-name:--font-display) text-(length:--fs-h4) font-bold leading-(--lh-snug) tracking-(--ls-heading) text-(--text-strong)">
+              Credentials
+            </h2>
+            <ul aria-label="Professional certifications" className="mt-(--space-6) flex flex-wrap gap-(--space-2)">
+              {trainer.credentials.map((c) => (
+                <li key={c}>
+                  <Chip>{c}</Chip>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
 
         {courses.length ? (
           <>

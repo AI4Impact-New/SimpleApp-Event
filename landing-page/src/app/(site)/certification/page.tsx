@@ -1,6 +1,7 @@
 import { ArrowRight, Building2, GraduationCap, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { Certificate } from "@/components/cards/Certificate";
+import { CertificateVerifier } from "@/components/cards/CertificateVerifier";
 import { CheckCard } from "@/components/cards/CheckCard";
 import { Button } from "@/components/core/Button";
 import { Card } from "@/components/core/Card";
@@ -129,7 +130,9 @@ export default function CertificationPage() {
         />
         <div className="mt-(--space-12) grid gap-(--space-4) md:grid-cols-2">
           <CheckCard {...CERT_TIERS.completion} />
-          <CheckCard highlighted {...CERT_TIERS.professional} />
+          <CheckCard id="verify" highlighted {...CERT_TIERS.professional}>
+            <CertificateVerifier />
+          </CheckCard>
         </div>
         <Card className="mt-(--space-6) grid items-center gap-(--space-8) p-(--space-6) lg:grid-cols-[1fr_1.1fr] lg:p-(--space-8)">
           <div>
@@ -165,20 +168,6 @@ export default function CertificationPage() {
             </dl>
           </div>
         </Card>
-      </Section>
-
-      <Section id="verify" tone="glow">
-        <SectionHeader
-          theme="dark"
-          eyebrow="Verification"
-          title="Anyone can check it."
-          lead="Employers scan the QR code or enter the credential ID to check the recipient, course, issuing organization and issue date."
-          aside={
-            <Button variant="light" icon={ArrowRight} href="/verify">
-              Verify a certificate
-            </Button>
-          }
-        />
       </Section>
     </>
   );

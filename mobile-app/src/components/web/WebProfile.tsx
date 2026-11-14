@@ -289,7 +289,6 @@ function PurchasesPanel({ onOpenOrder, wide }: { onOpenOrder?: (id: string) => v
               <OrderRow key={o.id} order={o} last={i === orders.length - 1} wide={wide} onOpen={onOpenOrder ? () => onOpenOrder(o.id) : undefined} />
             ))}
           </View>
-          <Text style={styles.footnote}>Demo orders only. No money was collected.</Text>
         </>
       )}
     </>

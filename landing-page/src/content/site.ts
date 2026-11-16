@@ -186,17 +186,93 @@ export type Trainer = {
   expertise?: { title: string; body: string }[];
   credentials?: string[];
   approach?: string;
+  /** Heading for the approach callout; defaults to "<first name>'s approach to learning". */
+  approachTitle?: string;
+  /** Headline numbers in the profile hero, e.g. { value: "15+", label: "years in IT" }. */
+  stats?: { value: string; label: string }[];
+  /** Short lead paragraph shown above the bio paragraphs. */
+  lead?: string;
+  /** Focus areas shown under the bio. */
+  focus?: { title: string; body: string }[];
+  /** Training programmes, each with the tools it covers. */
+  programmes?: { title: string; tools: string[] }[];
+  modules?: string[];
+  /** Public links (LinkedIn, YouTube…). */
+  links?: { label: string; href: string; display: string }[];
 };
 
 export const TRAINERS: Trainer[] = [
   {
     slug: "bhaskar-m",
-    name: "Bhaskar M",
-    initials: "BM",
-    role: "Hands-on Azure Data Engineer & Analyst",
-    subtitle: "15+ years in data engineering and BI; 10 years teaching Azure Data Factory, Databricks and Microsoft Fabric",
+    name: "Bhaskar GM",
+    initials: "BG",
+    role: "Azure Data Engineering Architect · Microsoft Fabric Specialist · Databricks Engineer · Power BI & Analytics Leader",
+    subtitle: "15+ years in IT and 7+ in data engineering; designs Lakehouse platforms on Azure and Microsoft Fabric",
     assignments: ["Lead trainer · AFDE", "Lead trainer · DAPE"],
     topics: ["Azure Data Factory", "Databricks", "Delta Lake", "Microsoft Fabric", "Power BI"],
+    photo: { src: "/trainers/bhaskar-gm.jpg", alt: "Portrait of Bhaskar GM" },
+    company: "Tungsten Automation · Trainer, Azure Data Engineering & Microsoft Fabric Data Engineering",
+    intro: "Designs modern data platforms on Azure and Microsoft Fabric, and trains the engineers who build them.",
+    stats: [
+      { value: "15+", label: "years in IT" },
+      { value: "7+", label: "years in Data Engineering" },
+      { value: "5+", label: "years in Power BI" },
+    ],
+    lead: "Bhaskar GM has spent more than 15 years in IT turning scattered enterprise data into platforms people trust. He designs Lakehouse architectures on Azure and Microsoft Fabric, writes the pipelines and Spark code that run them, and builds the Power BI models that leaders use to make decisions.",
+    bio: {
+      title: "An architect who builds, and a trainer who has done the work.",
+      paragraphs: [
+        "His work covers the full journey of data. It starts at the source, in SQL Server, Oracle, SAP, NetSuite, Salesforce, SFTP folders and REST APIs, and ends in governed, analytics-ready datasets and executive dashboards. Before joining Tungsten Automation, he led delivery as a Technical Manager at Launch IT Consulting.",
+        "Bhaskar brings the same projects into the classroom. His training in Azure Data Engineering, Microsoft Fabric, Databricks, PySpark, Delta Lake and Power BI follows the way real platforms are built. Learners leave able to design, build and explain a working pipeline of their own.",
+      ],
+    },
+    focus: [
+      { title: "Lakehouse platforms", body: "Medallion architecture with Bronze, Silver and Gold layers on Delta Lake. In Fabric he works across OneLake, Lakehouse, Warehouse, Dataflows Gen2, Notebooks and the SQL Analytics Endpoint." },
+      { title: "Pipelines and ingestion", body: "Metadata-driven Azure Data Factory and Fabric pipelines that load many tables from one reusable design, with watermark-based incremental loads, SCD Type 1 and Type 2, and audit logging built in." },
+      { title: "REST API sources", body: "Pipelines that pull data from REST APIs with OAuth, API key or managed identity authentication, handle pagination and retries, and land JSON in the lake before flattening it into Delta tables." },
+      { title: "Spark at scale", body: "PySpark and Spark SQL transformations on Databricks, with partitioning, deduplication, MERGE and upsert patterns, and performance tuning for large data volumes." },
+      { title: "Analytics that hold up", body: "Power BI semantic models, dimensional design, Power Query, DAX and KPI dashboards, built on top of clean, governed data so reports stay consistent across teams." },
+      { title: "Architecture and leadership", body: "HLD and LLD documents, source-to-target mappings, enterprise data models, technical standards and deployment strategies, plus mentoring and code and architecture reviews for engineering teams." },
+    ],
+    expertise: [
+      { title: "Microsoft Azure", body: "Azure Data Factory, Azure Databricks, ADLS Gen2, Azure Synapse, Azure Key Vault, Azure Functions, Logic Apps" },
+      { title: "Microsoft Fabric", body: "OneLake, Lakehouse, Dataflows Gen2, Fabric Notebooks, Fabric Warehouse, SQL Analytics Endpoint, Power BI" },
+      { title: "Data Engineering", body: "Apache Spark, PySpark, Spark SQL, Delta Lake, ETL/ELT, Medallion Architecture, incremental loading, metadata-driven frameworks, REST API ingestion" },
+      { title: "Databases & Sources", body: "SQL Server, Azure SQL, Oracle, SAP, NetSuite, Salesforce, REST APIs (authentication, pagination), SFTP and files" },
+      { title: "Analytics", body: "Power BI, Power Query, DAX, semantic models, star schema, snowflake schema" },
+      { title: "Architecture & Governance", body: "Data architecture, SCD Type 1 & 2, data quality, RBAC, managed identity, auditing, monitoring, enterprise data governance" },
+    ],
+    programmes: [
+      {
+        title: "Azure Data Engineering",
+        tools: ["Azure Data Lake Storage Gen2", "Azure SQL Database", "Azure Data Factory", "Azure Databricks", "Azure Key Vault"],
+      },
+      {
+        title: "Microsoft Fabric Data Engineering",
+        tools: ["Lakehouse", "Data Pipelines", "Notebooks", "Azure Key Vault"],
+      },
+    ],
+    modules: [
+      "SQL for Data Engineers",
+      "Python Basics",
+      "Apache Spark & PySpark",
+      "Spark Internals & Performance Tuning",
+      "Delta Lake",
+      "Unity Catalog",
+      "ADF Activities & Mini Projects",
+      "REST API Ingestion",
+      "OLTP, OLAP, ETL & ELT",
+      "Data Modeling",
+      "Power BI",
+      "Interview Preparation",
+    ],
+    approachTitle: "Professional focus",
+    approach:
+      "Designing modern data platforms that connect enterprise data to business value, from ingestion and engineering to analytics and decision-making. In the classroom that means learning each concept, then building it: working code, diagrams, hands-on labs, mini projects and interview questions drawn from real data engineering work.",
+    links: [
+      { label: "LinkedIn", href: "https://www.linkedin.com/in/bhaskar-marsikam", display: "linkedin.com/in/bhaskar-marsikam" },
+      { label: "YouTube", href: "https://www.youtube.com/@bhaskargonegandla?sub_confirmation=1", display: "youtube.com/@bhaskargonegandla" },
+    ],
   },
   {
     slug: "kamal-k-naidu",

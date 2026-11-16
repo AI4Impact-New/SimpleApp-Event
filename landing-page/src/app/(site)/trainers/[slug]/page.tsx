@@ -1,4 +1,4 @@
-import { MessagesSquare } from "lucide-react";
+import { ExternalLink, MessagesSquare } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -68,6 +68,21 @@ export default async function TrainerPage({ params }: PageProps<"/trainers/[slug
               {trainer.intro ? (
                 <p className="max-w-xl text-(length:--fs-body) leading-(--lh-body) text-(--text-on-dark-body)">{trainer.intro}</p>
               ) : null}
+              {trainer.stats?.length ? (
+                <dl className="flex flex-wrap gap-(--space-3)">
+                  {trainer.stats.map(({ value, label }) => (
+                    <div
+                      key={label}
+                      className="flex flex-col-reverse rounded-(--radius-xl) border border-(--border-dark-strong) px-(--space-4) py-(--space-3)"
+                    >
+                      <dt className="text-(length:--fs-xs) leading-(--lh-snug) text-(--text-on-dark-body)">{label}</dt>
+                      <dd className="font-(family-name:--font-display) text-(length:--fs-h4) font-bold leading-(--lh-tight) text-(--text-on-dark)">
+                        {value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : null}
               <ul aria-label="Teaches" className="flex flex-wrap gap-(--space-2)">
                 {courses.map((c) => (
                   <li key={c.code}>
@@ -88,6 +103,11 @@ export default async function TrainerPage({ params }: PageProps<"/trainers/[slug
             <h2 className="font-(family-name:--font-display) text-(length:--fs-h4) font-bold leading-(--lh-snug) tracking-(--ls-heading) text-(--text-strong)">
               {trainer.bio?.title ?? "About"}
             </h2>
+            {trainer.lead ? (
+              <p className="mt-(--space-5) max-w-2xl text-(length:--fs-lead) font-medium leading-(--lh-body) text-(--text-strong)">
+                {trainer.lead}
+              </p>
+            ) : null}
             {(trainer.bio?.paragraphs ?? [trainer.subtitle]).map((p) => (
               <p key={p} className="mt-(--space-5) max-w-2xl text-(length:--fs-body) leading-(--lh-body) text-(--text-body)">
                 {p}
@@ -96,7 +116,7 @@ export default async function TrainerPage({ params }: PageProps<"/trainers/[slug
             {trainer.approach ? (
               <div className="mt-(--space-8) max-w-2xl rounded-(--radius-xl) border-l-2 border-(--teal-500) bg-(--surface-alt) p-(--space-5)">
                 <h3 className="text-(length:--fs-sm) font-semibold leading-(--lh-snug) text-(--text-strong)">
-                  {firstName}&apos;s approach to learning
+                  {trainer.approachTitle ?? `${firstName}'s approach to learning`}
                 </h3>
                 <p className="mt-(--space-2) text-(length:--fs-sm) leading-(--lh-body) text-(--text-body)">{trainer.approach}</p>
               </div>
@@ -120,6 +140,17 @@ export default async function TrainerPage({ params }: PageProps<"/trainers/[slug
           </Card>
         </div>
 
+        {trainer.focus?.length ? (
+          <ul aria-label="Focus areas" className="mt-(--space-12) grid gap-(--space-4) md:grid-cols-2">
+            {trainer.focus.map(({ title, body }) => (
+              <li key={title} className="rounded-(--radius-xl) border border-(--border-default) border-l-2 border-l-(--teal-500) p-(--space-5)">
+                <h3 className="text-(length:--fs-sm) font-semibold leading-(--lh-snug) text-(--text-strong)">{title}</h3>
+                <p className="mt-(--space-1) text-(length:--fs-sm) leading-(--lh-body) text-(--text-body)">{body}</p>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
         {trainer.expertise?.length ? (
           <>
             <h2 className="mt-(--space-20) font-(family-name:--font-display) text-(length:--fs-h4) font-bold leading-(--lh-snug) tracking-(--ls-heading) text-(--text-strong)">
@@ -138,6 +169,44 @@ export default async function TrainerPage({ params }: PageProps<"/trainers/[slug
           </>
         ) : null}
 
+        {trainer.programmes?.length ? (
+          <>
+            <h2 className="mt-(--space-20) font-(family-name:--font-display) text-(length:--fs-h4) font-bold leading-(--lh-snug) tracking-(--ls-heading) text-(--text-strong)">
+              What {firstName} teaches
+            </h2>
+            <ul className="mt-(--space-8) grid gap-(--space-4) md:grid-cols-2">
+              {trainer.programmes.map(({ title, tools }) => (
+                <li key={title}>
+                  <Card className="h-full p-(--space-5)">
+                    <h3 className="text-(length:--fs-body) font-semibold leading-(--lh-snug) text-(--text-strong)">{title}</h3>
+                    <ul aria-label={`${title} tools`} className="mt-(--space-4) flex flex-wrap gap-(--space-2)">
+                      {tools.map((t) => (
+                        <li key={t}>
+                          <Chip variant="tag-light">{t}</Chip>
+                        </li>
+                      ))}
+                    </ul>
+                  </Card>
+                </li>
+              ))}
+            </ul>
+            {trainer.modules?.length ? (
+              <>
+                <h3 className="mt-(--space-8) text-(length:--fs-sm) font-semibold leading-(--lh-snug) text-(--text-strong)">
+                  Course modules include
+                </h3>
+                <ul className="mt-(--space-4) flex flex-wrap gap-(--space-2)">
+                  {trainer.modules.map((m) => (
+                    <li key={m}>
+                      <Chip>{m}</Chip>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
+          </>
+        ) : null}
+
         {trainer.credentials?.length ? (
           <>
             <h2 className="mt-(--space-20) font-(family-name:--font-display) text-(length:--fs-h4) font-bold leading-(--lh-snug) tracking-(--ls-heading) text-(--text-strong)">
@@ -147,6 +216,32 @@ export default async function TrainerPage({ params }: PageProps<"/trainers/[slug
               {trainer.credentials.map((c) => (
                 <li key={c}>
                   <Chip>{c}</Chip>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+
+        {trainer.links?.length ? (
+          <>
+            <h2 className="mt-(--space-20) font-(family-name:--font-display) text-(length:--fs-h4) font-bold leading-(--lh-snug) tracking-(--ls-heading) text-(--text-strong)">
+              Stay connected
+            </h2>
+            <ul className="mt-(--space-6) grid gap-(--space-4) sm:grid-cols-2 lg:grid-cols-3">
+              {trainer.links.map(({ label, href, display }) => (
+                <li key={href}>
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="block no-underline">
+                    <Card interactive className="h-full p-(--space-5)">
+                      <span className="flex items-center justify-between gap-(--space-2) text-(length:--fs-sm) font-semibold leading-(--lh-snug) text-(--text-strong)">
+                        {label}
+                        <ExternalLink size={15} aria-hidden className="shrink-0 text-(--text-accent)" />
+                      </span>
+                      <span className="mt-(--space-1) block break-all text-(length:--fs-sm) leading-(--lh-snug) text-(--text-accent)">
+                        {display}
+                      </span>
+                      <span className="sr-only"> (opens in a new tab)</span>
+                    </Card>
+                  </a>
                 </li>
               ))}
             </ul>

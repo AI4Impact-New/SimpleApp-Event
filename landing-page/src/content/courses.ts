@@ -1631,6 +1631,244 @@ const APAB: CourseDetail = {
   faqs: [COMMON_FAQS.week, COMMON_FAQS.handholding, COMMON_FAQS.fintech, COMMON_FAQS.job],
 };
 
+const ABT: CourseDetail = {
+  trackId: "abt",
+  enrolLabel: "Enquire about AI-Driven Business Transformation",
+  hero: {
+    title: "Turn strategy, P&L and AI into measurable business outcomes.",
+    lead: "Build the commercial judgement to understand how businesses create value, the intelligence to make better decisions, and the practical capability to identify and lead AI-enabled transformation.",
+  },
+  pricing: { international: "Fees announced with cohort dates", nextCohort: "To be announced" },
+  problem: {
+    title: "Knowing your function is no longer enough. Leaders need to understand the whole business.",
+    body: "Professionals are increasingly expected to connect functional decisions with financial performance, use data to identify what is happening across the business, and understand where AI can create real value.",
+    points: [
+      "Strategy without execution: priorities never become clear plans, owners and measurable outcomes",
+      "Activity without P&L visibility: functions look healthy while margins, costs or cash flow tell a different story",
+      "AI adoption without business value: tools and pilots that never deliver a measurable return",
+    ],
+  },
+  outcomes: [
+    { value: "8", label: "weekly practical outputs, from strategic diagnostic to 90-day roadmap" },
+    { value: "1", label: "ROI-led business case with a benefits-realisation scorecard" },
+    { value: "1", label: "executive-ready transformation proposal, presented to a simulated executive committee" },
+  ],
+  builtFor: [
+    "Professionals with 8+ years of experience ready to take on broader business responsibility",
+    "Mid-level and senior managers preparing for senior leadership or general management",
+    "Functional heads across finance, operations, sales, marketing, HR, technology and digital",
+    "Business unit leaders and general managers accountable for business performance",
+    "Consultants, independent advisors, entrepreneurs and business owners",
+  ],
+  prerequisites: {
+    required: [
+      "At least eight years of professional experience",
+      "Interest in business strategy and performance",
+      "Willingness to work with business scenarios, data and practical exercises",
+    ],
+    helpful: ["Curiosity about how AI can be applied in your day-to-day work", "A business challenge from your own organisation (anonymised)"],
+    notRequired: ["Programming background", "Advanced financial qualification"],
+  },
+  delivery: {
+    title: ["Strategic in approach.", "Commercial in outcome."],
+    features: [
+      { icon: CirclePlay, title: "Live and recorded sessions", description: "Business strategy, organisational context and a structured method for finding transformation priorities." },
+      { icon: Workflow, title: "Cases and simulations", description: "Select and scope the right projects using strategic fit, business value and feasibility." },
+      { icon: Hammer, title: "Applied AI demonstrations", description: "Evaluate AI through a business lens: revenue, operations, customers, productivity and risk." },
+      { icon: CalendarClock, title: "Capstone and faculty feedback", description: "Build a complete transformation proposal, with structured feedback on every assignment." },
+    ],
+    note: "Plan for 10–15 hrs/week across live sessions, guided exercises, independent application and capstone development.",
+  },
+  tools: [
+    "Strategic diagnostic",
+    "Value-vs-feasibility matrix",
+    "Data-to-P&L map",
+    "ROI & sensitivity analysis",
+    "Build-vs-buy decision matrix",
+    "90-day roadmap",
+  ],
+  coreWeeks: 8,
+  phases: [
+    {
+      title: "Strategic methodology and project selection",
+      summary: "Start with the business, not the technology",
+      weeks: [1, 2],
+      items: [
+        {
+          title: "Strategic methodology: start with the business, not the technology",
+          topics: [
+            "Purpose, business model, strategic priorities and competitive context",
+            "Diagnosing where value is created, constrained, lost or at risk",
+            "Translating strategy into outcomes, operating priorities and measurable objectives",
+            "Strategic gaps across revenue, customers, operations, people, technology and risk",
+          ],
+          lab: "Conduct a strategic diagnostic of a selected organisation or business unit. Define the business challenge, desired outcomes and measures of success.",
+          assignment: "Strategic diagnostic and transformation opportunity map.",
+        },
+        {
+          title: "Project selection: prioritising the right business problems",
+          topics: [
+            "From a long list of ideas to a focused transformation portfolio",
+            "Business value, strategic fit, feasibility, urgency, complexity and risk",
+            "Symptoms vs root causes; technology opportunities vs business needs",
+            "Scope, stakeholders, dependencies, ownership and success criteria",
+          ],
+          lab: "Evaluate a set of potential initiatives and select one priority project using a value-versus-feasibility framework.",
+          assignment: "Prioritised project charter with objectives, scope, sponsor, baseline measures and success criteria.",
+        },
+      ],
+    },
+    {
+      title: "Data to P&L and AI applications",
+      summary: "Find the value, then test where AI fits",
+      weeks: [3, 5],
+      items: [
+        {
+          title: "Data to P&L: core revenue, operational and financial indicators",
+          topics: [
+            "Revenue indicators: growth, conversion, order value, retention, churn and lifetime value",
+            "Operational indicators: productivity, utilisation, throughput, quality and cost-to-serve",
+            "Financial drivers: gross and contribution margin, opex, working capital and unit economics",
+            "Dashboards, trend analysis and root-cause diagnostics",
+          ],
+          lab: "Analyse a business performance dataset and trace revenue and operational indicators through to their P&L implications.",
+          assignment: "Data-to-P&L performance map, KPI baseline and quantified opportunity hypotheses.",
+        },
+        {
+          title: "AI applications with a business mindset",
+          topics: [
+            "Generative, predictive and agentic AI in business terms",
+            "Where AI improves revenue, customer experience, productivity and decisions",
+            "Assessing use cases on value, data readiness, process fit, adoption and risk",
+            "Limitations: hallucinations, bias, security, privacy and human oversight",
+          ],
+          lab: "For your Week 2 project, decide where AI fits, where automation or process redesign is better, and where human judgement must stay central.",
+          assignment: "AI opportunity assessment linked to business outcomes and measurable KPIs.",
+        },
+        {
+          title: "Revenue levers, ROI and the economics of transformation",
+          topics: [
+            "Growth levers: acquisition, conversion, pricing, frequency, retention and expansion",
+            "Operational levers: automation, productivity, cycle time, quality and cost-to-serve",
+            "Investment case: costs, benefits, payback, ROI and sensitivity analysis",
+            "Projected vs realised value, and how benefits will be tracked",
+          ],
+          lab: "Build a financial value case for your project, including assumptions, costs, benefits, ROI and measurable indicators.",
+          assignment: "Commercial business case and benefits-realisation scorecard.",
+        },
+      ],
+    },
+    {
+      title: "Build, buy and long-term transformation",
+      summary: "Decide, plan and present the proposition",
+      weeks: [6, 8],
+      items: [
+        {
+          title: "Build vs buy: choosing the right technology and operating model",
+          topics: [
+            "Build, buy, partner or configure: criteria and trade-offs",
+            "Total cost of ownership, time to value, scalability and vendor dependency",
+            "Data ownership, integration, security, compliance and interoperability",
+            "Proof of concept, procurement, adoption and exit considerations",
+          ],
+          lab: "Compare build, buy and partner options for your project using a weighted decision matrix.",
+          assignment: "Build-versus-buy recommendation and solution-selection rationale.",
+        },
+        {
+          title: "Building blocks, execution roadmap and long-term vision",
+          topics: [
+            "People, process, data, technology, governance and operating model",
+            "Sequencing foundations, pilots, scale-up and continuous improvement",
+            "Roles, decision rights, change management and adoption",
+            "A 90-day execution plan alongside a multi-year vision",
+          ],
+          lab: "Define the building blocks, dependencies, owners, milestones and measures for your initiative, and connect it to a longer-term vision.",
+          assignment: "90-day roadmap and long-term transformation blueprint.",
+        },
+        {
+          title: "Executive capstone: presenting the transformation proposition",
+          topics: [
+            "Strategic context, business problem and why this project",
+            "Baseline across revenue, operational and financial indicators",
+            "The AI-enabled intervention, investment case, ROI and risks",
+            "Build-vs-buy decision, building blocks, 90-day roadmap and governance",
+          ],
+          lab: "Present the proposition to a simulated executive committee, showing strategic fit, commercial logic, implementation readiness and expected value.",
+          assignment: "Executive-ready business transformation proposal.",
+        },
+      ],
+    },
+  ],
+  paceNote: "The exact weekly mix and timetable will be published for each cohort.",
+  projects: [
+    {
+      windowTitle: "performance · P&L drivers",
+      preview: "dashboard",
+      title: "Business performance & P&L assessment",
+      description: "Analyse a simulated business, interpret its financial and operating performance, find the underlying drivers and recommend improvements.",
+      dataset: "Simulated business financials and operating KPIs",
+      tags: ["Performance diagnosis", "P&L and KPI interpretation", "Commercial recommendations"],
+    },
+    {
+      windowTitle: "proposal · exec committee",
+      preview: "prd",
+      title: "AI-enabled transformation proposal",
+      description: "An executive-ready proposal connecting strategy and project selection to data, revenue levers, an AI-enabled intervention and measurable value.",
+      dataset: "Your own organisation's challenge (anonymised) or a simulated business",
+      tags: ["ROI case", "Build vs buy", "90-day roadmap"],
+    },
+  ],
+  capstone: {
+    eyebrow: "Executive capstone",
+    title: "Strategic AI-enabled business transformation proposal",
+    body: "Start with strategic context and project selection, then connect data, revenue and operational indicators to an AI-enabled intervention and measurable business value.",
+    stages: [
+      { title: "Select", body: "Strategic diagnosis and project selection" },
+      { title: "Measure", body: "Data-to-P&L indicators and revenue levers" },
+      { title: "Decide", body: "AI application, ROI and build-versus-buy" },
+      { title: "Realise", body: "Building blocks, roadmap and long-term vision" },
+    ],
+    altDomains: [],
+  },
+  trainerCode: "ABT",
+  roles: [
+    { title: "Business and functional leaders", body: "Strategic thinking, financial understanding and cross-functional decisions" },
+    { title: "Technology and transformation professionals", body: "Tie technology initiatives to commercial priorities and business cases" },
+    { title: "Entrepreneurs and consultants", body: "Sharper performance assessments and practical AI transformation proposals" },
+  ],
+  certificate: { capstone: "AI-enabled business transformation proposal", credentialId: "IIAA-ABT-2026-000123" },
+  faqs: [
+    {
+      question: "Do I need a technical or programming background?",
+      answer: "No. The programme is designed for business and working professionals. AI concepts and demonstrations are taught from a business application perspective, with no coding required.",
+    },
+    {
+      question: "Do I need to work in finance to understand the P&L module?",
+      answer: "No. The P&L module helps professionals from any function understand financial statements, profitability drivers, costs, margins and cash flow.",
+    },
+    {
+      question: "Is this an AI tools course?",
+      answer: "No. AI tools are used for demonstrations and exercises, but the focus is strategic business thinking, financial performance, business intelligence and the evaluation and execution of AI-enabled transformation.",
+    },
+    {
+      question: "Will I build an AI agent?",
+      answer: "The programme introduces agentic AI and intelligent workflows from a business perspective. You map and propose an AI-enabled process; it is not a software engineering or agent-development certification.",
+    },
+    {
+      question: "Can I use a challenge from my own organisation?",
+      answer: "Yes, where you are authorised to. Do not share confidential, personal or commercially sensitive data; simulated or anonymised examples can be used instead.",
+    },
+    {
+      question: "How is the programme delivered?",
+      answer: "An eight-week, faculty-led programme with 10–15 hours a week of live sessions, guided work, practical exercises and project development. Online delivery comes first, with classroom or hybrid delivery possible for selected cohorts.",
+    },
+    {
+      question: "Does the programme guarantee career advancement?",
+      answer: "No. It strengthens professional capabilities and business judgement, but it does not guarantee a promotion, placement, salary increase or appointment to a P&L role.",
+    },
+  ],
+};
+
 export const COURSE_DETAILS: Record<string, CourseDetail> = {
   "azure-fabric-data-engineering": AFDE,
   "forward-deployed-ai-engineer": FDE,
@@ -1639,6 +1877,7 @@ export const COURSE_DETAILS: Record<string, CourseDetail> = {
   "applied-ai-machine-learning-engineer": AIML,
   "generative-ai-agentic-systems-engineer": GENAI,
   "ai-product-automation-builder": APAB,
+  "ai-driven-business-transformation": ABT,
 };
 
 /** Splits "Lead trainer · DSDI" into its label and course code. */

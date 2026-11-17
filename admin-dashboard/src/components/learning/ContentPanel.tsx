@@ -6,6 +6,7 @@ import {
   Trash2, UploadCloud, Upload, X,
 } from 'lucide-react';
 import { learning, LearningClass, errorMessage, videoDuration } from '@/services/learning';
+import { prepareCourseImport, publishCourseImport } from './publishCourseZip';
 import { ClassEditor } from './ClassEditor';
 import { CourseDraft, DraftLecture, DraftMaterial, DraftModule, MaterialKind, ZipEntry, formatBytes, readCourseZip } from './courseZip';
 
@@ -93,6 +94,8 @@ export function ContentPanel({ courseId, classes, refresh }: { courseId: string;
   const [draft, setDraft] = useState<CourseDraft | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [showIgnored, setShowIgnored] = useState(false);
+  const [importProgress, setImportProgress] = useState('');
+  const importAttempt = useRef<{ draft: CourseDraft; prepared: Awaited<ReturnType<typeof prepareCourseImport>> } | null>(null);
   const zip = useRef<{ close: () => Promise<unknown>; extract: (entry: ZipEntry) => Promise<Blob> } | null>(null);
 
   useEffect(() => () => { void zip.current?.close(); }, []);
@@ -120,7 +123,24 @@ export function ContentPanel({ courseId, classes, refresh }: { courseId: string;
       setDraft(result.draft); setCollapsed(new Set());
     } catch (error) { setError(errorMessage(error)); } finally { setBusy(''); }
   };
-  const discard = () => { void zip.current?.close(); zip.current = null; setDraft(null); };
+  const discard = () => {
+    void zip.current?.close();
+    zip.current = null;
+    importAttempt.current = null;
+    setDraft(null);
+  };
+  const publish = async () => {
+    if (busy || !draft || !zip.current) return;
+    const extract = zip.current.extract;
+    setImportProgress('Preparing course files…');
+    await run('publish', async () => {
+      if (importAttempt.current?.draft !== draft) {
+        importAttempt.current = { draft, prepared: await prepareCourseImport(draft, extract) };
+      }
+      await publishCourseImport(courseId, importAttempt.current.prepared, extract, setImportProgress);
+      discard();
+    }, 'Course content published.');
+  };
   const previewLocal = async (lecture: DraftLecture) => {
     if (!lecture.video || !zip.current) return;
     setBusy(lecture.id); setError('');
@@ -170,6 +190,7 @@ export function ContentPanel({ courseId, classes, refresh }: { courseId: string;
     {!draft && <DropZone onFile={file => void openZip(file)} compact={classes.length > 0} busy={busy === 'zip'} />}
 
     {draft && stats && <section aria-label="ZIP import preview" className="overflow-hidden rounded-xl border border-primary-200 bg-white">
+      <fieldset disabled={!!busy} className="min-w-0">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b bg-primary-50/60 px-5 py-4">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wider text-primary-700">Review before publishing</p>
@@ -178,7 +199,7 @@ export function ContentPanel({ courseId, classes, refresh }: { courseId: string;
         </div>
         <div className="flex gap-2">
           <button className={ghost} onClick={discard}>Discard</button>
-          <button className={button} disabled title="Upload service not connected yet">Publish content</button>
+          <button className={button} onClick={() => void publish()} disabled={!stats.lectures && !stats.materials}>Publish content</button>
         </div>
       </header>
       {(stats.missing > 0 || draft.ignored.length > 0) && <div className="space-y-1 border-b bg-amber-50 px-5 py-3 text-sm text-amber-800">
@@ -228,8 +249,9 @@ export function ContentPanel({ courseId, classes, refresh }: { courseId: string;
           </li>;
         })}
       </ol>
-      <footer className="flex items-start gap-2 border-t bg-gray-50 px-5 py-3 text-xs text-gray-500">
-        <Info size={14} className="mt-0.5 shrink-0" />Preview only. Publishing will be enabled once the bulk-upload service is connected. Nothing has been uploaded yet.
+      </fieldset>
+      <footer role={busy === 'publish' ? 'status' : undefined} className="flex items-start gap-2 border-t bg-gray-50 px-5 py-3 text-xs text-gray-500">
+        <Info size={14} className="mt-0.5 shrink-0" />{busy === 'publish' ? importProgress : 'Publishing adds content after existing lectures. Keep this tab open until it finishes.'}
       </footer>
     </section>}
 

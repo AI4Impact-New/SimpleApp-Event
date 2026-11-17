@@ -1015,3 +1015,55 @@ def test_real_lecture_2x_watch_seek_and_replay_credit(data):
         cur.execute("UPDATE playback_sessions SET last_seen_at=now()-interval '10 seconds' WHERE id=%s",(session,))
     assert beat(510)['watched_seconds']==50 # replay of 500..510 is counted only once
     assert not beat(1000,'seek')['completed']
+
+
+def test_course_zip_import_publishes_once_and_checks_access(data, monkeypatch):
+    from learning import content_import, media
+    from learning.validation import ApiError as LearningError
+
+    admin = {"id": data["student"]["id"], "admin": True}
+    student = data["student"]
+    course = data["course"]
+    job, video_id, resource_id = uid(), uid(), uid()
+    video = {"id": video_id, "name": "Intro.mp4", "size": 500, "duration_seconds": 62}
+    resource = {"id": resource_id, "name": "Read me.pdf", "size": 200}
+    body = {"modules": [{"title": "Foundations", "lectures": [
+        {"title": "Intro", "video": video}, {"title": "Reading", "resources": [resource]}
+    ]}]}
+    uploaded = set()
+    monkeypatch.setattr(media, "upload_form", lambda key, size, mime: {"url": key, "fields": {}})
+
+    def verify(key, size, mime):
+        if key not in uploaded:
+            raise LearningError(409, "Missing upload")
+
+    monkeypatch.setattr(media, "confirm_upload", verify)
+    monkeypatch.setattr(media, "resource_download", lambda key, name: key)
+    with pytest.raises(LearningError) as forbidden:
+        content_import.stage(student, course, job, body)
+    assert forbidden.value.status == 403
+    staged = content_import.stage(admin, course, job, body)
+    assert len(staged["uploads"]) == 2
+    assert content_import.outline(admin, course) == {"modules": []}
+    with pytest.raises(LearningError) as missing:
+        content_import.publish(admin, course, job)
+    assert missing.value.status == 409
+    assert content_import.outline(admin, course) == {"modules": []}
+    with pytest.raises(LearningError) as reused:
+        content_import.stage(admin, course, job, {"modules": [{**body["modules"][0], "title": "Changed"}]})
+    assert reused.value.status == 409
+    uploaded.update(item["url"] for item in staged["uploads"])
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        assert list(pool.map(lambda _: content_import.publish(admin, course, job), range(2))) == [
+            {"status": "published"}, {"status": "published"}
+        ]
+    assert content_import.stage(admin, course, job, body) == {"status": "published", "uploads": []}
+    module, = content_import.outline(student, course)["modules"]
+    recorded, reading = module["lectures"]
+    assert recorded["title"] == "Intro"
+    assert reading["id"] is None
+    item, = reading["resources"]
+    assert content_import.download(student, course, str(item["id"]))["expires_in"] == 300
+    with pytest.raises(LearningError) as unenrolled:
+        content_import.download(data["teacher"], course, str(item["id"]))
+    assert unenrolled.value.status == 403

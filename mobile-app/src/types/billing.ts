@@ -7,6 +7,8 @@ export interface CoursePrice {
   marked_price_paise: number;
   discount_percentage: number;
   discount_paise: number;
+  gst_bps?: number;
+  gst_paise?: number;
   total_paise: number;
   currency: string;
 }
@@ -23,6 +25,8 @@ export interface DemoOrder {
   marked_price_paise: number;
   discount_bps: number;
   discount_paise: number;
+  gst_bps?: number;
+  gst_paise?: number;
   total_paise: number;
   status: OrderStatus;
   created_at: string;

@@ -80,3 +80,11 @@ Gayathri can attach domains through Amplify/Route 53. Landing domains alone do n
 - Whether to fund/operate a persistent isolated staging stack.
 
 These inputs are not replaced with fabricated users, course content, project IDs or capacity claims.
+
+### GST on standard course checkout
+
+For taxable commercial training under the approved 18% pricing policy, the server applies GST to the course fee after any qualifying upfront discount. For example, a ₹5 course fee with no discount results in ₹0.90 GST and a ₹5.90 Razorpay order. New standard course orders snapshot the rate, tax and total. Existing orders and agreed instalment amounts keep their original terms.
+
+Apply migration `025_course_checkout_gst.sql` before releasing the updated learning Lambda. Release the checkout and pricing UI with the Lambda. Verify the gross amount against a test payment and receipt before setting `course_gst_enabled = true` in production. Keep the flag disabled until Finance confirms the seller GST registration and how compliant invoices will be issued. The payment receipt displays the GST breakdown and a separate tax-invoice workflow is required. Confirm the SAC, place of supply and applicable CGST/SGST or IGST treatment with Finance.
+
+[CBIC GST rates](https://cbic-gst.gov.in/hindi/gst-goods-services-rates.html) · [CBIC upfront discount treatment](https://cbic-gst.gov.in/sectoral-faq.html) · [CBIC tax invoice rules](https://cbic-gst.gov.in/gst-invoice-rules.html)

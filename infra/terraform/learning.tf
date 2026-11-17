@@ -171,6 +171,7 @@ resource "aws_lambda_function" "learning" {
       TRANSACTIONAL_REPLY_TO          = var.transactional_reply_to
       RESEND_API_KEY_SECRET_ARN       = aws_secretsmanager_secret.resend_api_key.arn
       EXPO_PROJECT_ID                 = var.expo_project_id
+      COURSE_GST_ENABLED              = tostring(var.course_gst_enabled)
       RAZORPAY_ENABLED                = tostring(var.razorpay_enabled)
       RAZORPAY_SECRET_ARN             = aws_secretsmanager_secret.razorpay.arn
       STUDENT_CHECKOUT_URL            = "${local.student_portal_public_url}/checkout"

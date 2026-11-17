@@ -122,7 +122,9 @@ export default function Fees() {
               </label>
             </div>
             <p className="text-sm">
-              Current discount: {money(p.discount_paise)} · Total:{" "}
+              Current discount: {money(p.discount_paise)}
+              {Boolean(p.gst_bps) && ` · GST (${(p.gst_bps ?? 0) / 100}%): ${money(p.gst_paise ?? 0)}`}
+              {" · Total:"}{" "}
               <strong>{money(p.total_paise)}</strong>
             </p>
             <button

@@ -6,7 +6,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 import pytest
 from test_programme_integration import schema, data, DSN
-from learning import payments
+from learning import billing, payments
 from learning.validation import ApiError
 from shared.db import execute_query
 pytestmark=pytest.mark.skipif(not DSN,reason='Requires isolated PostgreSQL PROGRAMME_TEST_DSN')
@@ -16,6 +16,7 @@ def pay(data,monkeypatch):
     execute_query('DELETE FROM course_registrations WHERE user_id=%s',(data['student']['id'],),fetch='none')
     execute_query('UPDATE courses SET marked_price_paise=10000,discount_bps=1000 WHERE id=%s',(data['course'],),fetch='none')
     monkeypatch.setenv('RAZORPAY_ENABLED','true')
+    monkeypatch.delenv('COURSE_GST_ENABLED', raising=False)
     cfg={'mode':'test','key_id':'rzp_test_example','key_secret':'test-signature-secret','webhook_secret':'webhook-test','test_buyer_emails':['person1@example.invalid']}
     monkeypatch.setattr(payments,'credentials',lambda:cfg)
     remote={};calls=[]
@@ -118,6 +119,22 @@ def test_new_request_reuses_pending_order_and_expiry_blocks_checkout(pay):
     # A real late capture is still honored after the checkout link expires.
     assert payments.apply_payment(p)['status']=='paid'
     assert registration(d)['status']=='registered'
+
+
+def test_new_order_adds_gst_and_preserves_existing_payment_snapshot(pay, monkeypatch):
+    d, existing, _, _, _ = pay
+    monkeypatch.setenv('COURSE_GST_ENABLED', 'true')
+    assert billing.checkout_amounts(500, 0)['total_paise'] == 590
+    assert billing.checkout_amounts(525, 0)['gst_paise'] == 95
+    assert billing.checkout_amounts(500, 10000)['total_paise'] == 0
+    pending = payments.create(d['student'], {'course_id': d['course'], 'request_id': str(uuid.uuid4())})
+    assert (pending['id'], pending['total_paise'], pending['gst_paise']) == (existing['id'], 9000, 0)
+
+    execute_query("UPDATE payment_orders SET expires_at=now()-interval '1 second' WHERE id=%s",
+                  (existing['id'],), fetch='none')
+    taxed = payments.create(d['student'], {'course_id': d['course'], 'request_id': str(uuid.uuid4())})
+    assert (taxed['discount_paise'], taxed['gst_bps'], taxed['gst_paise']) == (1000, 1800, 1620)
+    assert taxed['checkout']['amount'] == taxed['total_paise'] == 10620
 
 
 def test_worker_provider_failure_keeps_durable_event_for_retry(pay,monkeypatch):

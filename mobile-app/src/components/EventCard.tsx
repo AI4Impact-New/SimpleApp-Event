@@ -34,7 +34,7 @@ export function EventCard({ event, onPress }: EventCardProps) {
         <Text style={styles.title} numberOfLines={1}>{event?.name ?? 'Event'}</Text>
         <View style={[styles.statusBadge, { backgroundColor: statusColor + '20' }]}>
           <Text style={[styles.statusText, { color: statusColor }]}>
-            { status || '—' }
+            { status || '—'}
           </Text>
         </View>
       </View>

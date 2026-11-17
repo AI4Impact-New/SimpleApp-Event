@@ -58,6 +58,7 @@ export default function CourseEditPage() {
         onSubmit={handleSubmit}
         isSubmitting={updateCourse.isPending}
         submitLabel="Save changes"
+        cancelHref={`/dashboard/courses/${id}`}
       />
     </div>
   );

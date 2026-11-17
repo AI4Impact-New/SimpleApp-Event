@@ -110,6 +110,7 @@ export function WebCatalogue({ onCoursePress }: { onCoursePress: (course: Course
 function CourseCard({ course, index, price, wide, onPress }: { course: Course; index: number; price?: CoursePrice; wide: boolean; onPress: () => void }) {
   const { buildHref } = useLinkBuilder();
   const href = buildHref('Courses', { screen: 'CourseDetail', params: { courseId: course.id } } as never) ?? undefined;
+  // Keep these patterns in sync with CARD_FACTS in admin-dashboard/src/components/CourseForm.tsx (the admin fields that write them).
   const duration = highlight(course, /duration|length|weeks/i);
   const effort = highlight(course, /effort|hours|commitment|time/i);
   const projects = highlight(course, /project/i);

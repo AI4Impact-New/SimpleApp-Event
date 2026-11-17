@@ -12,6 +12,7 @@ const LANDING_COURSE_SLUGS = new Set([
   'applied-ai-machine-learning-engineer',
   'generative-ai-agentic-systems-engineer',
   'ai-product-automation-builder',
+  'ai-driven-business-transformation',
 ]);
 
 function slugify(title: string) {

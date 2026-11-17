@@ -37,6 +37,7 @@ export default function CourseNewPage() {
         onSubmit={handleSubmit}
         isSubmitting={createCourse.isPending}
         submitLabel="Create course"
+        cancelHref="/dashboard/courses"
       />
     </div>
   );

@@ -166,6 +166,23 @@ def test_course_with_issued_certificates_is_preserved(monkeypatch):
     assert all('DELETE FROM courses' not in call.args[0] for call in cursor.execute.call_args_list)
 
 
+def test_course_with_payment_dependency_reports_conflict(monkeypatch):
+    from courses import repository
+    from psycopg2.errors import ForeignKeyViolation
+
+    cursor = Mock()
+    cursor.fetchone.side_effect = [{'id': UID}, None, None]
+    cursor.execute.side_effect = [None, None, None, ForeignKeyViolation('payment_orders_course_id_fkey')]
+
+    @contextmanager
+    def context():
+        yield cursor
+
+    monkeypatch.setattr(repository, 'get_db_cursor', context)
+    with pytest.raises(repository.CourseDeletionConflict, match='linked records'):
+        repository.CourseRepository().delete(UID)
+
+
 def test_public_browser_verify_redirect_keeps_id_and_no_login(monkeypatch):
     monkeypatch.setattr(certificates, "public_verify", lambda cid: {"id": cid, "valid": True})
     monkeypatch.setenv("CERTIFICATE_VERIFY_PAGE_URL", "https://site.example/verify")

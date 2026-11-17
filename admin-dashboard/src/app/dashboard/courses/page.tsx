@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { isAxiosError } from 'axios';
 import { useCourses, useDeleteCourse } from '@/hooks/useCourses';
 import { Plus, Loader2, BookOpen, Eye, Pencil, Trash2 } from 'lucide-react';
 import { Course } from '@/types/course';
@@ -11,11 +12,17 @@ export default function CoursesPage() {
   const deleteCourse = useDeleteCourse();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const handleDelete = async (course: Course) => {
     if (!confirm(`Delete course "${course.title}"? This cannot be undone.`)) return;
+    setDeleteError(null);
     setDeletingId(course.id);
     try {
       await deleteCourse.mutateAsync(course.id);
+    } catch (error) {
+      const message = isAxiosError(error) ? error.response?.data?.message : undefined;
+      setDeleteError(typeof message === 'string' ? message : 'Could not delete this course. Please try again.');
     } finally {
       setDeletingId(null);
     }
@@ -38,6 +45,11 @@ export default function CoursesPage() {
           Add Course
         </Link>
       </header>
+      {deleteError && (
+        <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          {deleteError}
+        </p>
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center rounded-xl border border-gray-200 bg-white py-20 shadow-sm">

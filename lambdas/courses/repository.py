@@ -7,6 +7,8 @@ import logging
 import uuid
 from typing import Optional, List, Dict, Any
 
+from psycopg2.errors import ForeignKeyViolation
+
 from shared.db import execute_query, get_db_cursor
 from shared.models import (
     Course,
@@ -595,7 +597,7 @@ class CourseRepository(ICourseRepository):
         return course
 
     def delete(self, course_id: str) -> bool:
-        """Delete a course only when no issued certificates depend on it."""
+        """Delete a course only when retained records allow it."""
         with get_db_cursor() as cursor:
             cursor.execute("SELECT id FROM courses WHERE id=%s FOR UPDATE", (course_id,))
             if not cursor.fetchone():
@@ -606,7 +608,13 @@ class CourseRepository(ICourseRepository):
             cursor.execute("SELECT 1 FROM demo_orders WHERE course_id=%s LIMIT 1", (course_id,))
             if cursor.fetchone():
                 raise CourseDeletionConflict("This course has purchase history; set it to draft instead of deleting it")
-            cursor.execute("DELETE FROM courses WHERE id=%s", (course_id,))
+            try:
+                cursor.execute("DELETE FROM courses WHERE id=%s", (course_id,))
+            except ForeignKeyViolation as error:
+                raise CourseDeletionConflict(
+                    "This course has linked records, such as payments or fee plans. "
+                    "Set it to draft to remove it from the public catalogue."
+                ) from error
         logger.info("Deleted course: %s", course_id)
         return True
 

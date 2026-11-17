@@ -2,6 +2,7 @@ import { LogIn } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/core/Button";
 import { Logo } from "@/components/core/Logo";
+import { MobileMenu } from "./MobileMenu";
 import { NavLinks } from "./NavLinks";
 
 export type NavLink = { label: string; href: string };
@@ -21,7 +22,7 @@ export function NavBar({ links, guidanceHref, loginHref }: NavBarProps) {
           <Logo />
         </Link>
         <NavLinks links={links} />
-        <div className="ml-auto flex items-center gap-(--space-4) lg:ml-0">
+        <div className="ml-auto flex items-center gap-(--space-3) sm:gap-(--space-4) lg:ml-0">
           <a
             href={guidanceHref}
             className="hidden whitespace-nowrap text-(length:--fs-xs) font-medium leading-none text-(--text-strong) hover:text-(--text-strong) sm:inline lg:hidden xl:inline"
@@ -31,6 +32,7 @@ export function NavBar({ links, guidanceHref, loginHref }: NavBarProps) {
           <Button variant="outline" size="sm" leadingIcon={LogIn} href={loginHref}>
             Student login
           </Button>
+          <MobileMenu links={links} guidanceHref={guidanceHref} />
         </div>
       </div>
     </header>

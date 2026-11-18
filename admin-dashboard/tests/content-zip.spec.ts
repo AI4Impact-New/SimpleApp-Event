@@ -84,3 +84,47 @@ test('course ZIP becomes an editable module → lecture → material outline', a
   expect(reset).toEqual({ path: '/admin/classes/c2/access-reset', body: { user_id: 'u1' } });
   if (shots) await page.screenshot({ path: `${shots}/4-learners.png`, fullPage: true });
 });
+
+test('publishing retries a failed resource upload using the same import ID', async ({ page }) => {
+  const payload = Buffer.from(JSON.stringify({ token_use: 'id', sub: 'test-admin', 'cognito:groups': ['Admins'], exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url');
+  await page.addInitScript(token => localStorage.setItem('auth_id_token', token), `test.${payload}.test`);
+  const staged: { path: string; body: unknown }[] = [];
+  let attempts = 0;
+  let published = 0;
+  await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**', async route => {
+    const path = new URL(route.request().url()).pathname;
+    let json: unknown = [];
+    if (path === `/courses/${cid}`) json = { id: cid, title: 'Azure Data Engineering' };
+    if (path.includes('/content-imports/')) {
+      if (route.request().method() === 'PUT') {
+        const body = route.request().postDataJSON();
+        staged.push({ path, body });
+        json = { status: 'uploading', uploads: [
+          { id: body.modules[0].resources[0].id, url: 'https://upload.example.invalid/', fields: { key: 'fixture' } }
+        ] };
+      } else {
+        published += 1;
+        json = { status: 'published' };
+      }
+    }
+    await route.fulfill({ json });
+  });
+  await page.route('https://upload.example.invalid/', async route => {
+    attempts += 1;
+    await route.fulfill({ status: attempts === 1 ? 503 : 204, headers: { 'Access-Control-Allow-Origin': '*' } });
+  });
+  const zip = new ZipWriter(new Uint8ArrayWriter());
+  await zip.add('Package/01 Foundations/syllabus.pdf', new TextReader('fixture'));
+  await page.goto(`${process.env.QA_ADMIN_URL || 'http://localhost:3100'}/dashboard/learning/${cid}`);
+  await page.getByLabel('Course ZIP file').setInputFiles({ name: 'resources.zip', mimeType: 'application/zip', buffer: Buffer.from(await zip.close()) });
+  const publish = page.getByRole('button', { name: 'Publish content' });
+  await publish.click();
+  await expect(page.getByRole('alert').filter({ hasText: 'Could not upload syllabus.pdf' })).toBeVisible();
+  expect(published).toBe(0);
+  await publish.click();
+  await expect(page.getByRole('status').filter({ hasText: 'Course content published' })).toBeVisible();
+  expect(attempts).toBe(2);
+  expect(published).toBe(1);
+  expect(staged).toHaveLength(2);
+  expect(staged[1]).toEqual(staged[0]);
+});

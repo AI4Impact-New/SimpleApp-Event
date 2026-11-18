@@ -155,6 +155,11 @@ def handler(event, context):
         elif path=="/admin/certificates" and method=="GET": result=certificates.listing(actor,True)
         elif len(parts)==4 and parts[:2]==["admin","certificates"] and parts[3]=="revoke" and method=="POST": result=certificates.revoke(actor,parts[2],body)
         elif len(parts)==3 and parts[0]=="certificates" and parts[2]=="download" and method=="GET": result=certificates.download(actor,parts[1])
+        elif len(parts)==5 and parts[:2]==["admin","courses"] and parts[3]=="content-imports":
+            from learning import content_import
+            cid, job = identifier(parts[2]), identifier(parts[4])
+            if method=="PUT": result=content_import.stage(actor,cid,job,body)
+            elif method=="POST": result=content_import.publish(actor,cid,job)
         elif len(parts)>=3 and parts[:2]==["admin","courses"]:
             cid=identifier(parts[2]); suffix=parts[3] if len(parts)>3 else ""
             if suffix=="classes" and len(parts)==4:
@@ -186,6 +191,10 @@ def handler(event, context):
         elif len(parts)>=3 and parts[:2]==["learning","courses"]:
             cid=identifier(parts[2]); suffix=parts[3] if len(parts)>3 else ""
             if len(parts)==3 and method=="GET": result={"course":service.access(actor,cid),"classes":service.classes(actor,cid),"completion":service.completion(actor,cid)}
+            elif suffix=="content" and method=="GET":
+                from learning import content_import
+                if len(parts)==4: result=content_import.outline(actor,cid)
+                elif len(parts)==5: result=content_import.download(actor,cid,identifier(parts[4]))
             elif len(parts)==4 and suffix=="progress" and method=="GET": result={"classes":service.classes(actor,cid),"completion":service.completion(actor,cid)}
             elif len(parts)==4 and suffix=="exams" and method=="GET": result=exams.list_exams(actor,cid)
             elif len(parts)==4 and suffix=="completion" and method=="GET": result=service.completion(actor,cid)

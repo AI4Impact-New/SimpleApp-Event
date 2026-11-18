@@ -27,24 +27,33 @@ s3 = boto3.client("s3", region_name=REGION, endpoint_url=f"https://s3.{REGION}.a
 secrets = boto3.client("secretsmanager", config=CONFIG)
 
 
-def upload_form(key, size):
+def upload_form(key, size, content_type="video/mp4"):
     return s3.generate_presigned_post(
         Bucket=os.environ["VIDEO_BUCKET"], Key=key,
-        Fields={"Content-Type": "video/mp4"},
-        Conditions=[{"Content-Type": "video/mp4"}, ["content-length-range", size, size]],
+        Fields={"Content-Type": content_type},
+        Conditions=[{"Content-Type": content_type}, ["content-length-range", size, size]],
         ExpiresIn=900,
     )
 
 
-def confirm_upload(key, size):
+def confirm_upload(key, size, content_type="video/mp4"):
     try:
         obj = s3.head_object(Bucket=os.environ["VIDEO_BUCKET"], Key=key)
     except s3.exceptions.ClientError as error:
         if error.response["Error"]["Code"] in ("403", "404", "NoSuchKey", "NotFound"):
             raise ApiError(409, "Upload the MP4 before publishing this lecture")
         raise
-    if obj["ContentLength"] != size or obj.get("ContentType") != "video/mp4":
+    if obj["ContentLength"] != size or obj.get("ContentType") != content_type:
         raise ApiError(409, "Uploaded file size or content type does not match the lecture")
+
+
+def resource_download(key, filename):
+    return s3.generate_presigned_url("get_object", Params={
+        "Bucket": os.environ["VIDEO_BUCKET"],
+        "Key": key,
+        "ResponseContentType": "application/octet-stream",
+        "ResponseContentDisposition": "attachment; filename*=UTF-8''" + quote(filename, safe=""),
+    }, ExpiresIn=300)
 
 
 @lru_cache(maxsize=4)

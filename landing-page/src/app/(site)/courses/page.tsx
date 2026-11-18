@@ -7,7 +7,7 @@ import { TRACK_FAMILIES } from "@/content/site";
 
 export const metadata: Metadata = {
   title: "Career tracks · AI4Impact",
-  description: "Seven role-led tracks across build, data and product — each designed backwards from a real job.",
+  description: "Eight role-led tracks across build, data, product and business transformation — each designed backwards from a real job.",
 };
 
 export default function CoursesPage() {

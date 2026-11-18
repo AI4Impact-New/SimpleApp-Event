@@ -139,6 +139,24 @@ export const TRACKS: Track[] = [
     roles: "AI Product Manager · Automation Specialist · AI Business Analyst",
     href: "/courses/ai-product-automation-builder",
   },
+  {
+    id: "abt",
+    /** Fee and cohort dates are not announced yet; send enquiries to guidance. */
+    demoCheckoutEnabled: false,
+    number: "08",
+    family: "Product",
+    title: "AI-Driven Business Transformation",
+    description: "Connect strategy, P&L, business intelligence and AI, and turn them into measurable business outcomes.",
+    level: "Professional · Executive",
+    duration: "8 weeks",
+    weekly: "10–15 hrs",
+    projects: "1 applied exercise + capstone",
+    projectCount: 2,
+    fee: "Fee on request",
+    need: "8+ years of professional experience — no coding required",
+    roles: "Functional Head · Business Unit Leader · General Manager · Transformation Consultant",
+    href: "/courses/ai-driven-business-transformation",
+  },
 ];
 
 export const FINDER_OPTIONS: { label: string; trackId: Track["id"] }[] = [
@@ -152,7 +170,7 @@ export const FINDER_OPTIONS: { label: string; trackId: Track["id"] }[] = [
 ];
 
 export const ANNOUNCEMENTS = [
-  "Explore seven career tracks in AI, data and product",
+  "Explore eight career tracks in AI, data and product",
   "Structured learning and real-world projects",
   "Book free career guidance",
 ];
@@ -276,11 +294,77 @@ export const TRAINERS: Trainer[] = [
   },
   {
     slug: "kamal-k-naidu",
-    name: "Kamal K Naidu",
+    name: "Kamal Kishore Naidu",
     initials: "KN",
-    subtitle: "Analytics, SQL, KPIs and business dashboards",
-    assignments: ["Lead trainer · DSDI"],
+    role: "Business Strategy & Transformation Leader · AI & Data Intelligence Practitioner · Executive Mentor",
+    subtitle: "Founder & CEO of PayIntelli; 25+ years leading strategy, data intelligence and AI-led transformation",
+    assignments: ["Lead trainer · ABT", "Lead trainer · DSDI"],
     topics: ["SQL for analysis", "KPI design", "Funnels and cohorts", "Power BI"],
+    photo: { src: "/trainers/kamal-k-naidu.png", alt: "Portrait of Kamal Kishore Naidu" },
+    company: "Founder & CEO, PayIntelli · AI4Impact Trainer",
+    intro:
+      "Brings more than 25 years of leadership experience to the intersection of business strategy, digital transformation, data intelligence and AI-led business performance.",
+    stats: [
+      { value: "25+", label: "years of experience" },
+      { value: "5", label: "countries in global leadership" },
+      { value: "$350M+", label: "additional client revenue through optimisation" },
+    ],
+    lead: "Kamal Kishore Naidu is a business and technology leader with over 25 years of experience spanning hospitality, iGaming, fintech and global financial services. His career has focused on helping organisations translate strategy into execution — improving commercial performance, strengthening operations, using data to make better decisions and preparing businesses for technology-led change.",
+    bio: {
+      title: "Turning business strategy into measurable transformation.",
+      paragraphs: [
+        "He is currently the Founder & CEO of PayIntelli, where he is building an AI-native business intelligence and payments technology platform. Previously, he held senior international leadership roles, including Managing Director of a UK-headquartered acquiring bank with operations across five countries and global annual processing volumes of approximately US$30 billion. He has led teams across Europe, the US and Asia, working at the intersection of corporate strategy, analytics, operations, risk and commercial growth.",
+        "Kamal is recognised for connecting the boardroom view with operational reality: clarifying strategic priorities, understanding the economics of a business, identifying performance gaps and using data and technology to improve outcomes. His work has included initiatives associated with a 2.7% improvement in merchant conversion and more than US$350 million in additional revenue for clients through optimisation initiatives.",
+        "A lifelong practitioner and builder, Kamal is now applying AI and agentic systems to real business workflows — from onboarding and risk monitoring to reporting, reconciliation and decision support. He brings these practical lessons into the classroom, helping participants understand not just what AI can do, but where it creates business value, how to evaluate it and how to lead adoption responsibly.",
+      ],
+    },
+    credentials: [
+      "Digital Business Leadership Programme · Cornell University",
+      "AI & Machine Learning · Great Lakes / IIT Chicago",
+      "Applied Finance · IIM Calcutta",
+      "Six Sigma Master Black Belt",
+      "Lean Practitioner",
+      "ITIL Foundation",
+      "Top 10 CSOs in India · 2023",
+    ],
+    focus: [
+      { title: "Business strategy & execution", body: "Strategic planning, business model thinking, market positioning, operating priorities, execution roadmaps and performance measurement." },
+      { title: "Digital & AI transformation", body: "Identifying high-value AI use cases, assessing organisational readiness, redesigning workflows and moving from experimentation to adoption." },
+      { title: "Data & business intelligence", body: "Using analytics, KPIs and management information to understand performance, identify trends, improve visibility and support better decisions." },
+      { title: "Commercial & P&L leadership", body: "Revenue growth, unit economics, cost optimisation, customer conversion, productivity and the commercial implications of strategic choices." },
+      { title: "Organisational transformation", body: "Change leadership, process improvement, operating-model effectiveness, governance and aligning people, processes and technology." },
+      { title: "Leadership in global markets", body: "Building and leading cross-functional teams, managing complexity across geographies and translating international experience into practical business insight." },
+    ],
+    programmes: [
+      {
+        title: "AI-Driven Business Transformation",
+        tools: ["AI opportunity identification", "Business process redesign", "AI adoption strategy", "Agentic AI in the enterprise", "AI governance & risk"],
+      },
+      {
+        title: "Business Strategy & Intelligence",
+        tools: ["Strategic planning", "KPI frameworks", "Data-led decision-making", "Commercial performance", "Transformation roadmaps"],
+      },
+    ],
+    modules: [
+      "AI for Business Leaders",
+      "Generative AI & Agentic AI",
+      "AI Use-Case Prioritisation",
+      "Digital Business Models",
+      "Business Intelligence",
+      "Data-Driven Leadership",
+      "Strategy to Execution",
+      "P&L and Unit Economics",
+      "Operational Excellence",
+      "Change Management",
+      "AI Governance",
+      "Executive Decision-Making",
+    ],
+    approachTitle: "Practical, executive-led learning",
+    approach:
+      "Kamal’s teaching connects frameworks with the realities of running a business. Participants work through business scenarios, practical examples and decision-making exercises to understand where transformation should begin, how to build a business case, how to measure outcomes and how to bring people along. The emphasis is on critical thinking and application — not technology for its own sake.",
+    links: [
+      { label: "LinkedIn", href: "https://www.linkedin.com/in/kamal-kishore-naidu-6999ab2b/", display: "linkedin.com/in/kamal-kishore-naidu-6999ab2b" },
+    ],
   },
   {
     slug: "shuja-l-p",
@@ -372,7 +456,7 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 export const TRACK_FAMILIES: { family: Track["family"]; eyebrow: string; title: string }[] = [
   { family: "Data", eyebrow: "Data tracks", title: "Build the data that AI runs on." },
   { family: "Build", eyebrow: "Build tracks", title: "Ship AI systems into production." },
-  { family: "Product", eyebrow: "Product tracks", title: "Decide what gets built, and why." },
+  { family: "Product", eyebrow: "Products & Business transformation tracks", title: "Decide what gets built, and why." },
 ];
 
 /** Shared footer copy. */

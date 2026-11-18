@@ -537,19 +537,21 @@ export function CourseForm({
                 </div>
                 {(phase.phase_items ?? []).map((item, ii) => (
                   <div key={ii} className="flex gap-2 mb-2">
-                    <Select
-                      value={item.item_type}
-                      onChange={(e) => updatePhaseItem(pi, ii, 'item_type', e.target.value)}
-                      className={inputCls + ' w-40'}
-                    >
-                      <option value="what_you_learn">What you&apos;ll learn</option>
-                      <option value="outcome">Outcome</option>
-                    </Select>
+                    <div className="w-48 shrink-0">
+                      <Select
+                        value={item.item_type}
+                        onChange={(e) => updatePhaseItem(pi, ii, 'item_type', e.target.value)}
+                        className={inputCls}
+                      >
+                        <option value="what_you_learn">What you&apos;ll learn</option>
+                        <option value="outcome">Outcome</option>
+                      </Select>
+                    </div>
                     <input
                       type="text"
                       value={item.text}
                       onChange={(e) => updatePhaseItem(pi, ii, 'text', e.target.value)}
-                      className={inputCls + ' flex-1'}
+                      className={inputCls + ' flex-1 min-w-0'}
                       placeholder="Bullet text"
                     />
                     <button type="button" onClick={() => removePhaseItem(pi, ii)} className="p-2 text-red-600 hover:bg-red-50 rounded">

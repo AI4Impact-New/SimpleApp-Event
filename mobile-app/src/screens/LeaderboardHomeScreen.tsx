@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { api } from '@/services/api';
 import { useMyAttendance } from '@/hooks/useEvents';
 import { colors, spacing, borderRadius } from '@/theme/colors';
-import { Event } from '@/types/event';
+import { AttendanceRecord, Event } from '@/types/event';
 import { formatCompactDateTimeInIst } from '@/utils/datetime';
 
 interface LeaderboardHomeScreenProps {

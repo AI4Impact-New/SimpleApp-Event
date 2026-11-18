@@ -283,22 +283,6 @@ export const TRAINERS: Trainer[] = [
     topics: ["SQL for analysis", "KPI design", "Funnels and cohorts", "Power BI"],
   },
   {
-    slug: "shuja-l-p",
-    name: "Shuja L P",
-    initials: "SL",
-    subtitle: "Data visualisation, storytelling and web visuals",
-    assignments: ["Co-trainer · DSDI"],
-    topics: ["Chart selection", "Data storytelling", "Dashboard layout", "Web visuals"],
-  },
-  {
-    slug: "naveen-g",
-    name: "Naveen G",
-    initials: "NG",
-    subtitle: "Statistics, machine learning and explainable models",
-    assignments: ["Lead trainer · AIML", "Lead trainer · DSDI"],
-    topics: ["Statistics", "Model evaluation", "Feature engineering", "Explainability"],
-  },
-  {
     slug: "tarun-kesavan",
     name: "Tarun Kesavan Menon",
     initials: "TK",
@@ -338,6 +322,22 @@ export const TRAINERS: Trainer[] = [
     ],
     approach:
       "Move beyond AI theory. Understand the foundations, build working systems, connect the components and learn what it takes to deploy intelligent applications in real-world environments.",
+  },
+  {
+    slug: "shuja-l-p",
+    name: "Shuja L P",
+    initials: "SL",
+    subtitle: "Data visualisation, storytelling and web visuals",
+    assignments: ["Co-trainer · DSDI"],
+    topics: ["Chart selection", "Data storytelling", "Dashboard layout", "Web visuals"],
+  },
+  {
+    slug: "naveen-g",
+    name: "Naveen G",
+    initials: "NG",
+    subtitle: "Statistics, machine learning and explainable models",
+    assignments: ["Lead trainer · AIML", "Lead trainer · DSDI"],
+    topics: ["Statistics", "Model evaluation", "Feature engineering", "Explainability"],
   },
   {
     slug: "ritesh",

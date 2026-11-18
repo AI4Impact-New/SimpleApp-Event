@@ -1,7 +1,7 @@
 // Events hooks
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
-import { Event, EventAnalytics } from '@/types/event';
+import { AttendanceRecord, Event, EventAnalytics } from '@/types/event';
 
 export function useEvents(visibility?: 'global' | 'private') {
   return useQuery({
@@ -26,8 +26,18 @@ export function useEventAnalytics(eventId: string) {
   });
 }
 
+/** The signed-in user's attendance history (newest first; the backend caps it at 200). */
+export function useMyAttendance() {
+  return useQuery({
+    queryKey: ['attendance'],
+    queryFn: () => api.getAttendance({ limit: 200 }) as Promise<AttendanceRecord[]>,
+  });
+}
+
 export function useJoinEvent() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (eventId: string) => api.joinEvent(eventId),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['attendance'] }),
   });
 }

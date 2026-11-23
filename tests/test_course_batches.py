@@ -174,3 +174,14 @@ def test_concurrent_transfers_allow_one_destination(data):
     with ThreadPoolExecutor(max_workers=2) as pool:
         assert sorted(pool.map(move, [first, second])) == [200, 409]
     assert len(roster(data, unassigned="true")) == 1
+
+
+def test_cleared_first_installment_assigns_agreed_batch(data):
+    from shared.db import execute_query
+    execute_query('DELETE FROM course_registrations WHERE user_id=%s AND course_id=%s',(data['student']['id'],data['course']),fetch='none')
+    batch=create(data)
+    account=fee_ledger.create_account(data['admin'],{'request_id':str(uuid4()),'user_id':data['student']['id'],'course_id':data['course'],'mode':'test','marked_price_paise':10000,'batch_id':str(batch['id']),'installments':[{'amount_paise':10000,'due_on':fee_ledger.today().isoformat()}]})
+    fee_ledger.receipt(data['admin'],account['id'],{'request_id':str(uuid4()),'method':'bank','amount_paise':10000,'reference':'QA-automatic-batch','received_on':fee_ledger.today().isoformat()})
+    registered=execute_query('SELECT id,batch_id FROM course_registrations WHERE user_id=%s AND course_id=%s',(data['student']['id'],data['course']),fetch='one')
+    assert registered['batch_id']==batch['id']
+    assert execute_query('SELECT count(*) AS n FROM batch_assignment_history WHERE registration_id=%s',(registered['id'],),fetch='one')['n']==1

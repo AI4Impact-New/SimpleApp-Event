@@ -699,12 +699,28 @@ def sync_access(cur, aid):
         and first["outstanding_paise"] == 0
     )
     if access_ready:
+        cur.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))", ("enrollment:" + str(a["user_id"]) + str(a["course_id"]),))
+        cur.execute("SELECT id,status,batch_id FROM course_registrations WHERE user_id=%s AND course_id=%s FOR UPDATE",
+                    (a["user_id"], a["course_id"]))
+        previous = cur.fetchone()
+        target = a["batch_id"]
+        if target:
+            cur.execute("SELECT 1 FROM fee_batches WHERE id=%s AND archived_at IS NULL", (target,))
+            if not cur.fetchone():
+                target = None
         cur.execute(
-            """INSERT INTO course_registrations(user_id,course_id,status,source) VALUES(%s,%s,'registered',%s)
+            """INSERT INTO course_registrations(user_id,course_id,status,source,batch_id) VALUES(%s,%s,'registered',%s,%s)
             ON CONFLICT(course_id,user_id) DO UPDATE SET status=CASE WHEN course_registrations.status='completed' THEN 'completed' ELSE 'registered' END,
-            source=CASE WHEN course_registrations.status IN ('registered','completed') THEN course_registrations.source ELSE excluded.source END,updated_at=now()""",
-            (a["user_id"], a["course_id"], source),
+            source=CASE WHEN course_registrations.status IN ('registered','completed') THEN course_registrations.source ELSE excluded.source END,
+            batch_id=CASE WHEN course_registrations.status IN ('registered','completed') THEN course_registrations.batch_id ELSE excluded.batch_id END,
+            updated_at=now() RETURNING id,batch_id""",
+            (a["user_id"], a["course_id"], source, target),
         )
+        registration = cur.fetchone()
+        before = previous["batch_id"] if previous else None
+        if registration["batch_id"] != before:
+            cur.execute("""INSERT INTO batch_assignment_history(registration_id,previous_batch_id,batch_id,changed_by)
+                VALUES(%s,%s,%s,%s)""",(registration["id"],before,registration["batch_id"],a["created_by"]))
     else:
         cur.execute(
             "UPDATE course_registrations SET status='dropped',updated_at=now() WHERE user_id=%s AND course_id=%s AND source=%s",

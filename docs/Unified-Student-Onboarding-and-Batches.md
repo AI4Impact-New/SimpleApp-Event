@@ -17,7 +17,7 @@ Open **Batches & trainers** at `/dashboard/batches`. Select a course, create a n
 
 Select an enrolled student from the roster and move them to a batch. The UI passes the previous assignment so a concurrent change produces a conflict. Moves are audited. Archived batches cannot receive new assignments. Batch changes do not create enrolments. New fee agreements can inherit the student's current batch or explicitly use Unassigned.
 
-A finance batch selected before payment is attached to the fee agreement. The batch roster is managed separately for registered/completed students. The staff should verify the roster assignment once the learner is enrolled.
+A finance batch selected before payment is attached to the fee agreement. When the first cleared instalment creates an enrolment, the student inherits the fee agreement's active batch. Existing enrolled students retain their current roster assignment. Later transfers are managed in Batches & trainers and are audited.
 
 ## API changes
 

@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { billing, money, Price, Order } from "@/services/billing";
 import { errorMessage } from "@/services/learning";
 import { decodeJwtPayload } from "@/utils/jwt";
+import { STUDENT_PORTAL_URL } from "@/utils/studentPortal";
 
 export function StudentCommerce({ checkout = false }: { checkout?: boolean }) {
   const params = useSearchParams(),
@@ -230,7 +231,7 @@ export function StudentCommerce({ checkout = false }: { checkout?: boolean }) {
                     You are enrolled in <strong>{order.course_title}</strong>. Your course is unlocked in My learning.
                   </p>
                   <a
-                    href={`${process.env.NEXT_PUBLIC_STUDENT_PORTAL_URL || "https://learn.ai4impact.in"}/learning/courses/${order.course_id}`}
+                    href={`${STUDENT_PORTAL_URL}/learning/courses/${order.course_id}`}
                     className="inline-block bg-green-700 text-white font-medium px-4 py-2 rounded-lg text-sm"
                   >
                     Go to course workspace

@@ -247,7 +247,7 @@ export function StudentOnboarding() {
   const counts = leadsQuery.data?.counts ?? { progress: 0, plan: 0, complete: 0, all: 0 };
 
   useEffect(() => {
-    if (!visible.length) return;
+    if (leadsQuery.isFetching || leadsQuery.isPlaceholderData || !visible.length) return;
     if (!visible.some((r) => r.lead.id === selected)) setSelected(visible[0].lead.id);
   }, [visible, selected]);
 
@@ -290,8 +290,8 @@ export function StudentOnboarding() {
             className={source === key ? primary : secondary}>{label}</button>
         ))}
       </nav>
-      {source === "interests" && <AppInterests open={async id => {
-        setSource("students"); setFilter("all"); setOffset(0); setSearch("");
+      {source === "interests" && <AppInterests open={async (id, email) => {
+        setSource("students"); setFilter("all"); setOffset(0); setSearch(email);
         await client.invalidateQueries({ queryKey: ["onboarding", "leads"] });
         setSelected(id);
       }} />}
@@ -1487,7 +1487,7 @@ function FollowUp({ lead, refresh }: { lead: Lead; refresh: () => Promise<void> 
   </form>;
 }
 
-function AppInterests({ open }: { open: (id: string) => Promise<void> }) {
+function AppInterests({ open }: { open: (id: string, email: string) => Promise<void> }) {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const result = useQuery({ queryKey: ['onboarding','app-interests'], queryFn: () => api.learningRequest<{ enquiries: {id:string;name:string;email:string;phone?:string;course_title:string}[] }>('GET','/admin/marketing/interests') });
@@ -1500,7 +1500,7 @@ function AppInterests({ open }: { open: (id: string) => Promise<void> }) {
         <div className="min-w-0"><p className="font-medium">{row.name || row.email}</p><p className="break-all text-sm text-slate-500">{row.email} · {row.course_title}</p></div>
         <button className={secondary} disabled={!!busy} onClick={async () => {
           setBusy(row.id); setError('');
-          try {const lead = await api.learningRequest<{id:string}>('POST', `/admin/onboarding/interests/${row.id}`, {});await open(lead.id);}
+          try {const lead = await api.learningRequest<{id:string}>('POST', `/admin/onboarding/interests/${row.id}`, {});await open(lead.id, row.email);}
           catch (cause) {setError(errorMessage(cause));} finally {setBusy('');}
         }}>{busy === row.id ? 'Opening…' : 'Continue onboarding'}</button>
       </li>)}</ul>}

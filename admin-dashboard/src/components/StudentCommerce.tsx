@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { openRazorpay } from "@/utils/razorpay";
+import { openRazorpay, formatPaymentFailure, type PaymentFailureDiagnosis } from "@/utils/razorpay";
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { billing, money, Price, Order } from "@/services/billing";
@@ -17,6 +17,7 @@ export function StudentCommerce({ checkout = false }: { checkout?: boolean }) {
     [orders, setOrders] = useState<Order[]>([]),
     [order, setOrder] = useState<Order | null>(null),
     [error, setError] = useState(""),
+    [failureDiagnosis, setFailureDiagnosis] = useState<PaymentFailureDiagnosis | null>(null),
     [busy, setBusy] = useState(false);
   const retry = useRef<{ course: string; id: string } | null>(null);
   async function load() {
@@ -149,17 +150,35 @@ export function StudentCommerce({ checkout = false }: { checkout?: boolean }) {
                   <button disabled={busy} onClick={() => void act(async () => {
                     const prepared = await billing.prepare(order.id);
                     if (prepared.checkout) {
-                      let failureMsg = "";
+                      let failureInfo: PaymentFailureDiagnosis | null = null;
                       const result = await openRazorpay({
                         ...prepared.checkout,
-                        onFailure: (f) => { failureMsg = f.description || "Payment was declined by your bank or provider."; },
+                        onFailure: (f) => { failureInfo = formatPaymentFailure(f); },
                       });
-                      if (result) await billing.verify(order.id, result);
-                      else if (failureMsg) setError(failureMsg);
+                      if (result) {
+                        await billing.verify(order.id, result);
+                        setFailureDiagnosis(null);
+                        setError("");
+                      } else if (failureInfo) {
+                        setFailureDiagnosis(failureInfo);
+                        setError(failureInfo.message);
+                      }
                     }
-                    setOrder(await billing.reconcile(order.id));
+                    const updated = await billing.reconcile(order.id);
+                    if (updated.status === "paid") {
+                      setFailureDiagnosis(null);
+                      setError("");
+                    }
+                    setOrder(updated);
                   })} className="bg-primary-600 text-white px-4 py-3 rounded-lg disabled:opacity-50">Pay with Razorpay {order.mode === 'test' ? '· TEST' : ''}</button>
-                  <button disabled={busy} onClick={() => void act(async () => setOrder(await billing.reconcile(order.id)))} className="border px-4 py-3 rounded-lg">Check payment status</button>
+                  <button disabled={busy} onClick={() => void act(async () => {
+                    const updated = await billing.reconcile(order.id);
+                    if (updated.status === "paid") {
+                      setFailureDiagnosis(null);
+                      setError("");
+                    }
+                    setOrder(updated);
+                  })} className="border px-4 py-3 rounded-lg">Check payment status</button>
                 </>}
                 {order.status === "pending" && order.demo && (
                   <>
@@ -215,6 +234,22 @@ export function StudentCommerce({ checkout = false }: { checkout?: boolean }) {
                   >
                     Go to course workspace
                   </a>
+                </div>
+              )}
+              {failureDiagnosis && order.status !== "paid" && (
+                <div className="bg-red-50 border border-red-200 text-red-900 p-5 rounded-xl space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-bold text-red-600">⚠</span>
+                    <strong className="text-lg">{failureDiagnosis.title}</strong>
+                  </div>
+                  <p className="text-sm font-medium">{failureDiagnosis.message}</p>
+                  <div className="bg-white border border-red-200 rounded-lg p-3 text-xs space-y-1">
+                    <p className="font-semibold text-red-900">Recommended next steps:</p>
+                    <p>• <strong>UPI:</strong> Pay with Google Pay, PhonePe, or Paytm for instant approval.</p>
+                    <p>• <strong>Alternate Card:</strong> Try a different debit or credit card with sufficient balance.</p>
+                    <p>• <strong>Netbanking:</strong> Select Netbanking from the Razorpay modal.</p>
+                    <p>• <em>No money was debited from your account.</em></p>
+                  </div>
                 </div>
               )}
               {order.status === "demo_completed" && (

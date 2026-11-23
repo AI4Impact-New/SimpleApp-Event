@@ -27,7 +27,7 @@ test('student onboarding tracks each learner through the four steps', async ({ p
     const url = new URL(route.request().url());
     let json: unknown = [];
     if (url.pathname === '/admin/onboarding') {
-      const enriched = leads.map((lead, i) => ({...lead, details_saved:true, user_id:i ? id(201+i) : null, has_quote:i>=2, has_plan:i===3, current:i===3 ? -1 : i+1}));
+      const enriched = leads.map((lead, i) => ({...lead, details_saved:true, account_ready:i>0, user_id:i ? id(201+i) : null, has_quote:i>=2, has_plan:i===3, current:i===3 ? -1 : i+1}));
       const stage = url.searchParams.get('stage');
       const filtered = enriched.filter(row => stage==='plan' ? row.current===3 : stage==='complete' ? row.current===-1 : stage==='all' ? true : row.current!==-1);
       json = { enquiries:filtered,total:filtered.length,offset:0,limit:50,counts:{progress:3,plan:1,complete:1,all:4} };

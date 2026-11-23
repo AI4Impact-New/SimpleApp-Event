@@ -622,9 +622,8 @@ export function getTrackAction(track: Track | undefined) {
   if (!slug || track?.demoCheckoutEnabled === false) {
     return { href: "#guidance", label: "Book free guidance" };
   }
-  const portalUrl = (process.env.NEXT_PUBLIC_STUDENT_PORTAL_URL || "https://learn.ai4impact.in").replace(/\/$/, "");
   return {
-    href: `${portalUrl}/courses/${encodeURIComponent(slug)}`,
+    href: `${STUDENT_PORTAL_URL}/courses/${encodeURIComponent(slug)}`,
     label: "Enroll Now",
   };
 }

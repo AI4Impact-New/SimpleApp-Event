@@ -156,8 +156,8 @@ function LeadRow({ lead }: { lead: Lead }) {
     </tr>
   );
 }
-export function WebsiteEnquiries() {
-  const [kind, setKind] = useState("");
+export function WebsiteEnquiries({ employerOnly = false }: { employerOnly?: boolean }) {
+  const [kind, setKind] = useState(employerOnly ? "employer" : "");
   const [status, setStatus] = useState("");
   const [search, setSearch] = useState("");
   const [offset, setOffset] = useState(0);
@@ -181,6 +181,7 @@ export function WebsiteEnquiries() {
           Type
           <Select
             aria-label="Filter enquiry type"
+            disabled={employerOnly}
             className="ml-2 rounded-lg border p-2"
             value={kind}
             onChange={(e) => {

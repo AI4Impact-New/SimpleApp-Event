@@ -84,15 +84,28 @@ def handler(event, context):
         if path=='/webhooks/razorpay' and method=='POST':
             return _response(200,payments.webhook(event))
         actor = _actor(event)
-        marketing_route=(path=="/admin/enquiries" or (len(parts)==3 and parts[:2]==['admin','enquiries']) or path=="/admin/marketing/interests" or (len(parts)>=4 and parts[:2]==["admin","enquiries"] and parts[3]=="assisted"))
+        marketing_route=(path=="/admin/onboarding" or path.startswith("/admin/onboarding/") or path=="/admin/enquiries" or (len(parts)==3 and parts[:2]==['admin','enquiries']) or path=="/admin/marketing/interests" or (len(parts)>=4 and parts[:2]==["admin","enquiries"] and parts[3]=="assisted"))
         if parts[0]=="admin":
             enquiries.staff(actor) if marketing_route else service.admin(actor)
         body = _body(event) if method in ("POST","PUT","PATCH") else {}
         if parts[0]=='programme' or parts[:2]==['admin','programme']:
             from programme import api as programme_api
             return _response(200,programme_api.dispatch(actor,path,method,body,event.get('queryStringParameters')))
+        if parts[:2] == ["admin", "batches"]:
+            from learning import batches
+            return _response(201 if len(parts) == 2 and method == "POST" else 200,
+                             batches.dispatch(actor, parts[2:], method, body, event.get("queryStringParameters") or {}))
         result, status = None, 200
-        if len(parts)>=4 and parts[:2]==['admin','enquiries'] and parts[3]=='assisted':
+        if path=="/admin/onboarding" and method=="GET":
+            from learning import onboarding
+            result=onboarding.listing(actor,event.get("queryStringParameters") or {})
+        elif len(parts)==4 and parts[:3]==["admin","onboarding","interests"] and method=="POST":
+            from learning import onboarding
+            result=onboarding.import_interest(actor,parts[3])
+        elif len(parts)==4 and parts[:2]==["admin","onboarding"] and parts[3]=="followups" and method=="GET":
+            from learning import onboarding
+            result=onboarding.followups(actor,parts[2])
+        elif len(parts)>=4 and parts[:2]==['admin','enquiries'] and parts[3]=='assisted':
             eid=identifier(parts[2]);suffix=parts[4] if len(parts)>4 else ''
             if len(parts)==4 and method=='GET':result=assisted.detail(actor,eid)
             elif len(parts)==4 and method=='PUT':result=assisted.save_profile(actor,eid,body)

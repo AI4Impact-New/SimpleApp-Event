@@ -26,6 +26,7 @@ const groups = [
       { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
       { href: "/dashboard/learning", label: "Learning Studio", icon: BookOpen },
       { href: "/dashboard/courses", label: "Courses", icon: BookOpen },
+      { href: "/dashboard/batches", label: "Batches & trainers", icon: Users },
       { href: "/dashboard/programme", label: "Programme+", icon: Sparkles },
     ],
   },
@@ -33,11 +34,7 @@ const groups = [
     title: "Students & payments",
     items: [
       { href: "/dashboard/users", label: "Students & users", icon: Users },
-      {
-        href: "/dashboard/course-enquiries",
-        label: "Course Enquiries",
-        icon: MessageCircle,
-      },
+
       {
         href: "/dashboard/onboarding",
         label: "Student onboarding",

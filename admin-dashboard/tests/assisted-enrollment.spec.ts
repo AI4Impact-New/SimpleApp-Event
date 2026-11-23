@@ -18,7 +18,8 @@ test('a website enquiry saves only student-profile fields, including after reope
   await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**', async route => {
     const url = new URL(route.request().url());
     let body: unknown = [];
-    if (url.pathname === '/admin/enquiries') body = { enquiries: [lead], total: 1, offset: 0, limit: 50 };
+    if (url.pathname === '/admin/onboarding') body = { enquiries: [{...lead,current:saved ? 1 : 0,details_saved:!!saved,account_ready:false,has_quote:false,has_plan:false}], total:1,offset:0,limit:50,counts:{progress:1,plan:0,complete:0,all:1} };
+    if (url.pathname.endsWith('/followups')) body = {history:[]};
     if (url.pathname.endsWith('/assisted')) {
       if (route.request().method() === 'PUT') {
         const request = route.request().postDataJSON();
@@ -31,27 +32,25 @@ test('a website enquiry saves only student-profile fields, including after reope
     await route.fulfill({ json: body });
   });
   await page.goto(`${process.env.QA_ADMIN_URL || 'http://localhost:3100'}/dashboard/course-enquiries`);
-  await page.getByRole('button', { name: 'Open student workspace' }).click();
-  const dialog = page.getByRole('dialog');
-  await expect(dialog.getByText(/Automatic quote email awaits Resend sender and API key setup/)).toBeVisible();
+  await expect(page).toHaveURL(/\/dashboard\/onboarding$/);
+  const dialog = page.getByRole('tabpanel');
   await expect(dialog.getByLabel('Full name', { exact: true })).toHaveValue(lead.name);
   for (const label of ['City', 'State', 'University', 'Degree / course of study', 'Year of study']) {
     await dialog.getByLabel(label, { exact: true }).fill('Example');
   }
   await dialog.getByRole('checkbox').check();
   await dialog.getByRole('button', { name: 'Save student details' }).click();
-  await expect(dialog.getByText('Student details saved. Course access remains unchanged.')).toBeVisible();
+  await expect(page.getByRole('status').filter({hasText:'Student details saved.'})).toBeVisible();
   expect(invalid).toEqual([]);
   expect(saved).toEqual(expect.objectContaining({ name: lead.name, account_authorized: true }));
-  await expect(dialog.getByRole('button', { name: 'Close student workspace' })).toBeEnabled();
-  await dialog.getByRole('button', { name: 'Close student workspace' }).click();
-  await page.getByRole('button', { name: 'Open student workspace' }).click();
+  await page.reload();
+  await page.getByRole('tab', {name:/1\. Student details/}).click();
   await expect(dialog.getByLabel('City', { exact: true })).toHaveValue('Example');
   await pick(dialog.getByLabel('Profile type'), 'professional');
   await dialog.getByLabel('Designation', { exact: true }).fill('Engineer');
-  await dialog.getByLabel('Company', { exact: true }).fill('Example Company');
+  await dialog.getByLabel('Company / college', { exact: true }).fill('Example Company');
   await dialog.getByRole('button', { name: 'Save student details' }).click();
-  await expect(dialog.getByText('Student details saved. Course access remains unchanged.')).toBeVisible();
+  await expect(page.getByRole('status').filter({hasText:'Student details saved.'})).toBeVisible();
   expect(invalid).toEqual([]);
   expect(saved).toEqual(expect.objectContaining({ user_type: 'professional', company: 'Example Company' }));
 });

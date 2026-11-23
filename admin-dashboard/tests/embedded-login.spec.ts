@@ -65,7 +65,7 @@ for (const scenario of [
   { name: 'new signed-out tab', groups: [], exp: 0, destination: '/login', seed: false },
   { name: 'expired staff session', groups: ['Admins'], exp: -60, destination: '/login', seed: true },
   { name: 'active administrator', groups: ['Admins'], exp: 3600, destination: '/dashboard', seed: true },
-  { name: 'active marketing colleague', groups: ['Marketing'], exp: 3600, destination: '/dashboard/course-enquiries', seed: true },
+  { name: 'active marketing colleague', groups: ['Marketing'], exp: 3600, destination: '/dashboard/onboarding', seed: true },
 ]) {
   test(`root opens directly for ${scenario.name}`, async ({ page }) => {
     if (scenario.seed) {

@@ -2,7 +2,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
-import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
   Check,
@@ -21,6 +21,8 @@ import {
   X,
 } from "lucide-react";
 import api from "@/services/api";
+import { isAdminFromToken } from "@/utils/jwt";
+import { WebsiteEnquiries } from "@/components/learning/WebsiteEnquiries";
 import { Select } from "@/components/ui/Select";
 import { errorMessage } from "@/services/learning";
 import { feeLedger, FeeAccount, LedgerReport } from "@/services/feeLedger";
@@ -35,7 +37,17 @@ type Lead = {
   interest: string;
   status: string;
   created_at: string;
+  notes?: string;
+  current: number;
+  details_saved: boolean;
+  account_ready: boolean;
+  has_quote: boolean;
+  has_plan: boolean;
+  user_id?: string;
+  course_title?: string;
+  batch_code?: string;
 };
+type Pipeline = { enquiries: Lead[]; total: number; offset: number; limit: number; counts: Record<Filter, number> };
 type Quote = {
   id: string;
   user_id: string;
@@ -166,9 +178,9 @@ type Progress = {
 };
 function progressOf(w: Workspace | undefined, accounts: FeeAccount[]): Progress {
   const uid = w?.enrollment?.user_id;
-  const courses = new Set(w?.quotes.map((q) => q.course_id));
+  const courses = new Set(w?.quotes.slice(0, 1).map((q) => q.course_id));
   const plan = uid
-    ? accounts.find((a) => a.user_id === uid && courses.has(a.course_id))
+    ? accounts.find((a) => a.user_id === uid && courses.has(a.course_id) && !a.source_order_id && !a.closed_at)
     : undefined;
   const done = [
     !!w?.enrollment,
@@ -190,93 +202,52 @@ export function StudentOnboarding() {
   const [selected, setSelected] = useState("");
   const [creating, setCreating] = useState(false);
 
+  const [source, setSource] = useState<"students" | "interests" | "employers">("students");
+  const [offset, setOffset] = useState(0);
+  const [query, setQuery] = useState("");
+  const [followupStatus, setFollowupStatus] = useState("");
+  const isAdmin = typeof window !== "undefined" && isAdminFromToken(localStorage.getItem("auth_id_token") || localStorage.getItem("auth_token") || "");
+  useEffect(() => {
+    const timer = window.setTimeout(() => { setQuery(search.trim()); setOffset(0); }, 300);
+    return () => window.clearTimeout(timer);
+  }, [search]);
   const leadsQuery = useQuery({
-    queryKey: ["onboarding", "leads"],
-    queryFn: async () => {
-      const all: Lead[] = [];
-      for (let offset = 0; offset < 500; offset += 50) {
-        const page = await api.learningRequest<{
-          enquiries: Lead[];
-          total: number;
-        }>("GET", `/admin/enquiries?kind=guidance&offset=${offset}`);
-        all.push(...page.enquiries);
-        if (all.length >= page.total || !page.enquiries.length) break;
-      }
-      return all;
-    },
+    queryKey: ["onboarding", "leads", query, filter, followupStatus, offset],
+    queryFn: () => api.learningRequest<Pipeline>("GET", "/admin/onboarding?" + new URLSearchParams({
+      search: query, stage: filter, status: followupStatus, offset: String(offset),
+    })),
+    enabled: source === "students",
+    placeholderData: previous => previous,
   });
-  const leads = useMemo(() => leadsQuery.data ?? [], [leadsQuery.data]);
-
+  const leads = useMemo(() => leadsQuery.data?.enquiries ?? [], [leadsQuery.data]);
+  const activeLead = leads.find(lead => lead.id === selected);
+  const workspaceQuery = useQuery({
+    queryKey: ["assisted", selected],
+    queryFn: () => api.learningRequest<Workspace>("GET", `/admin/enquiries/${selected}/assisted`),
+    enabled: !!activeLead && source === "students",
+  });
   const ledgerQuery = useQuery({
-    queryKey: ["onboarding", "ledger"],
-    queryFn: () =>
-      feeLedger.report(new URLSearchParams({ as_of: indiaToday() })),
+    queryKey: ["onboarding", "ledger", selected],
+    queryFn: () => feeLedger.report(new URLSearchParams({ as_of: indiaToday(), user_id: workspaceQuery.data!.enrollment!.user_id! })),
+    enabled: isAdmin && !!workspaceQuery.data?.enrollment?.user_id && source === "students",
     retry: false,
   });
-  const accounts = useMemo(
-    () => ledgerQuery.data?.accounts ?? [],
-    [ledgerQuery.data],
-  );
-
-  const workspaces = useQueries({
-    queries: leads.map((lead) => ({
-      queryKey: ["assisted", lead.id],
-      queryFn: () =>
-        api.learningRequest<Workspace>(
-          "GET",
-          `/admin/enquiries/${lead.id}/assisted`,
-        ),
-      staleTime: 60_000,
-    })),
-  });
-
-  const rows = useMemo(
-    () =>
-      leads.map((lead, i) => {
-        const w = workspaces[i]?.data;
-        return {
-          lead,
-          workspace: w,
-          loading: workspaces[i]?.isLoading ?? true,
-          progress: progressOf(w, accounts),
-        };
-      }),
-    [leads, workspaces, accounts],
-  );
-
-  const isProgress = (r: (typeof rows)[number]) =>
-    r.progress.current !== -1 && r.lead.status !== "dropped";
-  const counts = {
-    progress: rows.filter(isProgress).length,
-    plan: rows.filter((r) => r.progress.current === 3).length,
-    complete: rows.filter((r) => r.progress.current === -1).length,
-    all: rows.length,
-  };
-  const quotesAwaiting = rows.filter(
-    (r) =>
-      !r.progress.plan && r.workspace?.quotes.some((q) => q.status === "pending"),
-  ).length;
-
-  const term = search.trim().toLowerCase();
-  const visible = rows.filter((r) => {
-    if (filter === "progress" && !isProgress(r)) return false;
-    if (filter === "plan" && r.progress.current !== 3) return false;
-    if (filter === "complete" && r.progress.current !== -1) return false;
-    if (!term) return true;
-    const haystack = [
-      r.lead.name,
-      r.lead.email,
-      r.lead.phone,
-      r.progress.plan?.batch_code,
-      ...(r.workspace?.quotes.map((q) => q.course_title) ?? []),
-    ]
-      .join(" ")
-      .toLowerCase();
-    return haystack.includes(term);
-  });
+  const accounts = ledgerQuery.data?.accounts ?? [];
+  const visible = leads.map(lead => ({
+    lead,
+    workspace: lead.id === selected ? workspaceQuery.data : undefined,
+    loading: false,
+    progress: {
+      done: [lead.details_saved, lead.account_ready, lead.has_quote, lead.has_plan],
+      current: lead.current,
+      plan: lead.id === selected ? progressOf(workspaceQuery.data, accounts).plan : undefined,
+    },
+  }));
+  const rows = visible;
+  const counts = leadsQuery.data?.counts ?? { progress: 0, plan: 0, complete: 0, all: 0 };
 
   useEffect(() => {
-    if (!visible.length) return;
+    if (leadsQuery.isFetching || leadsQuery.isPlaceholderData || !visible.length) return;
     if (!visible.some((r) => r.lead.id === selected)) setSelected(visible[0].lead.id);
   }, [visible, selected]);
 
@@ -285,7 +256,7 @@ export function StudentOnboarding() {
   const stats = [
     { label: "In progress", value: counts.progress, icon: Loader },
     { label: "Awaiting instalment plan", value: counts.plan, icon: Split },
-    { label: "Quotes awaiting acceptance", value: quotesAwaiting, icon: FileClock },
+    { label: "All student enquiries", value: counts.all, icon: FileClock },
     { label: "Onboarded", value: counts.complete, icon: UserCheck },
   ];
   const filters: { key: Filter; label: string }[] = [
@@ -313,6 +284,19 @@ export function StudentOnboarding() {
         </button>
       </header>
 
+      <nav aria-label="Onboarding sources" className="flex flex-wrap gap-2">
+        {([["students", "Student pipeline"], ["interests", "Student app interest"], ["employers", "Employer enquiries"]] as const).map(([key, label]) => (
+          <button key={key} onClick={() => setSource(key)} aria-pressed={source === key}
+            className={source === key ? primary : secondary}>{label}</button>
+        ))}
+      </nav>
+      {source === "interests" && <AppInterests open={async (id, email) => {
+        setSource("students"); setFilter("all"); setOffset(0); setSearch(email);
+        await client.invalidateQueries({ queryKey: ["onboarding", "leads"] });
+        setSelected(id);
+      }} />}
+      {source === "employers" && <WebsiteEnquiries employerOnly />}
+      {source === "students" && <>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         {stats.map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-xl border border-slate-200 bg-white p-4">
@@ -348,6 +332,7 @@ export function StudentOnboarding() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search student, email, batch"
+                maxLength={120}
                 className="w-full rounded-lg border border-slate-300 py-2.5 pl-10 pr-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
               />
             </label>
@@ -356,7 +341,7 @@ export function StudentOnboarding() {
                 <button
                   key={f.key}
                   aria-pressed={filter === f.key}
-                  onClick={() => setFilter(f.key)}
+                  onClick={() => { setFilter(f.key); setOffset(0); }}
                   className={`rounded-full border px-3 py-1 text-sm transition ${filter === f.key ? "border-primary-600 bg-primary-50 text-primary-700" : "border-slate-200 text-slate-700 hover:bg-slate-50"}`}
                 >
                   {f.label} <span className="text-slate-400">{counts[f.key]}</span>
@@ -364,6 +349,12 @@ export function StudentOnboarding() {
               ))}
             </div>
           </div>
+          <label className="block px-4 pb-3 text-sm text-slate-600">Follow-up status
+            <Select aria-label="Follow-up status filter" className={input} value={followupStatus} onChange={event => { setFollowupStatus(event.target.value); setOffset(0); }}>
+              <option value="">All statuses</option>
+              {["new", "contacted", "registered", "dropped"].map(status => <option key={status} value={status}>{status}</option>)}
+            </Select>
+          </label>
           {leadsQuery.isLoading ? (
             <div className="flex justify-center py-12">
               <Loader2 className="animate-spin text-primary-500" size={24} />
@@ -385,6 +376,11 @@ export function StudentOnboarding() {
               ))}
             </ul>
           )}
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t p-3 text-xs">
+            <button className={secondary} disabled={offset === 0 || leadsQuery.isFetching} onClick={() => setOffset(Math.max(0, offset - 50))}>Previous</button>
+            <span>{offset + (visible.length ? 1 : 0)}-{offset + visible.length} of {leadsQuery.data?.total ?? 0}</span>
+            <button className={secondary} disabled={offset + 50 >= (leadsQuery.data?.total ?? 0) || leadsQuery.isFetching} onClick={() => setOffset(offset + 50)}>Next</button>
+          </div>
         </aside>
 
         {active ? (
@@ -392,15 +388,18 @@ export function StudentOnboarding() {
             key={active.lead.id}
             lead={active.lead}
             workspace={active.workspace}
-            loading={active.loading}
+            loading={workspaceQuery.isLoading}
+            loadError={workspaceQuery.error}
             progress={active.progress}
             ledger={ledgerQuery.data}
-            ledgerError={ledgerQuery.error}
+            ledgerError={isAdmin ? ledgerQuery.error : new Error("Fee plans are agreed by an administrator. Continue the account and quote steps here.")}
             refresh={async () => {
               await Promise.all([
                 client.invalidateQueries({ queryKey: ["assisted", active.lead.id] }),
                 client.invalidateQueries({ queryKey: ["onboarding", "ledger"] }),
                 client.invalidateQueries({ queryKey: ["website-enquiries"] }),
+                client.invalidateQueries({ queryKey: ["onboarding", "leads"] }),
+                client.invalidateQueries({ queryKey: ["onboarding-followups", active.lead.id] }),
               ]);
             }}
           />
@@ -413,12 +412,14 @@ export function StudentOnboarding() {
         )}
       </div>
 
+      </>}
       {creating && (
         <NewOnboarding
           close={() => setCreating(false)}
           created={async (id) => {
             setCreating(false);
-            setFilter("progress");
+            setFilter("all");
+            setOffset(0);
             setSearch("");
             await client.invalidateQueries({ queryKey: ["onboarding", "leads"] });
             setSelected(id);
@@ -461,7 +462,7 @@ function StudentRow({
     ? [progress.plan.course_title, progress.plan.batch_code].filter(Boolean).join(" · ")
     : quote
       ? `${quote.course_title} · ${money(quote.total_paise)}`
-      : "No quote yet";
+      : lead.course_title || lead.interest || "Details pending";
   return (
     <button
       onClick={onSelect}
@@ -495,6 +496,7 @@ function OnboardingDetail({
   progress,
   ledger,
   ledgerError,
+  loadError,
   refresh,
 }: {
   lead: Lead;
@@ -503,6 +505,7 @@ function OnboardingDetail({
   progress: Progress;
   ledger?: LedgerReport;
   ledgerError: unknown;
+  loadError?: unknown;
   refresh: () => Promise<void>;
 }) {
   const [step, setStep] = useState(progress.current === -1 ? 3 : progress.current);
@@ -539,6 +542,10 @@ function OnboardingDetail({
     }
   }
   const ctx = { workspace, lead, base, busy, run, requestId, forget, setProblem, setMessage };
+  const followups = useQuery({
+    queryKey: ["onboarding-followups", lead.id],
+    queryFn: () => api.learningRequest<{history:{old_status:string;new_status:string;created_at:string;actor_name?:string}[]}>("GET", `/admin/onboarding/${lead.id}/followups`),
+  });
 
   return (
     <section className="min-w-0 rounded-xl border border-slate-200 bg-white">
@@ -554,6 +561,7 @@ function OnboardingDetail({
       </header>
 
       <div className="space-y-6 p-4 sm:p-6">
+        <FollowUp lead={lead} refresh={refresh} />
         <div role="tablist" aria-label="Onboarding steps" className="grid grid-cols-2 gap-2 xl:grid-cols-4 xl:gap-3">
           {STEPS.map((label, i) => (
             <button
@@ -561,7 +569,7 @@ function OnboardingDetail({
               role="tab"
               aria-selected={step === i}
               onClick={() => setStep(i)}
-              className={`flex items-center justify-between gap-2 whitespace-nowrap rounded-lg border px-3 py-3 text-left text-sm font-medium transition 2xl:px-4 ${step === i ? "border-primary-600 bg-primary-50 text-primary-700 ring-1 ring-primary-600" : "border-slate-200 text-slate-800 hover:bg-slate-50"}`}
+              className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-3 text-left text-sm font-medium transition 2xl:px-4 ${step === i ? "border-primary-600 bg-primary-50 text-primary-700 ring-1 ring-primary-600" : "border-slate-200 text-slate-800 hover:bg-slate-50"}`}
             >
               <span>
                 {i + 1}. {label}
@@ -584,7 +592,11 @@ function OnboardingDetail({
           </p>
         )}
 
-        {loading || !workspace ? (
+        {loadError ? (
+          <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-800">{errorMessage(loadError)}
+            <button className={secondary + " ml-3"} onClick={() => void refresh()}>Retry student details</button>
+          </p>
+        ) : loading || !workspace ? (
           <div className="flex justify-center py-12">
             <Loader2 className="animate-spin text-primary-500" size={24} />
           </div>
@@ -614,6 +626,9 @@ function OnboardingDetail({
 
         <section className={card}>
           <h3 className="font-semibold text-slate-900">Activity and delivery status</h3>
+          {followups.data?.history.map((entry, index) => <p key={index} className="mt-2 text-sm text-slate-600">
+            Follow-up {entry.old_status} → {entry.new_status} · {entry.actor_name || "Staff"} · {when(entry.created_at)}
+          </p>)}
           {workspace?.actions.length ? (
             <ul className="mt-3 divide-y divide-slate-100 text-sm">
               {workspace.actions.map((a, i) => (
@@ -1438,4 +1453,56 @@ function NewOnboarding({ close, created }: { close: () => void; created: (id: st
     </div>,
     document.body,
   );
+}
+
+function FollowUp({ lead, refresh }: { lead: Lead; refresh: () => Promise<void> }) {
+  const [status, setStatus] = useState(lead.status);
+  const [notes, setNotes] = useState(lead.notes || '');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [saved, setSaved] = useState(false);
+  return <form className={card} onSubmit={async event => {
+    event.preventDefault(); setBusy(true); setError(''); setSaved(false);
+    try {
+      await api.learningRequest('PATCH', `/admin/enquiries/${lead.id}`, { status, notes });
+      await refresh(); setSaved(true);
+    } catch (cause) { setError(errorMessage(cause)); }
+    finally { setBusy(false); }
+  }}>
+    <h3 className="font-semibold text-slate-900">Marketing follow-up</h3>
+    <div className="mt-3 flex flex-wrap gap-3 text-sm">
+      <a href={`tel:${lead.phone}`} className={secondary}>Call {lead.phone || 'phone pending'}</a>
+      <a href={`mailto:${lead.email}`} className={secondary}>Email student</a>
+      <p className="w-full text-slate-500">Interested in {lead.interest}</p>
+    </div>
+    <div className="mt-4 grid gap-4 sm:grid-cols-[180px_minmax(0,1fr)]">
+      <label className="text-sm">Follow-up status<Select aria-label="Student follow-up status" className={input} value={status} onChange={event => {setStatus(event.target.value); setSaved(false);}}>
+        {['new','contacted','registered','dropped'].map(value => <option key={value} value={value}>{value}</option>)}
+      </Select></label>
+      <label className="text-sm">Call notes<textarea aria-label="Call notes" className={input} rows={3} maxLength={2000} value={notes} onChange={event => {setNotes(event.target.value);setSaved(false);}} /></label>
+    </div>
+    <button className={primary + ' mt-4'} disabled={busy}>{busy ? 'Saving…' : 'Save follow-up'}</button>
+    {saved && <p role="status" className="mt-2 text-sm text-emerald-700">Follow-up saved.</p>}
+    {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
+  </form>;
+}
+
+function AppInterests({ open }: { open: (id: string, email: string) => Promise<void> }) {
+  const [busy, setBusy] = useState('');
+  const [error, setError] = useState('');
+  const result = useQuery({ queryKey: ['onboarding','app-interests'], queryFn: () => api.learningRequest<{ enquiries: {id:string;name:string;email:string;phone?:string;course_title:string}[] }>('GET','/admin/marketing/interests') });
+  return <section className={card}>
+    <h2 className="text-lg font-semibold">Student app interest</h2>
+    <p className="mt-1 text-sm text-slate-500">Continue a course enquiry in the student pipeline.</p>
+    {(error || result.error) && <p role="alert" className="mt-3 text-red-700">{error || errorMessage(result.error)}</p>}
+    {result.isLoading ? <p>Loading interests…</p> : !result.data?.enquiries.length ? <p className="mt-4">No app interests yet.</p> :
+      <ul className="mt-4 divide-y">{result.data.enquiries.map(row => <li key={row.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
+        <div className="min-w-0"><p className="font-medium">{row.name || row.email}</p><p className="break-all text-sm text-slate-500">{row.email} · {row.course_title}</p></div>
+        <button className={secondary} disabled={!!busy} onClick={async () => {
+          setBusy(row.id); setError('');
+          try {const lead = await api.learningRequest<{id:string}>('POST', `/admin/onboarding/interests/${row.id}`, {});await open(lead.id, row.email);}
+          catch (cause) {setError(errorMessage(cause));} finally {setBusy('');}
+        }}>{busy === row.id ? 'Opening…' : 'Continue onboarding'}</button>
+      </li>)}</ul>}
+  </section>;
 }

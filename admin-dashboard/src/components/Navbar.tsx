@@ -25,14 +25,20 @@ export function Navbar({ user }: NavbarProps) {
       <div className="flex items-center justify-between px-4 py-4 sm:px-6">
         <div className="flex items-center gap-3">
           <Link
-            href="/dashboard"
+            href={
+              process.env.NEXT_PUBLIC_BATCHES_DEV === "true"
+                ? "/dashboard/batches"
+                : "/dashboard"
+            }
             className="text-lg font-bold tracking-tight text-primary-700"
             aria-label="AI4Impact home"
           >
             AI4Impact
           </Link>
           <span className="hidden sm:inline text-sm text-gray-500">
-            Staff console
+            {process.env.NEXT_PUBLIC_BATCHES_DEV === "true"
+              ? "Dev · Batch preview"
+              : "Staff console"}
           </span>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">

@@ -178,7 +178,6 @@ for (const fallback of [false, true]) test(`protected playback keeps the moving 
   await expect(mark).toBeVisible();
   // Renewal may reload the media; wait for its new source to be playable.
   await page.waitForFunction(() => (document.querySelector('video')?.readyState ?? 0) >= 2);
-  await page.getByRole('button', { name: 'Play', exact: true }).last().click();
   await expect.poll(async () => {
     const paused = await page.locator('video').evaluate((el: HTMLVideoElement) => el.paused);
     if (paused) {

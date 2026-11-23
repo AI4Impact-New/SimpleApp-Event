@@ -1,5 +1,5 @@
 // Verified Razorpay checkout and historical demo quotes.
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -23,7 +23,7 @@ import { colors, spacing, borderRadius } from '@/theme/colors';
 import { formatLocalDateTime } from '@/utils/datetime';
 import { formatPaise } from '@/utils/money';
 import { isOrderLinkExpired, orderStatusDisplay } from '@/utils/billing';
-import { openRazorpay } from '@/utils/razorpay';
+import { openRazorpay, formatPaymentFailure, type PaymentFailureDiagnosis } from '@/utils/razorpay';
 import { useQueryClient } from '@tanstack/react-query';
 import { downloadAndSharePdf } from '@/utils/sharePdf';
 
@@ -39,10 +39,44 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
   const [downloading, setDownloading] = useState(false);
   const [paying, setPaying] = useState(false);
   const [paymentError, setPaymentError] = useState('');
+  const [paymentFailure, setPaymentFailure] = useState<PaymentFailureDiagnosis | null>(null);
   const queryClient = useQueryClient();
+
+  const clearUrlFailureState = () => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('payment_status')) {
+        url.searchParams.delete('payment_status');
+        url.searchParams.delete('reason');
+        url.searchParams.delete('error_desc');
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('payment_status') === 'failed') {
+        const reason = params.get('reason') || '';
+        const desc = params.get('error_desc') || '';
+        setPaymentFailure(
+          formatPaymentFailure({
+            description: desc || (reason === 'insufficient_funds' ? 'Insufficient balance in bank account' : ''),
+            reason: reason || undefined,
+          })
+        );
+      }
+    }
+  }, []);
+
   const refreshPayment = async () => {
     const updated = await api.reconcilePayment(orderId);
-    if (updated?.status === 'paid') setPaymentError('');
+    if (updated?.status === 'paid') {
+      setPaymentError('');
+      setPaymentFailure(null);
+      clearUrlFailureState();
+    }
     await refetch();
     await queryClient.invalidateQueries({ queryKey: ['me'] });
     await queryClient.invalidateQueries({ queryKey: ['learning'] });
@@ -56,19 +90,31 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
       if (Platform.OS !== 'web') { await Linking.openURL(order.checkout_url); return; }
       const prepared = await api.preparePayment(orderId);
       if (prepared.checkout) {
-        let failureDesc = '';
+        let failureInfo: PaymentFailureDiagnosis | null = null;
         const result = await openRazorpay({
           ...prepared.checkout,
           onFailure: (failure) => {
-            failureDesc = failure.description || 'Payment was declined by your bank or provider.';
+            failureInfo = formatPaymentFailure(failure);
           },
         });
+        const failedInfo = failureInfo as PaymentFailureDiagnosis | null;
         if (result) {
           const verifiedOrder = await api.verifyPayment(orderId, result);
-          if (verifiedOrder?.status === 'paid') setPaymentError('');
-        } else if (failureDesc) {
-          setPaymentError(failureDesc);
-          notify('Payment declined', failureDesc);
+          if (verifiedOrder?.status === 'paid') {
+            setPaymentError('');
+            setPaymentFailure(null);
+            clearUrlFailureState();
+          }
+        } else if (failedInfo) {
+          setPaymentFailure(failedInfo);
+          setPaymentError(failedInfo.message);
+          if (Platform.OS === 'web' && typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            url.searchParams.set('payment_status', 'failed');
+            url.searchParams.set('reason', failedInfo.reasonCode);
+            if (failedInfo.message) url.searchParams.set('error_desc', failedInfo.message);
+            window.history.replaceState({}, '', url.toString());
+          }
         }
       }
       await refreshPayment();
@@ -227,7 +273,26 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
           ) : null}
         </View>
 
-        {paymentError && order.status !== 'paid' ? (
+        {paymentFailure && order.status !== 'paid' ? (
+          <View style={styles.failureCard}>
+            <View style={styles.failureHeader}>
+              <Ionicons name="close-circle" size={28} color={colors.error} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.failureTitle}>{paymentFailure.title}</Text>
+                <Text style={styles.failureStatusTag}>TRANSACTION FAILED</Text>
+              </View>
+            </View>
+            <View style={styles.failureBody}>
+              <Text style={styles.failureMessage}>{paymentFailure.message}</Text>
+              <View style={styles.failureTipsBox}>
+                <Text style={styles.failureTipsTitle}>Recommended next steps:</Text>
+                <Text style={styles.failureTipsItem}>• {paymentFailure.suggestion}</Text>
+                <Text style={styles.failureTipsItem}>• UPI (Google Pay, PhonePe, Paytm) has the highest bank success rate.</Text>
+                <Text style={styles.failureTipsItem}>• If money was debited by your bank, click "Check payment status" below.</Text>
+              </View>
+            </View>
+          </View>
+        ) : paymentError && order.status !== 'paid' ? (
           <View style={styles.errorBanner}>
             <Ionicons name="alert-circle-outline" size={22} color={colors.error} />
             <View style={{ flex: 1 }}>
@@ -375,5 +440,58 @@ const styles = StyleSheet.create({
     color: '#991b1b',
     marginTop: 2,
     lineHeight: 18,
+  },
+  failureCard: {
+    backgroundColor: '#fff5f5',
+    borderRadius: borderRadius.xl,
+    borderWidth: 1.5,
+    borderColor: '#feb2b2',
+    padding: spacing.lg,
+    gap: spacing.sm,
+  },
+  failureHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  failureTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#9b1c1c',
+  },
+  failureStatusTag: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#c53030',
+    letterSpacing: 0.5,
+    marginTop: 1,
+  },
+  failureBody: {
+    gap: spacing.xs,
+  },
+  failureMessage: {
+    fontSize: 14,
+    color: '#7f1d1d',
+    lineHeight: 20,
+  },
+  failureTipsBox: {
+    marginTop: spacing.xs,
+    backgroundColor: '#ffffff',
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    padding: spacing.sm + 2,
+    gap: 3,
+  },
+  failureTipsTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#991b1b',
+    marginBottom: 2,
+  },
+  failureTipsItem: {
+    fontSize: 12,
+    color: '#7f1d1d',
+    lineHeight: 17,
   },
 });

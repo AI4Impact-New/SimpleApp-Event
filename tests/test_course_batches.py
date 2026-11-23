@@ -147,7 +147,7 @@ def test_fee_plan_defaults_to_students_batch(data):
                 "course_id": data["course"],
                 "mode": "test",
                 "marked_price_paise": 10000,
-                "installments": [{"amount_paise": 10000, "due_on": "2026-11-11"}],
+                "installments": [{"amount_paise": 10000, "due_on": fee_ledger.today().isoformat()}],
                 **selection,
             },
         )

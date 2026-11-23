@@ -26,7 +26,13 @@ test('student onboarding tracks each learner through the four steps', async ({ p
   await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**', async route => {
     const url = new URL(route.request().url());
     let json: unknown = [];
-    if (url.pathname === '/admin/enquiries') json = { enquiries: leads, total: leads.length, offset: 0, limit: 50 };
+    if (url.pathname === '/admin/onboarding') {
+      const enriched = leads.map((lead, i) => ({...lead, details_saved:true, user_id:i ? id(201+i) : null, has_quote:i>=2, has_plan:i===3, current:i===3 ? -1 : i+1}));
+      const stage = url.searchParams.get('stage');
+      const filtered = enriched.filter(row => stage==='plan' ? row.current===3 : stage==='complete' ? row.current===-1 : stage==='all' ? true : row.current!==-1);
+      json = { enquiries:filtered,total:filtered.length,offset:0,limit:50,counts:{progress:3,plan:1,complete:1,all:4} };
+    }
+    else if (url.pathname.endsWith('/followups')) json = {history:[]};
     else if (url.pathname.endsWith('/assisted')) json = workspace[url.pathname.split('/')[3]];
     else if (url.pathname === '/admin/billing/ledger') json = { mode: 'test', accounts: [account], batches: [batch], courses: [] };
     else if (url.pathname === '/admin/billing/ledger/accounts' && route.request().method() === 'POST') { planBody = route.request().postDataJSON(); json = { id: id(401) }; }
@@ -71,4 +77,32 @@ test('student onboarding tracks each learner through the four steps', async ({ p
 
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBeTruthy();
+});
+
+test('marketing can call and save follow-up without loading every workspace or the finance ledger', async ({ page }) => {
+  const payload = Buffer.from(JSON.stringify({ token_use:'id',sub:'marketing-test','cognito:groups':['Marketing'],exp:Math.floor(Date.now()/1000)+3600 })).toString('base64url');
+  await page.addInitScript(token => localStorage.setItem('auth_id_token',token),`test.${payload}.test`);
+  let details=0, finance=0;
+  let change:unknown;
+  await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**', async route => {
+    const path=new URL(route.request().url()).pathname;
+    let json:unknown=[];
+    if(path==='/admin/onboarding') json={enquiries:[{...leads[0],current:0,details_saved:false,has_quote:false,has_plan:false}],total:1,offset:0,limit:50,counts:{progress:1,plan:0,complete:0,all:1}};
+    else if(path.endsWith('/assisted')){details++;json={lead:leads[0],enrollment:null,quotes:[],actions:[],quote_email_enabled:false};}
+    else if(path.endsWith('/followups'))json={history:[]};
+    else if(path.startsWith('/admin/billing/ledger'))finance++;
+    else if(route.request().method()==='PATCH'){change=route.request().postDataJSON();json={id:id(1)};}
+    await route.fulfill({json});
+  });
+  await page.setViewportSize({width:390,height:844});
+  await page.goto(base+'/dashboard/onboarding');
+  await expect(page.getByRole('heading',{name:'Student onboarding'})).toBeVisible();
+  await expect(page.getByRole('link',{name:'Call +919000000000'})).toBeVisible();
+  await page.getByLabel('Call notes',{exact:true}).fill('Called, wants a quote');
+  await pick(page.getByLabel('Student follow-up status',{exact:true}),'contacted');
+  await page.getByRole('button',{name:'Save follow-up',exact:true}).click();
+  await expect.poll(()=>change).toEqual({status:'contacted',notes:'Called, wants a quote'});
+  expect(finance).toBe(0);
+  expect(details).toBeLessThanOrEqual(2);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBeTruthy();
 });

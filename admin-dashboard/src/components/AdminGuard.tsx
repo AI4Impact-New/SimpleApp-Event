@@ -53,12 +53,12 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         }
         return;
       }
-      if (!admin && marketing && path !== "/dashboard/course-enquiries") {
+      if (!admin && marketing && !["/dashboard/onboarding", "/dashboard/course-enquiries"].includes(path || "")) {
         setAllowed(null);
-        router.replace("/dashboard/course-enquiries");
+        router.replace("/dashboard/onboarding");
         return;
       }
-      setAllowed(admin || (marketing && path === "/dashboard/course-enquiries"));
+      setAllowed(admin || (marketing && ["/dashboard/onboarding", "/dashboard/course-enquiries"].includes(path || "")));
     }
     void authorize();
     return () => { active = false; };

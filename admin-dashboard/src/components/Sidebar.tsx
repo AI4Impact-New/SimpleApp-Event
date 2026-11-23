@@ -34,11 +34,7 @@ const groups = [
     title: "Students & payments",
     items: [
       { href: "/dashboard/users", label: "Students & users", icon: Users },
-      {
-        href: "/dashboard/course-enquiries",
-        label: "Course Enquiries",
-        icon: MessageCircle,
-      },
+
       {
         href: "/dashboard/onboarding",
         label: "Student onboarding",

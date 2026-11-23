@@ -21,7 +21,7 @@ export default function HomePage() {
       const destination = token && isAdminFromToken(token)
         ? '/dashboard'
         : token && isMarketingFromToken(token)
-          ? '/dashboard/course-enquiries'
+          ? '/dashboard/onboarding'
           : '/login';
       router.replace(destination);
     });

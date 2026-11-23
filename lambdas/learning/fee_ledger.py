@@ -1,6 +1,6 @@
 """Audited INR fee obligations, installment schedules, receipts and as-of reporting."""
 
-import csv, io, json, uuid
+import csv, io, json, os, uuid
 from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 from decimal import Decimal
@@ -52,7 +52,7 @@ def bucket(days):
 def mode(value=None):
     from learning.payments import credentials
 
-    value = value or credentials()["mode"]
+    value = value or os.environ.get("BILLING_MODE") or credentials()["mode"]
     if value not in ("test", "live"):
         raise ApiError(400, "Use test or live mode")
     return value
@@ -199,7 +199,7 @@ def report(actor, query):
     m = mode(query.get("mode"))
     params = [m, asof]
     where = ["a.mode=%s", "a.billed_on<=%s"]
-    for field, column in [("course_id", "a.course_id"), ("trainer_id", "b.trainer_id")]:
+    for field, column in [("course_id", "a.course_id"), ("trainer_id", "b.trainer_id"), ("user_id", "a.user_id")]:
         if query.get(field):
             where.append(column + "=%s")
             params.append(identifier(query[field]))

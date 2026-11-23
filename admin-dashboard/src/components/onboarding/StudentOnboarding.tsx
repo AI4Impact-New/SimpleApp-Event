@@ -217,6 +217,7 @@ export function StudentOnboarding() {
       search: query, stage: filter, status: followupStatus, offset: String(offset),
     })),
     enabled: source === "students",
+    placeholderData: previous => previous,
   });
   const leads = useMemo(() => leadsQuery.data?.enquiries ?? [], [leadsQuery.data]);
   const activeLead = leads.find(lead => lead.id === selected);

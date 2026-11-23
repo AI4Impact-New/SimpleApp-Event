@@ -1,5 +1,5 @@
 // Verified Razorpay checkout and historical demo quotes.
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -97,6 +97,7 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
             failureInfo = formatPaymentFailure(failure);
           },
         });
+        const failedInfo = failureInfo as PaymentFailureDiagnosis | null;
         if (result) {
           const verifiedOrder = await api.verifyPayment(orderId, result);
           if (verifiedOrder?.status === 'paid') {
@@ -104,14 +105,14 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
             setPaymentFailure(null);
             clearUrlFailureState();
           }
-        } else if (failureInfo) {
-          setPaymentFailure(failureInfo);
-          setPaymentError(failureInfo.message);
+        } else if (failedInfo) {
+          setPaymentFailure(failedInfo);
+          setPaymentError(failedInfo.message);
           if (Platform.OS === 'web' && typeof window !== 'undefined') {
             const url = new URL(window.location.href);
             url.searchParams.set('payment_status', 'failed');
-            url.searchParams.set('reason', failureInfo.reasonCode);
-            if (failureInfo.message) url.searchParams.set('error_desc', failureInfo.message);
+            url.searchParams.set('reason', failedInfo.reasonCode);
+            if (failedInfo.message) url.searchParams.set('error_desc', failedInfo.message);
             window.history.replaceState({}, '', url.toString());
           }
         }

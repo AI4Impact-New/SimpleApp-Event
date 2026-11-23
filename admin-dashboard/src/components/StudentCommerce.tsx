@@ -155,13 +155,14 @@ export function StudentCommerce({ checkout = false }: { checkout?: boolean }) {
                         ...prepared.checkout,
                         onFailure: (f) => { failureInfo = formatPaymentFailure(f); },
                       });
+                      const failedInfo = failureInfo as PaymentFailureDiagnosis | null;
                       if (result) {
                         await billing.verify(order.id, result);
                         setFailureDiagnosis(null);
                         setError("");
-                      } else if (failureInfo) {
-                        setFailureDiagnosis(failureInfo);
-                        setError(failureInfo.message);
+                      } else if (failedInfo) {
+                        setFailureDiagnosis(failedInfo);
+                        setError(failedInfo.message);
                       }
                     }
                     const updated = await billing.reconcile(order.id);

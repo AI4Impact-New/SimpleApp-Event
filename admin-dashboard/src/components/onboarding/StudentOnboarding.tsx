@@ -40,6 +40,7 @@ type Lead = {
   notes?: string;
   current: number;
   details_saved: boolean;
+  account_ready: boolean;
   has_quote: boolean;
   has_plan: boolean;
   user_id?: string;
@@ -177,9 +178,9 @@ type Progress = {
 };
 function progressOf(w: Workspace | undefined, accounts: FeeAccount[]): Progress {
   const uid = w?.enrollment?.user_id;
-  const courses = new Set(w?.quotes.map((q) => q.course_id));
+  const courses = new Set(w?.quotes.slice(0, 1).map((q) => q.course_id));
   const plan = uid
-    ? accounts.find((a) => a.user_id === uid && courses.has(a.course_id))
+    ? accounts.find((a) => a.user_id === uid && courses.has(a.course_id) && !a.source_order_id && !a.closed_at)
     : undefined;
   const done = [
     !!w?.enrollment,
@@ -236,7 +237,7 @@ export function StudentOnboarding() {
     workspace: lead.id === selected ? workspaceQuery.data : undefined,
     loading: false,
     progress: {
-      done: [lead.details_saved, !!lead.user_id, lead.has_quote, lead.has_plan],
+      done: [lead.details_saved, lead.account_ready, lead.has_quote, lead.has_plan],
       current: lead.current,
       plan: lead.id === selected ? progressOf(workspaceQuery.data, accounts).plan : undefined,
     },
@@ -387,6 +388,7 @@ export function StudentOnboarding() {
             lead={active.lead}
             workspace={active.workspace}
             loading={workspaceQuery.isLoading}
+            loadError={workspaceQuery.error}
             progress={active.progress}
             ledger={ledgerQuery.data}
             ledgerError={isAdmin ? ledgerQuery.error : new Error("Fee plans are agreed by an administrator. Continue the account and quote steps here.")}
@@ -493,6 +495,7 @@ function OnboardingDetail({
   progress,
   ledger,
   ledgerError,
+  loadError,
   refresh,
 }: {
   lead: Lead;
@@ -501,6 +504,7 @@ function OnboardingDetail({
   progress: Progress;
   ledger?: LedgerReport;
   ledgerError: unknown;
+  loadError?: unknown;
   refresh: () => Promise<void>;
 }) {
   const [step, setStep] = useState(progress.current === -1 ? 3 : progress.current);
@@ -587,7 +591,11 @@ function OnboardingDetail({
           </p>
         )}
 
-        {loading || !workspace ? (
+        {loadError ? (
+          <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-800">{errorMessage(loadError)}
+            <button className={secondary + " ml-3"} onClick={() => void refresh()}>Retry student details</button>
+          </p>
+        ) : loading || !workspace ? (
           <div className="flex justify-center py-12">
             <Loader2 className="animate-spin text-primary-500" size={24} />
           </div>

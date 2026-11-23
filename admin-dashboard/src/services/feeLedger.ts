@@ -23,6 +23,7 @@ export type FeeAccount = {
   mode: "test" | "live";
   version: number;
   source_order_id?: string;
+  closed_at?: string;
   total_paise: number;
   marked_price_paise: number;
   discount_bps: number;

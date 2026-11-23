@@ -7,10 +7,15 @@ from shared.db import get_db_cursor
 SUMMARY = """
 WITH pipeline AS (
  SELECT e.*,a.user_id,
-   CASE WHEN a.enquiry_id IS NULL THEN 0 WHEN a.user_id IS NULL THEN 1
+   CASE WHEN a.enquiry_id IS NULL THEN 0 WHEN a.user_id IS NULL OR (a.account_created_here AND NOT EXISTS (
+          SELECT 1 FROM assisted_actions invite WHERE invite.enquiry_id=e.id
+            AND invite.action='invitation' AND invite.state='accepted')) THEN 1
         WHEN q.id IS NULL THEN 2 WHEN f.id IS NULL THEN 3 ELSE -1 END AS current,
    q.course_title,q.total_paise AS quote_total_paise,b.code AS batch_code,
    (a.enquiry_id IS NOT NULL) AS details_saved,
+   (a.user_id IS NOT NULL AND (NOT a.account_created_here OR EXISTS (
+       SELECT 1 FROM assisted_actions invite WHERE invite.enquiry_id=e.id
+         AND invite.action='invitation' AND invite.state='accepted'))) AS account_ready,
    (q.id IS NOT NULL) AS has_quote,(f.id IS NOT NULL) AS has_plan
  FROM website_enquiries e
  LEFT JOIN assisted_enrollments a ON a.enquiry_id=e.id
@@ -64,7 +69,7 @@ def listing(actor, query):
             count(*) FILTER(WHERE current=-1) AS complete""" + where, values)
         counts = dict(cur.fetchone())
         cur.execute(SUMMARY + """SELECT id,name,email,phone,interest,status,notes,created_at,source_page,
-            consent_at,consent_version,user_id,current,details_saved,has_quote,has_plan,
+            consent_at,consent_version,user_id,current,details_saved,account_ready,has_quote,has_plan,
             course_title,quote_total_paise,batch_code""" + where + selection +
             " ORDER BY created_at DESC,id LIMIT 50 OFFSET %s", (*values, offset))
         rows = cur.fetchall()

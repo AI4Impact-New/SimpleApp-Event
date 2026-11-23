@@ -335,6 +335,7 @@ def report(actor, query):
         for field, column in [
             ("course_id", "p.course_id"),
             ("trainer_id", "fb.trainer_id"),
+            ("user_id", "p.user_id"),
         ]:
             if query.get(field):
                 attempt_where.append(column + "=%s")

@@ -20,6 +20,8 @@ import { useDemoOrder, useFinishDemoCheckout } from '@/hooks/useBilling';
 import { apiErrorMessage } from '@/services/apiErrors';
 import type { DemoCheckoutAction } from '@/types/billing';
 import { colors, spacing, borderRadius } from '@/theme/colors';
+import { isWeb } from '@/hooks/useWebLayout';
+import { WebCheckout } from '@/components/web/WebCheckout';
 import { formatLocalDateTime } from '@/utils/datetime';
 import { formatPaise } from '@/utils/money';
 import { isOrderLinkExpired, orderStatusDisplay } from '@/utils/billing';
@@ -127,10 +129,8 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
   };
 
 
-  const notify = (title: string, message: string) => {
-    if (Platform.OS === 'web') window.alert(`${title}\n\n${message}`);
-    else Alert.alert(title, message);
-  };
+  // Alert.alert renders the portal's in-app dialog on web (utils/webAlert), never a native browser popup.
+  const notify = (title: string, message: string) => Alert.alert(title, message);
 
   const runAction = async (action: DemoCheckoutAction) => {
     try {
@@ -143,14 +143,10 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
           const latest = (await refetch()).data;
           if (latest && latest.status === 'pending') await runAction(action);
         };
-        if (Platform.OS === 'web') {
-          if (window.confirm('Connection problem. We could not confirm the order status. Check it and retry?')) void retry();
-        } else {
-          Alert.alert('Connection problem', 'We could not confirm the order status. Retry checks the current order first.', [
-            { text: 'Retry', onPress: () => void retry() },
-            { text: 'Not now', style: 'cancel' },
-          ]);
-        }
+        Alert.alert('Connection problem', 'We could not confirm the order status. Retry checks the current order first.', [
+          { text: 'Retry', onPress: () => void retry() },
+          { text: 'Not now', style: 'cancel' },
+        ]);
         return;
       }
       if (status === 410) notify('Link expired', 'This checkout link has expired. Start a new order from the course page.');
@@ -161,10 +157,6 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
   };
 
   const confirmCancel = () => {
-    if (Platform.OS === 'web') {
-      if (window.confirm('Cancel this demo order?')) void runAction('cancel');
-      return;
-    }
     Alert.alert('Cancel order?', 'This demo order will be cancelled.', [
       { text: 'Keep order', style: 'cancel' },
       { text: 'Cancel order', style: 'destructive', onPress: () => runAction('cancel') },
@@ -195,6 +187,35 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
       setDownloading(false);
     }
   };
+
+  if (isWeb) {
+    const linkExpired = !!order && isOrderLinkExpired(order);
+    const display = order ? orderStatusDisplay(order) : { label: '', color: colors.text };
+    return (
+      <WebCheckout
+        order={order}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => refetch()}
+        onBack={onBack}
+        linkExpired={linkExpired}
+        pending={order?.status === 'pending' && !linkExpired}
+        statusLabel={display.label}
+        statusColor={display.color}
+        paying={paying}
+        downloading={downloading}
+        demoBusy={finish.isPending}
+        paymentFailure={paymentFailure}
+        paymentError={paymentError}
+        onPay={() => void pay()}
+        onCheckStatus={() => void refreshPayment().catch(e => notify('Payment status', apiErrorMessage(e, 'Please retry checking payment.')))}
+        onDownload={() => void downloadInvoice()}
+        onCompleteDemo={() => void runAction('complete_demo')}
+        onCancelDemo={confirmCancel}
+        onOpenLearning={onOpenLearning && order ? () => onOpenLearning(order.course_id) : undefined}
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -302,6 +323,7 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
           </View>
         ) : null}
 
+        <View style={styles.actions}>
         {order.status === 'paid' && !order.demo && onOpenLearning ? (
           <TouchableOpacity
             style={[styles.primaryBtn, { backgroundColor: colors.success }]}
@@ -352,6 +374,7 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
             </>
           )}
         </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -408,6 +431,7 @@ const styles = StyleSheet.create({
   },
   primaryText: { color: colors.white, fontSize: 16, fontWeight: '600' },
   disabled: { opacity: 0.6 },
+  actions: { gap: spacing.md },
   secondaryBtn: {
     flexDirection: 'row',
     alignItems: 'center',

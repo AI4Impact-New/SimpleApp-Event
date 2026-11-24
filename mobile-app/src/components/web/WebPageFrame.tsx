@@ -8,7 +8,6 @@ import { colors, layout } from '@/theme/colors';
 const READING_ROUTES = new Set([
   'EditProfile',
   'PrivacyPolicy',
-  'Checkout',
   'ProgrammeCheckout',
   'NotificationDetail',
   'VerifyCertificate',

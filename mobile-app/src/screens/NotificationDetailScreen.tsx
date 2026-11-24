@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useNotifications } from '@/hooks/useLearning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
+import { useWebButtons } from '@/theme/webButtons';
 import { formatLocalDateTime } from '@/utils/datetime';
 
 interface NotificationDetailScreenProps {
@@ -15,6 +16,7 @@ interface NotificationDetailScreenProps {
 }
 
 export function NotificationDetailScreen({ notificationId, onBack, onOpenCourse }: NotificationDetailScreenProps) {
+  const { fitButton } = useWebButtons();
   // Read from the owned inbox list, never from navigation params: the server decides what this user can see.
   const { data: notifications, isLoading, isError, refetch, isFetching } = useNotifications();
   const item = notifications?.find((n) => n.id === notificationId);
@@ -45,7 +47,7 @@ export function NotificationDetailScreen({ notificationId, onBack, onOpenCourse 
           <Text style={styles.time}>{formatLocalDateTime(item.created_at)}</Text>
           <Text style={styles.body}>{item.body}</Text>
           {item.course_id ? (
-            <TouchableOpacity style={styles.primaryBtn} onPress={() => onOpenCourse(item.course_id!)} activeOpacity={0.75}>
+            <TouchableOpacity style={[styles.primaryBtn, fitButton]} onPress={() => onOpenCourse(item.course_id!)} activeOpacity={0.75}>
               <Ionicons name="school-outline" size={20} color={colors.white} />
               <Text style={styles.primaryBtnText}>Open course</Text>
             </TouchableOpacity>

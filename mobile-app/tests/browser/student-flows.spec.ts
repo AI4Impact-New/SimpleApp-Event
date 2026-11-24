@@ -456,6 +456,11 @@ for (const width of [390, 1440]) for (const outcome of ['captured', 'authorized'
   }, outcome);
   await page.goto(`/checkout/${aid}`);
   await expect(page.getByText('Test payment. No real money is collected.', { exact: true })).toBeVisible();
+  if (width >= 1024) {
+    // Desktop buttons size to their label; they must never stretch across the page column.
+    const box = await page.getByRole('button', { name: 'Pay with Razorpay · TEST', exact: true }).boundingBox();
+    expect(box?.width ?? 0).toBeLessThan(480);
+  }
   await page.getByRole('button', { name: 'Pay with Razorpay · TEST', exact: true }).click();
   await expect.poll(() => prepared).toBe(1);
   if (outcome === 'captured') {

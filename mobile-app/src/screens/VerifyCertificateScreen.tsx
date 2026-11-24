@@ -20,6 +20,7 @@ import { api } from '@/services/api';
 import { apiErrorMessage } from '@/services/apiErrors';
 import type { CertificateVerification } from '@/types/learning';
 import { colors, spacing, borderRadius } from '@/theme/colors';
+import { useWebButtons } from '@/theme/webButtons';
 import { formatLocalDate } from '@/utils/datetime';
 
 interface VerifyCertificateScreenProps {
@@ -30,6 +31,7 @@ interface VerifyCertificateScreenProps {
 const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 export function VerifyCertificateScreen({ onBack, initialId }: VerifyCertificateScreenProps) {
+  const { fitButton } = useWebButtons();
   const [input, setInput] = useState(initialId ?? '');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CertificateVerification | null>(null);
@@ -109,7 +111,7 @@ export function VerifyCertificateScreen({ onBack, initialId }: VerifyCertificate
             returnKeyType="search"
             placeholderTextColor={colors.textMuted}
           />
-          <TouchableOpacity style={[styles.btn, loading && { opacity: 0.6 }]} onPress={() => verify()} disabled={loading} activeOpacity={0.75}>
+          <TouchableOpacity style={[styles.btn, fitButton, loading && { opacity: 0.6 }]} onPress={() => verify()} disabled={loading} activeOpacity={0.75}>
             {loading ? <ActivityIndicator size="small" color={colors.white} /> : <Text style={styles.btnText}>Verify</Text>}
           </TouchableOpacity>
           {Platform.OS !== 'web' ? (

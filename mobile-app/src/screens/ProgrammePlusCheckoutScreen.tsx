@@ -9,11 +9,13 @@ import { LearnerIdCard } from '@/components/LearnerIdCard';
 import { useMyProfile } from '@/hooks/useMyProfile';
 import { useMyLearning } from '@/hooks/useLearning';
 import { colors, fonts, palette } from '@/theme/colors';
+import { useWebButtons } from '@/theme/webButtons';
 import { PROGRAMME_PLUS_MODULES, openProgrammePlusSite } from '@/screens/ProgrammePlusScreen';
 
 export const PROGRAMME_PLUS_PRICE = '₹24,999';
 
 export function ProgrammePlusCheckoutScreen({ onBack }: { onBack: () => void }) {
+  const { fitButton, wide } = useWebButtons();
   const profile = useMyProfile();
   const learning = useMyLearning();
   const [agreed, setAgreed] = useState(false);
@@ -68,11 +70,11 @@ export function ProgrammePlusCheckoutScreen({ onBack }: { onBack: () => void }) 
           <Ionicons name={agreed ? 'checkbox' : 'square-outline'} size={20} color={agreed ? palette.teal600 : palette.slate400} />
           <Text style={styles.checkText}>I understand Programme+ is an optional add-on and agree to the programme terms.</Text>
         </Pressable>
-        <Pressable disabled accessibilityRole="button" accessibilityState={{ disabled: true }} style={styles.payBtn}>
+        <Pressable disabled accessibilityRole="button" accessibilityState={{ disabled: true }} style={[styles.payBtn, fitButton]}>
           <Ionicons name="lock-closed-outline" size={16} color={palette.slate500} />
           <Text style={styles.payText}>Pay {PROGRAMME_PLUS_PRICE} · Coming soon</Text>
         </Pressable>
-        <Text style={styles.note}>Online payment for Programme+ isn't open yet. We'll notify you when registration opens.</Text>
+        <Text style={[styles.note, wide && { textAlign: 'left' }]}>Online payment for Programme+ isn't open yet. We'll notify you when registration opens.</Text>
       </View>
     </ScrollView>
   );

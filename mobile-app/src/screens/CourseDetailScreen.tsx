@@ -81,7 +81,7 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
     try {
       await markInterest.mutateAsync(courseId);
       setMarkedInterested(true);
-      Alert.alert('Done', "You're marked as interested. We'll be in touch.");
+      Alert.alert("You're on the list", "We've noted your interest. The AI4Impact team will be in touch soon.");
     } catch (err: any) {
       Alert.alert('Error', apiErrorMessage(err, 'Failed to mark interest.'));
     }

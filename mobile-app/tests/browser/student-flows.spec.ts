@@ -458,16 +458,16 @@ for (const width of [390, 1440]) for (const outcome of ['captured', 'authorized'
   await expect(page.getByText('Test payment. No real money is collected.', { exact: true })).toBeVisible();
   if (width >= 1024) {
     // Desktop buttons size to their label; they must never stretch across the page column.
-    const box = await page.getByRole('button', { name: 'Pay with Razorpay · TEST', exact: true }).boundingBox();
+    const box = await page.getByRole('button', { name: 'Pay securely · TEST', exact: true }).boundingBox();
     expect(box?.width ?? 0).toBeLessThan(480);
   }
-  await page.getByRole('button', { name: 'Pay with Razorpay · TEST', exact: true }).click();
+  await page.getByRole('button', { name: 'Pay securely · TEST', exact: true }).click();
   await expect.poll(() => prepared).toBe(1);
   if (outcome === 'captured') {
     await expect(page.getByText('Payment verified · enrolled', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Pay with Razorpay · TEST', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Pay securely · TEST', exact: true })).toHaveCount(0);
   } else {
-    await expect(page.getByRole('button', { name: 'Pay with Razorpay · TEST', exact: true })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Pay securely · TEST', exact: true })).toBeEnabled();
     await expect(page.getByText('Awaiting payment', { exact: true })).toBeVisible();
     await expect(page.getByText('Payment verified · enrolled', { exact: true })).toHaveCount(0);
   }

@@ -124,7 +124,7 @@ function StatusCard(props: WebCheckoutProps & { order: DemoOrder }) {
       : order.status === 'pending'
         ? order.demo
           ? { title: 'Complete the demo payment', text: 'Historical demo order. No money is collected and no course access is granted.' }
-          : { title: 'Complete your payment', text: 'Pay securely with Razorpay to unlock the course. Already charged? Check the payment status instead of paying again.' }
+          : { title: 'Complete your payment', text: 'Pay securely to unlock the course. Already charged? Check the payment status instead of paying again.' }
         : order.status === 'demo_completed'
           ? { title: 'Demo payment completed', text: 'No money was collected for this demo order.' }
           : order.status === 'cancelled'
@@ -182,7 +182,7 @@ function PaymentProblem({ failure, message }: { failure: PaymentFailureDiagnosis
 
 function SummaryCard(props: WebCheckoutProps & { order: DemoOrder; wide: boolean }) {
   const { order, pending } = props;
-  const payLabel = props.paying ? 'Opening secure checkout…' : order.mode === 'test' ? 'Pay with Razorpay · TEST' : 'Pay with Razorpay';
+  const payLabel = props.paying ? 'Opening secure checkout…' : order.mode === 'test' ? 'Pay securely · TEST' : 'Pay securely';
   return (
     <View style={[styles.card, props.wide && styles.aside]}>
       <View style={[styles.cardPad, { gap: 14 }]}>

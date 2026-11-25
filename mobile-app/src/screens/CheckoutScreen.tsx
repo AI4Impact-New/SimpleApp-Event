@@ -286,7 +286,7 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
           <Text style={styles.label}>Status</Text>
           <Text style={[styles.status, { color: statusDisplay.color }]}>{statusDisplay.label}</Text>
           {!order.demo && order.status === 'paid' ? <Text style={styles.muted}>Your payment has been verified. Your course is available in My learning.</Text> : null}
-          {!order.demo && order.status === 'pending' ? <Text style={styles.muted}>Click "Pay with Razorpay" below to complete your enrollment. If you were already charged, use Check payment status.</Text> : null}
+          {!order.demo && order.status === 'pending' ? <Text style={styles.muted}>Click "Pay securely" below to complete your enrollment. If you were already charged, use Check payment status.</Text> : null}
           {order.status === 'pending' ? (
             <Text style={styles.muted}>
               {linkExpired ? 'Expired' : 'Link expires'} {formatLocalDateTime(order.expires_at)}
@@ -359,7 +359,7 @@ export function CheckoutScreen({ orderId, onBack, onOpenLearning }: CheckoutScre
         ) : null}
 
         {!order.demo && pending ? <TouchableOpacity accessibilityRole="button" style={styles.primaryBtn} disabled={paying} onPress={() => void pay()}>
-          <Text style={styles.primaryText}>{paying ? 'Opening secure checkout…' : order.mode === 'test' ? 'Pay with Razorpay · TEST' : 'Pay with Razorpay'}</Text>
+          <Text style={styles.primaryText}>{paying ? 'Opening secure checkout…' : order.mode === 'test' ? 'Pay securely · TEST' : 'Pay securely'}</Text>
         </TouchableOpacity> : null}
         {!order.demo && order.status === 'pending' ? <TouchableOpacity accessibilityRole="button" style={styles.secondaryBtn} disabled={paying} onPress={() => void refreshPayment().catch(e => notify('Payment status', apiErrorMessage(e, 'Please retry checking payment.')))}>
           <Text style={styles.secondaryText}>Check payment status</Text>

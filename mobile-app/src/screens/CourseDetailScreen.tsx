@@ -397,6 +397,11 @@ export function CourseDetailScreen({ courseId, onBack, onOpenLearning, onOpenChe
                   </>
                 ) : null}
               </View>
+              {Boolean(price.gst_bps) && (
+                <Text style={styles.bulletDesc}>
+                  Includes {formatPaise(price.gst_paise ?? 0)} GST ({(price.gst_bps ?? 0) / 100}%)
+                </Text>
+              )}
               <Text style={[styles.bulletDesc, { marginTop: 6 }]}>
                 Pay securely with Razorpay. Test checkout is currently restricted to authorized QA accounts.
               </Text>

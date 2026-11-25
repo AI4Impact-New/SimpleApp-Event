@@ -6,6 +6,8 @@ export interface Price {
   marked_price_paise: number;
   discount_percentage: number;
   discount_paise: number;
+  gst_bps?: number;
+  gst_paise?: number;
   total_paise: number;
   currency: string;
 }
@@ -19,6 +21,8 @@ export interface Order {
   marked_price_paise: number;
   discount_bps: number;
   discount_paise: number;
+  gst_bps?: number;
+  gst_paise?: number;
   total_paise: number;
   status: "pending" | "demo_completed" | "cancelled" | "paid" | "refunded" | "partially_refunded";
   created_at: string;

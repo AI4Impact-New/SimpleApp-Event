@@ -7,6 +7,11 @@ variable "razorpay_enabled" {
   type    = bool
   default = false
 }
+variable "course_gst_enabled" {
+  description = "Charge 18% GST on new standard course checkout orders after applying migration 025."
+  type        = bool
+  default     = false
+}
 resource "aws_iam_role_policy" "learning_payments" {
   name = "razorpay-secret"
   role = aws_iam_role.learning.id

@@ -34,9 +34,22 @@ def amounts(marked, bps):
             'discount_paise':discount,'total_paise':marked-discount,'currency':'INR'}
 
 
+def checkout_amounts(marked, bps):
+    price = amounts(marked, bps)
+    taxable = price['total_paise']
+    gst_bps = 1800 if os.environ.get('COURSE_GST_ENABLED', 'false').lower() == 'true' else 0
+    gst = (taxable * gst_bps + 5000) // 10000
+    return {**price, 'gst_bps': gst_bps, 'gst_paise': gst, 'total_paise': taxable + gst}
+
+
+def catalog_amounts(marked, bps):
+    from learning import payments
+    return checkout_amounts(marked, bps) if payments.enabled() else amounts(marked, bps)
+
+
 def catalog(actor):
     rows=execute_query('SELECT id,title,slug,marked_price_paise,discount_bps FROM courses WHERE archived=false AND status=\'published\' ORDER BY display_order,id',fetch='all') or []
-    return [{**r,**amounts(int(r['marked_price_paise']),r['discount_bps'])} for r in rows]
+    return [{**r,**catalog_amounts(int(r['marked_price_paise']),r['discount_bps'])} for r in rows]
 
 
 def set_price(actor,cid,body):
@@ -47,7 +60,7 @@ def set_price(actor,cid,body):
     row=execute_query('UPDATE courses SET marked_price_paise=%s,discount_bps=%s,updated_at=now() WHERE id=%s AND archived=false RETURNING id,title',
                       (marked,bps,cid),fetch='one')
     if not row: raise ApiError(404,'Active course not found')
-    return {**row,**amounts(marked,bps)}
+    return {**row,**catalog_amounts(marked,bps)}
 
 
 def order_response(row):
@@ -143,7 +156,15 @@ def invoice_pdf(actor,oid):
     for line in simpleSplit(row['course_title'],'Helvetica-Bold',12,w-80):pdf.drawString(40,y,line);y-=18
     def money(paise):return 'INR '+format(Decimal(paise)/100,',.2f')
     y-=25;pdf.setFont('Helvetica',12)
-    for label,value in [('Marked price',money(row['marked_price_paise'])),('Discount ('+str(Decimal(row['discount_bps'])/100)+'%)','- '+money(row['discount_paise'])),('Total',money(row['total_paise']))]:
+    lines = [('Marked price', money(row['marked_price_paise'])),
+             ('Discount (' + str(Decimal(row['discount_bps']) / 100) + '%)', '- ' + money(row['discount_paise']))]
+    if row.get('gst_bps'):
+        lines.extend([
+            ('Taxable course fee', money(row['marked_price_paise'] - row['discount_paise'])),
+            (f"GST ({row['gst_bps'] / 100:g}%)", money(row['gst_paise'])),
+        ])
+    lines.append(('Total', money(row['total_paise'])))
+    for label, value in lines:
         pdf.drawString(40,y,label);pdf.drawRightString(w-40,y,value);y-=28
     pdf.setStrokeColor(colors.HexColor('#cbd5e1'));pdf.line(40,y,w-40,y)
     pdf.setFont('Helvetica-Bold',11);pdf.setFillColor(colors.HexColor('#9a3412'))

@@ -425,11 +425,57 @@ export const TRAINERS: Trainer[] = [
   },
   {
     slug: "ritesh",
-    name: "Ritesh",
-    initials: "R",
-    subtitle: "Product discovery, PRDs, metrics and AI products",
+    name: "Ritesh Pandey",
+    initials: "RP",
+    role: "Product Leader · Agile Practitioner · AI Product & Automation Educator",
+    subtitle: "About 14 years building B2B SaaS products across fintech and investment banking; leads AI product and automation training",
     assignments: ["Lead trainer · APAB"],
     topics: ["Product discovery", "Writing PRDs", "Product metrics", "AI automation"],
+    photo: { src: "/trainers/ritesh-pandey.jpg", alt: "Portrait of Ritesh Pandey" },
+    company: "Lead Trainer, AI Product & Automation Builder · AI4Impact",
+    intro: "Helps professionals turn business problems into AI products people actually use, from discovery and PRDs to prototypes, working automation and launch.",
+    stats: [
+      { value: "14+", label: "years in product & technology" },
+      { value: "5", label: "organisations across product, fintech & technology" },
+      { value: "AI", label: "product thinking to working automation" },
+    ],
+    lead: "A product leader and Agile practitioner with approximately 14 years of experience building and scaling B2B SaaS products across fintech and investment banking, bringing together product strategy, technical architecture and practical AI-enabled product delivery.",
+    bio: {
+      title: "Bridging product strategy, engineering and real-world AI adoption.",
+      paragraphs: [
+        "Ritesh Pandey has driven scalable B2B SaaS solutions across fintech and investment banking ecosystems, including wealth management, compliance and trading systems. His work sits at the intersection of strategic product management and deep technical architecture: translating complex business needs into product vision, roadmaps, requirements and delivery plans. His experience includes next-generation systems, FIX-protocol-backed low-latency platforms, microservices and the redesign of business-critical product workflows.",
+        "His professional journey includes product and business analysis roles with Orion, London Stock Exchange, Upstox, Eze Software and Genpact. In his current Product Manager role at Orion, he is involved in re-designing advisory compliance experiences for investment advisers, brokers and portfolio management firms. Earlier roles span product ownership in trading and fintech platforms, product infrastructure and business systems analysis.",
+        "As an educator, Ritesh mentors working professionals and helps people move into high-impact roles in AI-integrated product management, Agile delivery and business analysis. His approach connects product thinking with hands-on practice: discovering the right problem, defining a useful solution, prototyping it, building workflows and measuring adoption.",
+      ],
+    },
+    expertise: [
+      { title: "AI Product Management", body: "AI product lifecycle, opportunity framing, product discovery, value definition, adoption and measurement" },
+      { title: "Product strategy & vision", body: "Defining users, problems and long-term impact; shaping product direction, strategic choices and outcome-led roadmaps" },
+      { title: "Agile methodology & delivery", body: "Scrum, Kanban and Scrumban; sprint planning, prioritisation, collaboration and iterative delivery" },
+      { title: "Product roadmaps & requirements", body: "Now–Next–Later and goal-oriented roadmaps, discovery, PRDs, epics, user stories and acceptance criteria" },
+      { title: "Design thinking & MVP development", body: "Lean UX thinking, user journeys, prototyping and turning product vision into testable minimum viable products" },
+      { title: "Technical product architecture", body: "APIs, microservices, low-latency systems and complex product environments, aligning business needs with engineering execution" },
+    ],
+    credentials: [
+      "Professional Scrum Product Owner – Advanced",
+      "Artificial Intelligence, Machine Learning & Deep Learning",
+      "Agile Project Management",
+      "Certified Business Analysis Program",
+    ],
+    focus: [
+      { title: "Product discovery & strategy", body: "Problem discovery, customer needs, workflow mapping and AI opportunity assessment." },
+      { title: "Product definition & design", body: "Product requirements, user journeys, PRDs, prototyping and usability testing." },
+      { title: "AI workflows & automation", body: "LLM-powered workflows, no/low-code tools, app connections and quality checks." },
+      { title: "Product analytics & metrics", body: "Activation, adoption, experimentation, dashboards and success measures." },
+      { title: "Agile execution", body: "Roadmaps, backlog definition, sprint planning, iterative delivery and stakeholder alignment." },
+      { title: "Launch & adoption", body: "Responsible AI, risk reviews, change management, launch planning and ROI estimates." },
+    ],
+    approachTitle: "His approach to learning",
+    approach:
+      "“Anyone can transform — it simply takes the compass of mentorship, the grind of practice, and the fuel of consistency.” Ritesh’s learning approach is built around doing: learners discover real problems, translate them into product requirements, prototype and build practical AI workflows, test their solutions and learn to measure whether people actually use them. The goal is not just to understand product and AI concepts, but to develop the confidence and discipline to apply them in real work.",
+    links: [
+      { label: "LinkedIn", href: "https://www.linkedin.com/in/ritesh-pandey-bb930264/", display: "linkedin.com/in/ritesh-pandey-bb930264" },
+    ],
   },
 ];
 

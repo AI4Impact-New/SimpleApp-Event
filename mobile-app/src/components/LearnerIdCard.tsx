@@ -1,8 +1,9 @@
 // Learner identity card: avatar, name, learner ID and current course. Used in the home sidebar and Programme+.
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useMyProfile } from '@/hooks/useMyProfile';
+import { authService, type StoredUserData } from '@/services/auth';
 import { initialsFor, learnerIdFromUuid } from '@/utils/learnerId';
 import { fonts, palette } from '@/theme/colors';
 
@@ -12,8 +13,10 @@ const canCopy = isWeb && typeof navigator !== 'undefined' && !!navigator.clipboa
 export function LearnerIdCard({ name, courseTitle }: { name?: string | null; courseTitle?: string | null }) {
   const profile = useMyProfile();
   const [copied, setCopied] = useState(false);
-  // Full profile name first; `name` (often just a first name) is only a fallback while the profile loads.
-  const displayName = profile.data?.name || name || profile.data?.email || 'Learner';
+  const accountName = useAccountFullName();
+  // Full name first: the profile row, then the sign-in account's name. `name` (often just a first name)
+  // covers the loading state; the email is a last resort for accounts with no name anywhere.
+  const displayName = profile.data?.name?.trim() || accountName || name || profile.data?.email || 'Learner';
   const learnerId = learnerIdFromUuid(profile.data?.id);
 
   const copy = async () => {
@@ -56,6 +59,28 @@ export function LearnerIdCard({ name, courseTitle }: { name?: string | null; cou
       ) : null}
     </View>
   );
+}
+
+function fullNameOf(user: StoredUserData | null | undefined) {
+  return (user?.name || [user?.given_name, user?.family_name].filter(Boolean).join(' ')).trim() || null;
+}
+
+/** Full name from the Cognito account, for learners whose profile row has no name saved. */
+function useAccountFullName() {
+  const [accountName, setAccountName] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    authService
+      .getCurrentUser()
+      .then((res) => active && setAccountName(fullNameOf(res.user)))
+      .catch(() => {});
+    const unsubscribe = authService.onUserDataChange((user) => setAccountName(fullNameOf(user)));
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
+  return accountName;
 }
 
 const styles = StyleSheet.create({

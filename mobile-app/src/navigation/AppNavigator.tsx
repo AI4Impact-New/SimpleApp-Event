@@ -652,7 +652,12 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
                 {({ navigation }: any) => <ProgrammePlusScreen onRegister={() => navigation.navigate('ProgrammeCheckout')} />}
               </Stack.Screen>
               <Stack.Screen name="ProgrammeCheckout">
-                {({ navigation }: any) => <ProgrammePlusCheckoutScreen onBack={() => navigation.goBack()} />}
+                {({ navigation }: any) => (
+                  <ProgrammePlusCheckoutScreen
+                    onBack={() => navigation.goBack()}
+                    onOpenCourses={() => navigation.navigate('Courses', { screen: 'CoursesMain' })}
+                  />
+                )}
               </Stack.Screen>
             </Stack.Navigator>
           )}

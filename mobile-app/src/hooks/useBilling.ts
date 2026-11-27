@@ -43,6 +43,18 @@ export function useCreateDemoOrder() {
   });
 }
 
+export function useCreateProgrammePlusOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courseId, requestId }: { courseId: string; requestId: string }) =>
+      api.createProgrammePlusOrder(courseId, requestId),
+    onSuccess: (order) => {
+      queryClient.setQueryData(['billing', 'order', order.id], order);
+      queryClient.invalidateQueries({ queryKey: ['me', 'purchases'] });
+    },
+  });
+}
+
 export function useFinishDemoCheckout() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -60,27 +60,48 @@ def provider(method, path, data=None):
         raise ApiError(502, 'Payment provider is temporarily unavailable; check your order before retrying') from None
 
 
+PROGRAMME_PLUS_PREFIX = 'Programme+ · '
+
+
+def is_programme_order(row):
+    return str(row.get('course_title', '')).startswith(PROGRAMME_PLUS_PREFIX)
+
+
 def response(row):
-    return {**row, 'demo':False, 'payment_provider':'Razorpay',
+    is_programme = is_programme_order(row)
+    return {**row, 'demo':False, 'product_type':'programme_plus' if is_programme else 'course',
+        'payment_provider':'Razorpay',
         'checkout_url':os.environ.get('STUDENT_CHECKOUT_URL', 'https://main.d26ztc5gxt79re.amplifyapp.com/checkout')+'/'+str(row['id']),
         'invoice_url':'/billing/orders/'+str(row['id'])+'/invoice',
-        'notice':'Test payment. No real money is collected.' if row['mode']=='test' else 'Course access is granted after payment capture is verified.'}
+        'notice':'Test payment. No real money is collected.' if row['mode']=='test' else ('Programme+ access is granted after payment capture is verified.' if is_programme else 'Course access is granted after payment capture is verified.')}
 
 
 def allowed_test_buyer(email, config):
     return email.lower() in [str(x).lower() for x in config.get('test_buyer_emails', [])]
 
 
+def programme_plus_price_paise():
+    raw = os.environ.get('PROGRAMME_PLUS_PRICE_PAISE', '2499900')
+    try:
+        value = int(raw)
+    except ValueError:
+        value = 2499900
+    return value if value >= 100 else 2499900
+
+
 def create(actor, body, as_admin=False):
     from learning.billing import amounts
     if as_admin: admin(actor)
-    if set(body)-({'course_id','request_id','buyer_email'} if as_admin else {'course_id','request_id'}):
+    if set(body)-({'course_id','request_id','buyer_email','product_type'} if as_admin else {'course_id','request_id','product_type'}):
         raise ApiError(400, 'Unknown order field')
+    product_type = body.get('product_type') or 'course'
+    if product_type not in ('course', 'programme_plus'):
+        raise ApiError(400, 'Invalid product_type')
     cid, rid = identifier(body.get('course_id')), identifier(body.get('request_id'))
     config = credentials()
     # Agreed installments override public catalog pricing in the student Buy flow.
     lookup=body.get('buyer_email') if as_admin else actor['id']
-    if isinstance(lookup,str):
+    if product_type=='course' and isinstance(lookup,str):
         clause='lower(u.email)=%s' if as_admin else 'a.user_id=%s'
         plan=execute_query('SELECT a.id FROM fee_accounts a JOIN users u ON u.id=a.user_id WHERE a.course_id=%s AND a.mode=%s AND a.source_order_id IS NULL AND a.closed_at IS NULL AND '+clause,(cid,config['mode'],lookup.strip().lower() if as_admin else lookup),fetch='one')
         if plan:
@@ -97,25 +118,36 @@ def create(actor, body, as_admin=False):
         if not buyer: raise ApiError(404, 'Student account not found')
         if config['mode']=='test' and not allowed_test_buyer(buyer['email'],config):
             raise ApiError(403, 'Checkout is currently available to authorized test accounts only')
-        cur.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))',('payment:'+str(buyer['id'])+cid,))
+        cur.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))',('payment:'+str(buyer['id'])+cid+':'+product_type,))
         cur.execute('SELECT * FROM payment_orders WHERE user_id=%s AND request_id=%s',(buyer['id'],rid))
         row = cur.fetchone()
-        if row and str(row['course_id'])!=cid: raise ApiError(409,'Request ID was used for another course')
+        if row and (str(row['course_id'])!=cid or ('programme_plus' if is_programme_order(row) else 'course')!=product_type):
+            raise ApiError(409,'Request ID was used for another order')
         if not row:
-            cur.execute("SELECT * FROM payment_orders WHERE user_id=%s AND course_id=%s AND mode=%s AND status='pending' AND expires_at>now() ORDER BY created_at DESC LIMIT 1",(buyer['id'],cid,config['mode']))
+            title_filter = "AND course_title LIKE 'Programme+ · %%'" if product_type=='programme_plus' else "AND course_title NOT LIKE 'Programme+ · %%'"
+            cur.execute("SELECT * FROM payment_orders WHERE user_id=%s AND course_id=%s AND mode=%s AND status='pending' AND expires_at>now() "+title_filter+" ORDER BY created_at DESC LIMIT 1",(buyer['id'],cid,config['mode']))
             row=cur.fetchone()
         if not row:
             cur.execute("SELECT * FROM courses WHERE id=%s AND archived=false AND status='published' FOR SHARE",(cid,))
             course = cur.fetchone()
             if not course: raise ApiError(404,'Published course not found')
-            price = amounts(int(course['marked_price_paise']),course['discount_bps'])
-            if price['total_paise']<100: raise ApiError(400,'This course does not require online payment')
             cur.execute("SELECT 1 FROM course_registrations WHERE user_id=%s AND course_id=%s AND status IN ('registered','completed')",(buyer['id'],cid))
-            if cur.fetchone(): raise ApiError(409,'You already have access to this course')
+            has_course_reg = bool(cur.fetchone())
+            if product_type=='programme_plus':
+                if not has_course_reg: raise ApiError(409,'Active course enrollment is required before registering for Programme+')
+                cur.execute("SELECT 1 FROM payment_orders WHERE user_id=%s AND course_id=%s AND course_title LIKE 'Programme+ · %%' AND mode=%s AND status IN ('paid','partially_refunded')",(buyer['id'],cid,config['mode']))
+                if cur.fetchone(): raise ApiError(409,'You already have Programme+ access for this course')
+                price = amounts(programme_plus_price_paise(), 0)
+                order_title = PROGRAMME_PLUS_PREFIX+course['title']
+            else:
+                if has_course_reg: raise ApiError(409,'You already have access to this course')
+                price = amounts(int(course['marked_price_paise']),course['discount_bps'])
+                if price['total_paise']<100: raise ApiError(400,'This course does not require online payment')
+                order_title = course['title']
             cur.execute('''INSERT INTO payment_orders(id,request_id,user_id,course_id,course_title,buyer_name,buyer_email,
                 marked_price_paise,discount_bps,discount_paise,total_paise,mode,created_by)
                 VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *''',
-                (str(uuid.uuid4()),rid,buyer['id'],cid,course['title'],buyer['name'] or 'Learner',buyer['email'],
+                (str(uuid.uuid4()),rid,buyer['id'],cid,order_title,buyer['name'] or 'Learner',buyer['email'],
                  price['marked_price_paise'],price['discount_bps'],price['discount_paise'],price['total_paise'],config['mode'],actor['id']))
             row = cur.fetchone()
     # Persist receipt before the external call. A retry can recover an order whose response was lost.
@@ -149,7 +181,7 @@ def checkout(actor, oid, as_admin=False):
             existing=provider('GET','orders?receipt='+str(row['id'])+'&count=100').get('items',[])
             matches=[o for o in existing if o.get('receipt')==str(row['id'])]
             order=matches[0] if matches else provider('POST','orders',{'amount':int(row['total_paise']), 'currency':'INR',
-                'receipt':str(row['id']), 'notes':{'local_order_id':str(row['id'])}})
+                'receipt':str(row['id']), 'notes':{'local_order_id':str(row['id']), 'product_type':'programme_plus' if is_programme_order(row) else 'course'}})
             if order.get('amount')!=int(row['total_paise']) or order.get('currency')!='INR' or not re.fullmatch(r'order_[A-Za-z0-9]+',order.get('id','')):
                 raise ApiError(502,'Provider order does not match the checkout amount')
             cur.execute('UPDATE payment_orders SET provider_order_id=%s,updated_at=now() WHERE id=%s RETURNING *',(order['id'],row['id']))
@@ -188,8 +220,20 @@ def apply_payment(payment):
         updated=cur.fetchone()
         # Never revoke pre-existing/manual access. A refund only removes the grant owned by this order.
         plan_payment=fee_ledger.linked_plan(cur,row)
+        is_programme=is_programme_order(row)
         if plan_payment:
             fee_ledger.sync_access(cur,row['fee_account_id'])
+        elif is_programme:
+            if status=='refunded':
+                cur.execute("SELECT 1 FROM payment_orders WHERE user_id=%s AND course_id=%s AND course_title LIKE 'Programme+ · %%' AND status IN ('paid','partially_refunded') AND id<>%s",(row['user_id'],row['course_id'],row['id']))
+                if not cur.fetchone():
+                    cur.execute("UPDATE programme_entitlements SET active=false WHERE user_id=%s AND course_id=%s",(row['user_id'],row['course_id']))
+            else:
+                cur.execute("INSERT INTO programme_entitlements(user_id,course_id,active) VALUES(%s,%s,true) ON CONFLICT(user_id,course_id) DO UPDATE SET active=true",(row['user_id'],row['course_id']))
+                cur.execute("SELECT 1 FROM course_registrations WHERE user_id=%s AND course_id=%s AND status IN ('registered','completed')",(row['user_id'],row['course_id']))
+                if cur.fetchone():
+                    from programme.common import entitlement
+                    entitlement(cur,str(row['user_id']),str(row['course_id']))
         else:
             source='razorpay:'+str(row['id'])
             if status=='refunded':
@@ -203,7 +247,8 @@ def apply_payment(payment):
         if row['status']!=status:
             notification_id=str(uuid.uuid5(uuid.NAMESPACE_URL,'ai4impact:payment:'+str(row['id'])+':'+status))
             title='Payment confirmed' if status=='paid' else 'Refund updated'
-            message=('Test payment confirmed. ' if row['mode']=='test' else 'Payment confirmed. ')+'Your course access is ready.' if status=='paid' else 'Your payment refund status is '+status.replace('_',' ')+'.'
+            access_ready='Your Programme+ career layer access is ready.' if is_programme else 'Your course access is ready.'
+            message=('Test payment confirmed. ' if row['mode']=='test' else 'Payment confirmed. ')+access_ready if status=='paid' else 'Your payment refund status is '+status.replace('_',' ')+'.'
             if plan_payment and status=='paid':message='Your payment was received. Your installment balance and course access have been updated.'
             cur.execute('INSERT INTO learner_notifications(id,user_id,course_id,title,body) VALUES(%s,%s,%s,%s,%s) ON CONFLICT(id) DO NOTHING',(notification_id,row['user_id'],row['course_id'],title,message))
         return response(updated)

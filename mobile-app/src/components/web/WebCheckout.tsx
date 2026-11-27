@@ -117,18 +117,23 @@ function Page({ onBack, subtitle, children }: { onBack: () => void; subtitle?: s
 
 function StatusCard(props: WebCheckoutProps & { order: DemoOrder }) {
   const { order, linkExpired } = props;
+  const isProgramme = order.product_type === 'programme_plus';
   const copy = linkExpired
-    ? { title: 'This checkout link has expired', text: 'Start a new order from the course page to enrol.' }
+    ? { title: 'This checkout link has expired', text: isProgramme ? 'Start a new registration from the Programme+ page.' : 'Start a new order from the course page to enrol.' }
     : order.status === 'paid'
-      ? { title: "You're enrolled", text: 'Your payment has been verified. The course is now in My learning.' }
+      ? isProgramme
+        ? { title: "You're registered for Programme+", text: 'Your payment has been verified. Programme+ career services are now unlocked for your course.' }
+        : { title: "You're enrolled", text: 'Your payment has been verified. The course is now in My learning.' }
       : order.status === 'pending'
         ? order.demo
           ? { title: 'Complete the demo payment', text: 'Historical demo order. No money is collected and no course access is granted.' }
-          : { title: 'Complete your payment', text: 'Pay securely to unlock the course. Already charged? Check the payment status instead of paying again.' }
+          : isProgramme
+            ? { title: 'Complete your payment', text: 'Pay securely to unlock Programme+ features for your course. Already charged? Check the payment status instead of paying again.' }
+            : { title: 'Complete your payment', text: 'Pay securely to unlock the course. Already charged? Check the payment status instead of paying again.' }
         : order.status === 'demo_completed'
           ? { title: 'Demo payment completed', text: 'No money was collected for this demo order.' }
           : order.status === 'cancelled'
-            ? { title: 'This order was cancelled', text: 'Start a new order from the course page if you still want to enrol.' }
+            ? { title: 'This order was cancelled', text: isProgramme ? 'Start a new registration from the Programme+ page if you still want to join.' : 'Start a new order from the course page if you still want to enrol.' }
             : { title: 'This order was refunded', text: 'Refunds reach your account within 5–7 working days of being issued.' };
 
   return (
@@ -189,7 +194,7 @@ function SummaryCard(props: WebCheckoutProps & { order: DemoOrder; wide: boolean
         <Text style={styles.label}>Order summary</Text>
         <Text style={styles.summaryCourse}>{order.course_title}</Text>
         <View style={{ gap: 10 }}>
-          <Line label="Course fee" value={formatPaise(order.marked_price_paise)} />
+          <Line label={order.product_type === 'programme_plus' ? 'Programme+ fee' : 'Course fee'} value={formatPaise(order.marked_price_paise)} />
           {order.discount_paise > 0 ? <Line label={`Discount (${order.discount_bps / 100}%)`} value={`− ${formatPaise(order.discount_paise)}`} accent /> : null}
         </View>
         <View style={styles.totalRow}>

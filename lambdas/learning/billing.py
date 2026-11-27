@@ -59,6 +59,8 @@ def order_response(row):
 def create_order(actor,body,as_admin=False):
     from learning import payments
     if payments.enabled(): return payments.create(actor,body,as_admin)
+    if body.get('product_type') == 'programme_plus':
+        raise ApiError(503, 'Online checkout for Programme+ is not available yet')
     if as_admin: admin(actor)
     if set(body)-({'course_id','request_id','buyer_email'} if as_admin else {'course_id','request_id'}): raise ApiError(400,'Unknown order field')
     cid=identifier(body.get('course_id'));request=identifier(body.get('request_id'))

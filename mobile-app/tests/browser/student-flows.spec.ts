@@ -519,3 +519,83 @@ test('student portal counts video playback, offers an extension and signs out af
   await expect.poll(() => page.evaluate(() => localStorage.getItem('auth_id_token'))).toBeNull();
   await expect(page.getByRole('tab', { name: /My learning/i })).toHaveCount(0);
 });
+
+for (const outcome of ['captured', 'failed'] as const) test(`Programme+ registration checkout ${outcome} connects to Razorpay`, async ({ page }) => {
+  await seed(page); await spaFallback(page);
+  let status = 'pending', verified = 0, orderCreated = 0;
+  let capturedBody: any = null;
+  const order = () => ({
+    id: aid, course_id: cid, user_id: cid, product_type: 'programme_plus',
+    course_title: 'Programme+ · Forward Deployed AI Engineer',
+    buyer_name: 'QA learner', buyer_email: 'qa@example.invalid',
+    marked_price_paise: 2499900, discount_bps: 0, discount_paise: 0, total_paise: 2499900, currency: 'INR',
+    status, created_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000).toISOString(),
+    demo: false, mode: 'test', notice: 'Test payment. No real money is collected.',
+    checkout_url: `https://learn.ai4impact.in/checkout/${aid}`,
+  });
+
+  await page.route('https://*.execute-api.ap-south-1.amazonaws.com/**', async route => {
+    const pathname = new URL(route.request().url()).pathname;
+    let json: unknown = [];
+    if (pathname === '/users/me') json = { id: cid, email: 'qa@example.invalid', name: 'QA learner', user_type: 'professional', designation: 'Engineer', company: 'QA' };
+    if (pathname === '/me/learning') json = [{ id: cid, title: 'Forward Deployed AI Engineer', status: 'published', registration_status: 'registered', completed_lectures: 0, total_recorded_lectures: 1 }];
+    if (pathname === '/me/purchases') json = orderCreated ? [order()] : [];
+    if (pathname === '/billing/orders' && route.request().method() === 'POST') {
+      orderCreated++;
+      capturedBody = route.request().postDataJSON();
+      json = { ...order(), checkout: { key: 'rzp_test_public', order_id: 'order_PP_QA', amount: 2499900, currency: 'INR' } };
+    }
+    if (pathname === `/billing/orders/${aid}/verify`) {
+      verified++;
+      status = 'paid';
+      json = order();
+    }
+    if (pathname === `/billing/orders/${aid}/reconcile`) json = order();
+    await route.fulfill({ json });
+  });
+
+  await page.addInitScript((outcome) => {
+    (window as any).Razorpay = class {
+      private failCb?: (res: any) => void;
+      constructor(private options: any) {}
+      on(event: string, cb: (res: any) => void) {
+        if (event === 'payment.failed') this.failCb = cb;
+      }
+      open() {
+        if (outcome === 'captured') {
+          this.options.handler({ razorpay_order_id: 'order_PP_QA', razorpay_payment_id: 'pay_PP_QA', razorpay_signature: 'qa-sig' });
+        } else {
+          if (this.failCb) {
+            this.failCb({ error: { code: 'BAD_REQUEST_ERROR', reason: 'insufficient_funds', description: 'Payment failed due to insufficient funds in account.' } });
+          }
+          this.options.modal.ondismiss();
+        }
+      }
+    };
+  }, outcome);
+
+  await page.goto('/programme-plus/register');
+  await expect(page.getByText('Forward Deployed AI Engineer')).toBeVisible();
+  const payBtn = page.getByRole('button', { name: /Pay ₹24,999/ });
+  await expect(payBtn).toBeDisabled();
+
+  await page.getByRole('checkbox').click();
+  await expect(payBtn).toBeEnabled();
+  await payBtn.click();
+
+  await expect.poll(() => orderCreated).toBe(1);
+  expect(capturedBody?.product_type).toBe('programme_plus');
+  expect(capturedBody?.course_id).toBe(cid);
+
+  if (outcome === 'captured') {
+    await expect(page.getByText('Programme+ is active', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Download receipt (PDF)', exact: true })).toBeVisible();
+    expect(verified).toBe(1);
+  } else {
+    await expect(page.getByRole('alert')).toContainText('Payment Declined: Insufficient Funds');
+    await expect(page.getByRole('button', { name: /Check payment status/ })).toBeVisible();
+    expect(page.url()).toContain('payment_status=failed');
+    expect(page.url()).toContain('reason=insufficient_funds');
+    expect(verified).toBe(0);
+  }
+});

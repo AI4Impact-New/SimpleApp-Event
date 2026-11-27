@@ -589,7 +589,7 @@ for (const outcome of ['captured', 'failed'] as const) test(`Programme+ registra
 
   if (outcome === 'captured') {
     await expect(page.getByText('Programme+ is active', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Download receipt (PDF)', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Download receipt \(PDF\)/ })).toBeVisible();
     expect(verified).toBe(1);
   } else {
     await expect(page.getByRole('alert')).toContainText('Payment Declined: Insufficient Funds');

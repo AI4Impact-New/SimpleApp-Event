@@ -296,6 +296,7 @@ export function ProgrammePlusCheckoutScreen({
             <Pressable
               onPress={onBack}
               accessibilityRole="button"
+              accessibilityLabel="Back to Programme+"
               style={(s: PressState) => [styles.payBtn, styles.payBtnActive, (s.hovered || s.pressed) && styles.payBtnHover, fitButton]}
             >
               <Text style={[styles.payText, styles.payTextActive]}>Back to Programme+</Text>
@@ -305,6 +306,7 @@ export function ProgrammePlusCheckoutScreen({
               onPress={() => void handleDownloadReceipt()}
               disabled={downloading}
               accessibilityRole="button"
+              accessibilityLabel="Download receipt (PDF)"
               style={[styles.secondaryBtn, fitButton]}
             >
               {downloading ? (

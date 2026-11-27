@@ -17,6 +17,7 @@ export interface DemoOrder {
   id: string;
   user_id: string;
   course_id: string;
+  product_type?: 'course' | 'programme_plus';
   course_title: string;
   buyer_name: string;
   buyer_email: string;

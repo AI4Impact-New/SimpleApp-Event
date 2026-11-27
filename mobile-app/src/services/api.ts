@@ -363,6 +363,16 @@ class ApiService {
     return response.data;
   }
 
+  /** Creates or reuses a Programme+ add-on checkout order for an enrolled course. */
+  async createProgrammePlusOrder(courseId: string, requestId: string): Promise<DemoOrder> {
+    const response = await this.client.post('/billing/orders', {
+      course_id: courseId,
+      product_type: 'programme_plus',
+      request_id: requestId,
+    });
+    return response.data;
+  }
+
   async getDemoOrder(orderId: string): Promise<DemoOrder> {
     const response = await this.client.get(`/billing/orders/${orderId}`);
     return response.data;
